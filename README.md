@@ -1,2 +1,2 @@
-# desert-project-wip
+# Sands Uncharted
 a desert cartography exploration game
