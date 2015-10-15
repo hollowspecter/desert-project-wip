@@ -16,16 +16,23 @@ public class CharacterLogic : MonoBehaviour
     [SerializeField]
     private float rotationDegreePerSecond = 120f;
 
+
     //private global
     private float speed = 0.0f;
     private float direction = 0f;
     private float horizontal = 0.0f;
     private float vertical = 0.0f;
     private AnimatorStateInfo stateInfo;
+    private float lookWeight = 0f;
+    private Vector3 lookAt = new Vector3(0, 0, 0);
 
     //Hashes
     private int m_LocomotionId = 0;
     #endregion
+
+    //Properties
+
+    public Animator Animator { get { return this.anim; } }
 
     // Use this for initialization
     void Start()
@@ -43,7 +50,7 @@ public class CharacterLogic : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (anim) {
+        if (anim && gamecam.CamState != ThirdPersonCam.CamStates.FirstPerson) {
             //Set animation stateInfo
             stateInfo = anim.GetCurrentAnimatorStateInfo(0);
 
@@ -73,6 +80,18 @@ public class CharacterLogic : MonoBehaviour
             Quaternion deltaRotation = Quaternion.Euler(rotationAmount * Time.deltaTime);
             this.transform.rotation = (this.transform.rotation * deltaRotation);
         }
+    }
+
+    void OnAnimatorIK(int layerIndex)
+    {
+        anim.SetLookAtWeight(lookWeight);
+        anim.SetLookAtPosition(lookAt);
+    }
+
+    public void setLookVars(Vector3 target, float weight)
+    {
+        lookWeight = weight;
+        lookAt = target;
     }
 
     public void StickoWorldspace(Transform root, Transform camera, ref float directionOut, ref float speedOut)

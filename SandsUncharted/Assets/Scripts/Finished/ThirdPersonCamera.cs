@@ -27,25 +27,25 @@ using UnityEditor;
 /// <summary>
 /// Struct to hold data for aligning camera
 /// </summary>
-struct CameraPosition 
+struct CameraPosition0 
 {
 	// Position to align camera to, probably somewhere behind the character
 	// or position to point camera at, probably somewhere along character's axis
-	private Vector3 position;
+	private Vector3 pos;
 	// Transform used for any rotation
 	private Transform xForm;
 	
-	public Vector3 Position { get { return position; } set { position = value; } }
+	public Vector3 Position { get { return pos; } set { pos = value; } }
 	public Transform XForm { get { return xForm; } set { xForm = value; } }
 	
 	public void Init(string camName, Vector3 pos, Transform transform, Transform parent)
 	{
-		position = pos;
+		this.pos = pos;
 		xForm = transform;
 		xForm.name = camName;
 		xForm.parent = parent;
 		xForm.localPosition = Vector3.zero;
-		xForm.localPosition = position;
+		xForm.localPosition = pos;
 	}
 }
 
@@ -115,7 +115,7 @@ public class ThirdPersonCamera : MonoBehaviour
 	private BarsEffect barEffect;
 	private CamStates camState = CamStates.Behind;	
 	private float xAxisRot = 0.0f;
-	private CameraPosition firstPersonCamPos;			
+	private CameraPosition0 firstPersonCamPos;			
 	private float lookWeight;
 	private const float TARGETING_THRESHOLD = 0.01f;
 	private Vector3 savedRigToGoal;
@@ -207,7 +207,7 @@ public class ThirdPersonCamera : MonoBehaviour
 		}
 		
 		// Position and parent a GameObject where first person view should be
-		firstPersonCamPos = new CameraPosition();
+		firstPersonCamPos = new CameraPosition0();
 		firstPersonCamPos.Init
 			(
 				"First Person Camera",
