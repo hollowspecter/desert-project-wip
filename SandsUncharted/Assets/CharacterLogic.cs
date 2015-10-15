@@ -33,6 +33,8 @@ public class CharacterLogic : MonoBehaviour
     //Properties
 
     public Animator Animator { get { return this.anim; } }
+    public float Speed { get { return this.speed; } }
+    public float LocomotionThreshold { get { return 0.2f; } }
 
     // Use this for initialization
     void Start()

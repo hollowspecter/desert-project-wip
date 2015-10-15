@@ -68,10 +68,14 @@ public class ThirdPersonCam : MonoBehaviour
     private Vector3 velocityCamSmooth = Vector3.zero;
     [SerializeField]
     private float camSmoothDampTime = 0.1f;
+    private Vector3 velocityLookDir = Vector3.zero;
+    [SerializeField]
+    private float lookDirDampTime = 0.1f;
 
 
     //private global only
     private Vector3 lookDir;
+    private Vector3 currLookDir;
     private Vector3 targetPosition;
     private BarsEffect barEffect;
     private CamStates camState = CamStates.Behind;
@@ -121,6 +125,7 @@ public class ThirdPersonCam : MonoBehaviour
             Debug.LogError("Reference from ThirdPersonCam to CharacterLogic failed.", this);
         }
         lookDir = followTransform.forward;
+        currLookDir = followTransform.forward;
 
         barEffect = GetComponent<BarsEffect>();
         if (barEffect == null) {
@@ -184,19 +189,29 @@ public class ThirdPersonCam : MonoBehaviour
             case CamStates.Behind:
                 ResetCamera();
 
-                //Calculate direction from camera to player, kill Y, normalize to give valid direction with unit magnitude
-                lookDir = characterOffset - this.transform.position;
-                lookDir.y = 0f;
-                lookDir.Normalize();
+                //Only update camera look direction if moving
+                if (characterLogic.Speed > characterLogic.LocomotionThreshold && characterLogic.IsInLocomotion()) {
+                    //the direction we wanna look
+                    lookDir = Vector3.Lerp(followTransform.right * (leftX < 0 ? 1f : -1f),
+                        followTransform.forward * (leftY < 0 ? -1f : 1f),
+                        Mathf.Abs(Vector3.Dot(this.transform.forward, followTransform.forward)));
 
-                //setting the target position to be the correct offset from the target
-                targetPosition = characterOffset + followTransform.up * distanceUp - lookDir * distanceAway;
+                    //calculate direction from camera to player, kill Y, normalize
+                    currLookDir = Vector3.Normalize(characterOffset - this.transform.position);
+                    currLookDir.y = 0;
+
+                    //Damping makes it so we dont update targetPos while pivoting; camera shouldnt rotate around player
+                    currLookDir = Vector3.SmoothDamp(currLookDir, lookDir, ref velocityLookDir, lookDirDampTime);
+                }
+
+                targetPosition = characterOffset + followTransform.up * distanceUp - Vector3.Normalize(lookDir) * distanceAway;
 
                 break;
             case CamStates.Target:
                 ResetCamera();
 
                 lookDir = followTransform.forward;
+                currLookDir = followTransform.forward;
 
                 //setting the target position to be the correct offset from the target
                 targetPosition = characterOffset + followTransform.up * distanceUp - lookDir * distanceAway;
