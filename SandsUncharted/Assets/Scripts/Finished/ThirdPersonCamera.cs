@@ -68,8 +68,10 @@ public class ThirdPersonCamera : MonoBehaviour
 	private float distanceUp;
 	[SerializeField]
 	private float distanceUpMultiplier = 5f;
-	[SerializeField]
-	private CharacterControllerLogic follow;
+    //[SerializeField]
+    //private CharacterControllerLogic follow;
+    [SerializeField]
+    private CharacterMovement follow;
 	[SerializeField]
 	private Transform followXform;
 	[SerializeField]
@@ -194,7 +196,12 @@ public class ThirdPersonCamera : MonoBehaviour
 			Debug.LogError("Parent camera to empty GameObject.", this);
 		}
 		
-		follow = GameObject.FindWithTag("Player").GetComponent<CharacterControllerLogic>();
+        //follow = GameObject.FindWithTag("Player").GetComponent<CharacterControllerLogic>();
+        follow = GameObject.FindWithTag("Player").GetComponent<CharacterMovement>();
+        if (follow == null) {
+            Debug.LogError("Could not find the player");
+        }
+
 		followXform = GameObject.FindWithTag("Player").transform;
 		
 		lookDir = followXform.forward;
@@ -256,7 +263,7 @@ public class ThirdPersonCamera : MonoBehaviour
 		float mouseWheel = Input.GetAxis("Mouse ScrollWheel");
 		float mouseWheelScaled = mouseWheel * mouseWheelSensitivity;
 		float leftTrigger = Input.GetAxis("Target");
-		bool bButtonPressed = Input.GetButton("ExitFPV");
+		bool bButtonPressed = Input.GetButton("B");
 		bool qKeyDown = Input.GetKey(KeyCode.Q);
 		bool eKeyDown = Input.GetKey(KeyCode.E);
 		bool lShiftKeyDown = Input.GetKey(KeyCode.LeftShift);
@@ -296,7 +303,7 @@ public class ThirdPersonCamera : MonoBehaviour
 			barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, 0f, targetingTime);
 			
 			// * First Person *
-			if (rightY > firstPersonThreshold && camState != CamStates.Free && !follow.IsInLocomotion())
+			if (rightY > firstPersonThreshold && camState != CamStates.Free && !follow.isMoving())
 			{
 				// Reset look before entering the first person mode
 				xAxisRot = 0;
@@ -305,11 +312,11 @@ public class ThirdPersonCamera : MonoBehaviour
 			}
 
 			// * Free *
-			if ((rightY < freeThreshold || mouseWheel < 0f) && System.Math.Round(follow.Speed, 2) == 0)
+			/*if ((rightY < freeThreshold || mouseWheel < 0f) && System.Math.Round(follow.Speed, 2) == 0)
 			{
 				camState = CamStates.Free;
 				savedRigToGoal = Vector3.zero;
-			}
+			}*/
 
 			// * Behind the back *
 			if ((camState == CamStates.FirstPerson && bButtonPressed) || 
@@ -319,8 +326,8 @@ public class ThirdPersonCamera : MonoBehaviour
 			}
 		}
 		
-		// Set the Look At Weight - amount to use look at IK vs using the head's animation
-		follow.Animator.SetLookAtWeight(lookWeight);
+         //Set the Look At Weight - amount to use look at IK vs using the head's animation
+        follow.Animator.SetLookAtWeight(lookWeight);
 		
 		// Execute camera state
 		switch (camState)
@@ -329,7 +336,7 @@ public class ThirdPersonCamera : MonoBehaviour
 				ResetCamera();
 			
 				// Only update camera look direction if moving
-                if (follow.Speed > follow.LocomotionThreshold && follow.IsInLocomotion() && !follow.IsInPivot())
+                if (follow.Speed > follow.MovementThreshold && follow.isMoving() /*&& !follow.IsInPivot()*/)
 				{
 					lookDir = Vector3.Lerp(followXform.right * (leftX < 0 ? 1f : -1f), followXform.forward * (leftY < 0 ? -1f : 1f), Mathf.Abs(Vector3.Dot(this.transform.forward, followXform.forward)));
 					Debug.DrawRay(this.transform.position, lookDir, Color.white);
@@ -389,7 +396,7 @@ public class ThirdPersonCamera : MonoBehaviour
 				// Choose lookAt target based on distance
 				lookAt = (Vector3.Lerp(this.transform.position + this.transform.forward, lookAt, Vector3.Distance(this.transform.position, firstPersonCamPos.XForm.position)));
 				break;
-			case CamStates.Free:
+			/*case CamStates.Free:
 				lookWeight = Mathf.Lerp(lookWeight, 0.0f, Time.deltaTime * firstPersonLookSpeed);
 
 				Vector3 rigToGoal = characterOffset - cameraXform.position;
@@ -434,7 +441,7 @@ public class ThirdPersonCamera : MonoBehaviour
 					targetPosition = characterOffset + followXform.up * distanceUpFree - savedRigToGoal * distanceAwayFree;
 				}
 
-				break;
+				break;*/
 		}
 		
 

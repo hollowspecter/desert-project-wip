@@ -135,7 +135,7 @@ public class CharacterControllerLogic : MonoBehaviour
 			transInfo = animator.GetAnimatorTransitionInfo(0);
 			
 			// Press A to jump
-			if (Input.GetButton("Jump"))
+			if (Input.GetButton("A"))
 			{
 				animator.SetBool("Jump", true);
 			}
@@ -156,7 +156,7 @@ public class CharacterControllerLogic : MonoBehaviour
             StickToWorldspace(this.transform, gamecam.transform, ref direction, ref charSpeed, ref charAngle, IsInPivot());		
 			
 			// Press B to sprint
-			if (Input.GetButton("Sprint"))
+			if (Input.GetButton("X"))
 			{
 				speed = Mathf.Lerp(speed, SPRINT_SPEED, Time.deltaTime);
 				gamecam.GetComponent<Camera>().fieldOfView = Mathf.Lerp(gamecam.GetComponent<Camera>().fieldOfView, SPRINT_FOV, fovDampTime * Time.deltaTime);
@@ -167,7 +167,7 @@ public class CharacterControllerLogic : MonoBehaviour
 				gamecam.GetComponent<Camera>().fieldOfView = Mathf.Lerp(gamecam.GetComponent<Camera>().fieldOfView, NORMAL_FOV, fovDampTime * Time.deltaTime);		
 			}
 			
-			animator.SetFloat("Speed", speed, speedDampTime, Time.deltaTime);
+			animator.SetFloat("Speed", speed, speedDampTime*0, Time.deltaTime);
 			animator.SetFloat("Direction", direction, directionDampTime, Time.deltaTime);
 			
 			if (speed > LocomotionThreshold)	// Dead zone
