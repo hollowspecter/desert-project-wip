@@ -12,6 +12,7 @@ using System.Collections;
 public class shape2D : UniqueMesh
 {
     #region variables (private)
+    public bool DebugDrawMesh = false;
     public Vector2[] verts;
     public Vector2[] normals = new Vector2[6];
     public float[] us;
@@ -71,6 +72,14 @@ public class shape2D : UniqueMesh
     ///</summary>
     void OnDrawGizmos()
     {
+        // the mesh
+        if (mesh.vertexCount != 0 && DebugDrawMesh) {
+            Gizmos.color = Color.white;
+            Gizmos.DrawWireMesh(mesh);
+        }
+
+        if (Application.isPlaying)
+            return;
 
         // line
         Gizmos.color = Color.yellow;
@@ -96,10 +105,7 @@ public class shape2D : UniqueMesh
         tmp = transform.position + new Vector3(verts[5].x, verts[5].y, 0);
         Gizmos.DrawLine(tmp, tmp + new Vector3(normals[5].x, normals[5].y, 0));
 
-        // bezier path (only when not playing)
-        if (Application.isPlaying)
-            return;
-
+        // bezier path
         bezier = new Bezier();
         bezier.pts = bezierPositions;
         foreach (OrientedPoint p in bezier.GetBezierPath(segmentNumber)) {
@@ -112,11 +118,6 @@ public class shape2D : UniqueMesh
                 Gizmos.DrawLine(bezierPositions[i], bezierPositions[(i + 1) % 4]);
         }
 
-        // the mesh
-        if (mesh.vertexCount == 0)
-                return;
-        Gizmos.color = Color.white;
-        Gizmos.DrawWireMesh(mesh);
     }
 
     #endregion
@@ -163,7 +164,11 @@ public class shape2D : UniqueMesh
                 int id = offset + j;
                 vertices[id] = path[i].LocalToWorld(shape.verts[j]);
                 normals[id] = path[i].LocalToWorldDirection(shape.normals[j]);
-                uvs[id] = new Vector2(shape.us[j], (i / (((float)edgeLoops)) * bezier.GetLength()) / GetUSpan());
+                float vCoord = i / (float)edgeLoops * bezier.GetLength(path); // this needs fixing
+                uvs[id] = new Vector2(shape.us[j], vCoord);
+
+                // /* Old Code */
+                //uvs[id] = new Vector2(shape.us[j], (i / (((float)edgeLoops)) * bezier.GetLength()) / GetUSpan());
                 //uvs[id] = new Vector2(shape.us[j], (i / ((float)edgeLoops)) * bezier.GetLength());
                 //uvs[id] = new Vector2(shape.us[j], (i / ((float)edgeLoops)) * bezier.GetLength(path));
                 //uvs[id] = new Vector2(shape.us[j], i / ((float)edgeLoops));
