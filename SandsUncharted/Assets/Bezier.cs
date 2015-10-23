@@ -5,6 +5,7 @@
 
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public struct OrientedPoint
 {
@@ -47,17 +48,44 @@ public class Bezier
     #endregion
 
     #region Methods
-    public OrientedPoint[] GetBezierPath()
+    public OrientedPoint[] GetBezierPath(int segments)
     {
-        OrientedPoint[] path = new OrientedPoint[4];
+        OrientedPoint[] path = new OrientedPoint[segments + 1];
+        float quotient = 1f / (float)segments;
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < segments+1; i++) {
             path[i] = new OrientedPoint();
-            path[i].position = GetPoint(pts, i * 0.25f);
-            path[i].rotation = GetOrientation3D(pts, i * 0.25f, Vector3.up);
+            path[i].position = GetPoint(pts, i * quotient);
+            path[i].rotation = GetOrientation3D(pts, i * quotient, Vector3.up);
         }
 
         return path;
+    }
+
+    public float GetLength()
+    {
+        int precision = 128;
+        float quotient = 1f / (float)precision;
+        float length = 0;
+
+        for (int i = 0; i < precision + 1; i += 2) {
+            Vector3 p1 = GetPoint(pts, i * quotient);
+            Vector3 p2 = GetPoint(pts, (i + 1) * quotient);
+            length += (p2 - p1).magnitude;
+        }
+
+        return length;
+    }
+
+    public float GetLength(OrientedPoint[] path)
+    {
+        float length = 0;
+
+        for (int l = 0; l < path.Length-2; l += 2) {
+            length += (path[l + 1].position - path[l].position).magnitude;
+        }
+
+        return length;
     }
 
     Vector3 GetPoint(Vector3[] pts, float t)
