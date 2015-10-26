@@ -120,6 +120,7 @@ public class CharacterMovement : MonoBehaviour
         speed = speed > speedMaximum ? speedMaximum : speed;
         angle = charAngle;
 
+        speed = (camera.CamState == ThirdPersonCamera.CamStates.FirstPerson) ? 0f : speed;
         _animator.SetFloat("Speed", speed);
     }
 
@@ -138,8 +139,7 @@ public class CharacterMovement : MonoBehaviour
             Vector3 movement = _transform.forward * speed;
             movement.y = _rigidbody.velocity.y;
             _rigidbody.velocity = movement;
-        }
-        
+        }        
     }
 
     ///<summary>
