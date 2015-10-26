@@ -443,7 +443,6 @@ public class ThirdPersonCamera : MonoBehaviour
 
 				break;*/
 		}
-		
 
 		CompensateForWalls(characterOffset, ref targetPosition);		
 		SmoothPosition(cameraXform.position, targetPosition);	
