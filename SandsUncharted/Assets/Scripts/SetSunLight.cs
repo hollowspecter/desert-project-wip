@@ -24,7 +24,7 @@ public class SetSunLight : MonoBehaviour
     //private float maxEmissionIntensity = 5f;
 
     private Transform _transform;
-    private bool lightOn;
+    //private bool lightOn;
     #endregion
 
     #region Properties (public)
@@ -39,7 +39,7 @@ public class SetSunLight : MonoBehaviour
     void Awake()
     {
         _transform = transform;
-        lightOn = false;
+        //lightOn = false;
     }
 
     ///<summary>
@@ -58,9 +58,9 @@ public class SetSunLight : MonoBehaviour
         // Rotate stars
         //stars.transform.rotation = _transform.rotation;
 
-        if (Input.GetKeyDown(KeyCode.T)) {
-            lightOn = !lightOn;
-        }
+        //if (Input.GetKeyDown(KeyCode.T)) {
+        //    lightOn = !lightOn;
+        //}
 
         //if (lightOn) {
         //    Color final = Color.white * Mathf.LinearToGammaSpace(maxEmissionIntensity);

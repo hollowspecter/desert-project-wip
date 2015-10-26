@@ -56,10 +56,11 @@ public class AutoIntensity : MonoBehaviour
     private Light mainLight;
     private Skybox sky;
     private Material skyMat;
+    private bool isNight = false;
     #endregion
 
     #region Properties (public)
-
+    public bool IsNight { get { return isNight; } }
     #endregion
 
     #region Unity event functions
@@ -113,9 +114,11 @@ public class AutoIntensity : MonoBehaviour
 
         // Rotate
         if (percentage > 0) {
+            isNight = false;
             transform.Rotate(dayRotateSpeed * Time.deltaTime * skySpeed);
         }
         else {
+            isNight = true;
             transform.Rotate(nightRotateSpeed * Time.deltaTime * skySpeed);
         }
     }
