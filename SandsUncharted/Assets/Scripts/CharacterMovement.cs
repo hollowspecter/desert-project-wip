@@ -34,6 +34,8 @@ public class CharacterMovement : MonoBehaviour
     private float angle = 0f;
     private float moveAmount = 0f;
     private AnimatorStateInfo stateInfo;
+    private float lookWeight = 0f;
+    private Vector3 lookAt = new Vector3(0, 0, 0);
 
     //damp vars
     private float moveAmountDampTime = 0.1f;
@@ -198,5 +200,19 @@ public class CharacterMovement : MonoBehaviour
     {
         return stateInfo.fullPathHash == m_moveId;
     }
+
+    public void setLookVars(Vector3 target, float weight)
+    {
+        lookWeight = weight;
+        lookAt = target;
+    }
+
+    void OnAnimatorIK(int layerIndex)
+    {
+        _animator.SetLookAtWeight(lookWeight);
+        _animator.SetLookAtPosition(lookAt);
+    }
     #endregion
+
+
 }

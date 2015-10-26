@@ -119,6 +119,7 @@ public class ThirdPersonCamera : MonoBehaviour
 	private float xAxisRot = 0.0f;
 	private CameraPosition0 firstPersonCamPos;			
 	private float lookWeight;
+    private Vector3 headLookAt = new Vector3(0f, 0f, 0f);
 	private const float TARGETING_THRESHOLD = 0.01f;
 	private Vector3 savedRigToGoal;
 	private float distanceAwayFree;
@@ -360,6 +361,9 @@ public class ThirdPersonCamera : MonoBehaviour
 				curLookDir = followXform.forward;
 				
 				targetPosition = characterOffset + followXform.up * distanceUp - lookDir * distanceAway;
+
+                //zero out the lookweight
+                lookWeight = Mathf.Lerp(lookWeight, 0.0f, Time.deltaTime * firstPersonLookSpeed);
 				
 				break;
 			case CamStates.FirstPerson:	
@@ -374,9 +378,8 @@ public class ThirdPersonCamera : MonoBehaviour
 				this.transform.rotation = rotationShift * this.transform.rotation;		
 				
 				// Move character model's head
-		        follow.Animator.SetLookAtPosition(firstPersonCamPos.XForm.position + firstPersonCamPos.XForm.forward);
-				lookWeight = Mathf.Lerp(lookWeight, 1.0f, Time.deltaTime * firstPersonLookSpeed);
-				
+                lookWeight = Mathf.Lerp(lookWeight, 1.0f, Time.deltaTime * firstPersonLookSpeed);
+                headLookAt = firstPersonCamPos.XForm.position + firstPersonCamPos.XForm.forward;
 				
 				// Looking left and right
 				// Similarly to how character is rotated while in locomotion, use Quaternion * to add rotation to character
@@ -443,6 +446,10 @@ public class ThirdPersonCamera : MonoBehaviour
 
 				break;*/
 		}
+
+        //set the lookat weight - amount to use look at IK vs using
+        //the heads animation
+        follow.setLookVars(headLookAt, lookWeight);
 
 		CompensateForWalls(characterOffset, ref targetPosition);		
 		SmoothPosition(cameraXform.position, targetPosition);	
