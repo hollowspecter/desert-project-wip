@@ -40,6 +40,8 @@ public class DrawingScript : MonoBehaviour
 
 	void Update() 
 	{
+        Clear(); /* NEW */
+
         RaycastHit mouseHit;
         Ray ray = cam.ScreenPointToRay(Input.mousePosition);
         if(Physics.Raycast (ray, out mouseHit))
@@ -121,7 +123,7 @@ public class DrawingScript : MonoBehaviour
     void Draw(Vector2 OldUV, Vector2 NewUV)
     {
         Vector2[] positions = FindStampPositions(OldUV, NewUV);
-		Debug.Log (positions.Length.ToString ());
+        //Debug.Log (positions.Length.ToString ());
         for (int i = 0; i < positions.Length; ++i)
         {
             Vector2 p = positions[i];
@@ -129,8 +131,8 @@ public class DrawingScript : MonoBehaviour
                 Stamp((int)p.x - brush.width/2, (int)p.y - brush.height/2);
         }
         texture.Apply(true);
-        saveTexture.SetPixels(texture.GetPixels());
-        saveTexture.Apply();
+        //saveTexture.SetPixels(texture.GetPixels());
+        //saveTexture.Apply();
     }
 
 
@@ -169,4 +171,25 @@ public class DrawingScript : MonoBehaviour
 		return tmp;
 	}
 
+    /* USE COMPARE TO OTHER SCRIPT */
+    static int incrementer = 0;
+    public void Compare()
+    {
+        bool b = GetComponent<CompareTextures>().CompareTextureToPerfect(texture);
+        Debug.Log(incrementer++ + b.ToString());
+    }
+
+    public void Clear()
+    {
+        if (Input.GetKeyUp(KeyCode.C)) {
+            Debug.Log("CLEAR");
+            Color[] px = texture.GetPixels();
+            for (int x = 0; x < texture.width; ++x) {
+                for (int y = 0; y < texture.height; ++y) {
+                    texture.SetPixel(x, y, Color.white);
+                }
+            }
+            texture.Apply();
+        }
+    }
 }
