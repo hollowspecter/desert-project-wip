@@ -13,15 +13,22 @@ public class CharacterLantern : MonoBehaviour
 {
     #region variables (private)
     [SerializeField]
-    private bool ikActive = true;
+    private Transform handSlot;
     [SerializeField]
-    private Transform leftHandObj;
+    private Transform beltSlot;
+    [SerializeField]
+    private float movementSpeed = 1f;
 
+    private LightSwitch lightSwitch;
+    private bool usingLantern = false;
+    private Transform handTarget;
+    private Transform lantern;
     private Animator animator;
+    private bool lanternGrabbed = false;
     #endregion
 
     #region Properties (public)
-
+    public bool UsingLantern { get { return usingLantern; } }
     #endregion
 
     #region Unity event functions
@@ -29,6 +36,33 @@ public class CharacterLantern : MonoBehaviour
     void Awake()
     {
         animator = GetComponent<Animator>();
+
+        lantern = beltSlot.GetChild(0);
+        if (lantern == null)
+            Debug.LogError("Lantern reference not found", this);
+
+        handTarget = transform.Find("LanternHandTarget");
+
+        lightSwitch = lantern.GetComponentInChildren<LightSwitch>();
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyUp(KeyCode.L)) 
+        {
+            if (!usingLantern) {
+                lantern.parent = handSlot;
+                lantern.localPosition = Vector3.zero;
+                lantern.localRotation = Quaternion.identity;
+            }
+            else {
+                lantern.parent = beltSlot;
+                lantern.localPosition = Vector3.zero;
+                lantern.localRotation = Quaternion.identity;
+            }
+            usingLantern = !usingLantern;
+            lightSwitch.SwitchLight(usingLantern);
+        }        
     }
 
     //a callback for calculating IK
@@ -37,13 +71,13 @@ public class CharacterLantern : MonoBehaviour
         if (animator) {
 
             //if the IK is active, set the position and rotation directly to the goal. 
-            if (ikActive) {
+            if (usingLantern) {
                 // Set the right hand target position and rotation, if one has been assigned
-                if (leftHandObj != null) {
-                    animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1);
-                    animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1);
-                    animator.SetIKPosition(AvatarIKGoal.LeftHand, leftHandObj.position);
-                    animator.SetIKRotation(AvatarIKGoal.LeftHand, leftHandObj.rotation);
+                if (handTarget != null) {
+                    animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, .6f);
+                    animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, .9f);
+                    animator.SetIKPosition(AvatarIKGoal.LeftHand, handTarget.position);
+                    animator.SetIKRotation(AvatarIKGoal.LeftHand, handTarget.rotation);
                 }
 
             }
