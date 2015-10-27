@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 869923afeb06ca34f943b62ccd655a8e
+timeCreated: 1445443329
+licenseType: Free
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - brush: {fileID: 2800000, guid: 6468a90ceb424b64f82d8435acf49cd1, type: 3}
+  - brushCircle: {fileID: 2800000, guid: c802bf20cd44e564fa5d10a1c9f4ed9d, type: 3}
+  - cam: {instanceID: 0}
+  - plane: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
