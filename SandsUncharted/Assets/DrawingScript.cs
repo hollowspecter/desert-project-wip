@@ -8,7 +8,7 @@ public class DrawingScript : MonoBehaviour
 	public GameObject brushCircle;
 
     Texture2D texture;
-    public Texture2D saveTexture;
+	Color clearColor;
     Camera cam;
 
 	bool first;
@@ -17,30 +17,43 @@ public class DrawingScript : MonoBehaviour
 
     float reticleSpeed = 0.8f;
 
-	float paintinterval = 2f; // how many pixels between two drawpositions
+	float paintinterval = 1f; // how many pixels between two drawpositions
 
 	Color[] brushPx;
-
 	Color[] currentPx;
 	Color[] scaledBrushPx;
 	int scaledBrushW;
 	int scaledBrushH;
-	float scaleFactor = 1f;
+	float scaleFactor = 0.5f;
+	float setScale = 0.5f;
 	float scaleSpeed = 1f;
+	float minScale = 0.25f;
+	float maxScale = 1f;
+
+	float minPX = 16f;
+	float maxPX = 64f;
 
 	MeshRenderer mesh;
-	float borderWidth = 0.1f;
+	float borderWidth = 0.15f;
 
-	void Start() 
+	void Awake() 
 	{
 		cam = GameObject.Find("Main Camera").GetComponent<Camera>();
-		texture = new Texture2D(1024,1024, TextureFormat.ARGB32, false);
+		texture = new Texture2D(512,512, TextureFormat.ARGB32, false);
+		clearColor  = new Color(0f,0f,0f,0f);
+		floodTexture (clearColor);
+		mesh = GetComponent<MeshRenderer> ();
+		if (mesh == null) 
+		{
+			Debug.LogError("no mesh");
+		}
+		mesh.material.SetTexture("_DrawTex", texture);
 
-		GetComponent<MeshRenderer> ().material.SetTexture(0, texture);
 		brushPx = brush.GetPixels ();
 		oldUV = pixelUV = new Vector2 ();
 		first = true;
-		mesh = GetComponent<MeshRenderer> ();
+		brushCircle.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
+		brushRescale (scaleFactor);
 	}
 
 	void Update() 
@@ -54,37 +67,18 @@ public class DrawingScript : MonoBehaviour
 
         Debug.DrawLine(ray.origin, mouseHit.point, Color.red);
 
-        /* get drawposition from Mouse */
-		if (Input.GetMouseButton(0)) 
-		{			
-			if (mouseHit.collider ==  null)
-				return;
-
-			oldUV = pixelUV;
-		
-			pixelUV = mouseHit.textureCoord;
-
-			pixelUV.x *= texture.width;
-			pixelUV.y *= texture.height;
-			if(first)
-			{
-				oldUV = pixelUV;
-				first = false;
-			}
-			//Debug.Log ("old: " + oldUV.ToString() + "| new: " + pixelUV.ToString());
-	
-            Draw(oldUV, pixelUV);
-		}
-
-
         /****move Reticle with joystick****/
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
 
         Vector3 axisVector = new Vector3(h, 0, v);
         axisVector = axisVector.sqrMagnitude >= 0.03 ? axisVector : new Vector3();
-        brushCircle.transform.position += reticleSpeed * reticleSpeed * axisVector * Time.deltaTime;
+		brushCircle.transform.position += (reticleSpeed * reticleSpeed) * axisVector * Time.deltaTime; //squared speed to get a better controllable curve
 
+		if (mesh == null) 
+		{
+			Debug.LogError("no mesh in update");
+		}
 
 		brushCircle.transform.position = new Vector3 (Mathf.Clamp (brushCircle.transform.position.x, mesh.bounds.min.x + borderWidth, mesh.bounds.max.x - borderWidth),
 		                                             brushCircle.transform.position.y,
@@ -107,6 +101,7 @@ public class DrawingScript : MonoBehaviour
 					Debug.Log ("first");
 				    oldUV = pixelUV;
 				    first = false;
+					brushRescale (scaleFactor);
 			    }
 
                 Draw(oldUV, pixelUV);
@@ -114,24 +109,53 @@ public class DrawingScript : MonoBehaviour
 
         }
 
+		else if (Input.GetButton ("B")) 
+		{
+			RaycastHit reticleHit;
+			if (Physics.Raycast(new Ray(brushCircle.transform.position, -brushCircle.transform.up), out reticleHit))
+			{
+				oldUV = pixelUV;
+				pixelUV = reticleHit.textureCoord;
+				
+				pixelUV.x *= texture.width;
+				pixelUV.y *= texture.height;
+				if(first)
+				{
+					Debug.Log ("first");
+					oldUV = pixelUV;
+					first = false;
+					brushRescale (scaleFactor);
+				}
+				
+				Erase(oldUV, pixelUV);
+			}
+		}
+
+		/* free brush scaling */
+
 		float scaleAxis = Input.GetAxis ("RightStickX");
 		if (Mathf.Abs (scaleAxis) > 0.2) 
 		{
 			if(scaleAxis < 0)
 			{
-				scaleFactor = Mathf.Clamp(scaleFactor + (-1.0f * scaleSpeed * Time.deltaTime), 0.3f, 3f);
+				scaleFactor = Mathf.Clamp(scaleFactor + (-1.0f * scaleSpeed * Time.deltaTime), minPX/brush.width, maxPX/brush.width);
+				setScale = scaleFactor;
 			}
 			else
 			{
-				scaleFactor = Mathf.Clamp(scaleFactor + (1.0f * scaleSpeed * Time.deltaTime), 0.3f, 3f);
+				scaleFactor = Mathf.Clamp(scaleFactor + (1.0f * scaleSpeed * Time.deltaTime), minPX/brush.width, maxPX/brush.width);
+				setScale = scaleFactor;
 			}
 
 			brushCircle.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
 
 		}
 
+		//rescale based on speed slow = big / fast = small
+		scaleFactor = Mathf.Clamp(scaleFactor + (((1f - axisVector.magnitude * axisVector.magnitude) * 2f) - 1f) /* * Random.Range(-0.2f, 1f)*/ * Time.deltaTime, setScale*0.75f, setScale * 1.25f);
 
-        if (Input.GetMouseButtonUp(0) || Input.GetButtonUp("A")) 
+
+        if (Input.GetButtonUp("B") || Input.GetButtonUp("A")) 
 		{
 			first = true;
 
@@ -141,18 +165,44 @@ public class DrawingScript : MonoBehaviour
     
     void Draw(Vector2 OldUV, Vector2 NewUV)
     {
-        Vector2[] positions = FindStampPositions(OldUV, NewUV);
-        //Debug.Log (positions.Length.ToString ());
-        for (int i = 0; i < positions.Length; ++i)
-        {
-            Vector2 p = positions[i];
-            if (p.x >= 0 && p.x + brush.width <= texture.width && p.y >= 0 && p.y + brush.height <= texture.height)
-                Stamp((int)p.x - scaledBrushW/2, (int)p.y - scaledBrushH/2);
-        }
+		//Debug.Log ("old: " + OldUV.ToString () + "new: " + NewUV.ToString ());
+		if (!first) {
+			Vector2[] positions = FindStampPositions (OldUV, NewUV);
+			//Debug.Log (positions.Length.ToString ());
+			for (int i = 0; i < positions.Length; ++i) 
+			{
+				Vector2 p = positions [i];
+				Stamp ((int)p.x - scaledBrushW / 2, (int)p.y - scaledBrushH / 2);
+				//if (p.x >= 0 && p.x + scaledBrushW <= texture.width && p.y >= 0 && p.y + scaledBrushH <= texture.height)
+
+			}
+		} 
+		else 
+		{
+			Stamp ((int)NewUV.x - scaledBrushW / 2, (int)NewUV.y - scaledBrushH / 2);
+		}
         texture.Apply(true);
-        //saveTexture.SetPixels(texture.GetPixels());
-        //saveTexture.Apply();
     }
+
+	void Erase(Vector2 OldUV, Vector2 NewUV)
+	{
+		//Debug.Log ("old: " + OldUV.ToString () + "new: " + NewUV.ToString ());
+		if (!first) {
+			Vector2[] positions = FindStampPositions (OldUV, NewUV);
+			//Debug.Log (positions.Length.ToString ());
+			for (int i = 0; i < positions.Length; ++i) 
+			{
+				Vector2 p = positions [i];
+				if (p.x >= 0 && p.x + scaledBrushW <= texture.width && p.y >= 0 && p.y + scaledBrushH <= texture.height)
+					EraseStamp((int)p.x - scaledBrushW / 2, (int)p.y - scaledBrushH / 2);
+			}
+		} 
+		else 
+		{
+			EraseStamp((int)NewUV.x - scaledBrushW / 2, (int)NewUV.y - scaledBrushH / 2);
+		}
+		texture.Apply(true);
+	}
 	
 	
 	Vector2[] FindStampPositions(Vector2 v1, Vector2 v2)
@@ -160,8 +210,6 @@ public class DrawingScript : MonoBehaviour
 		
 		Vector2 dir = (v2 - v1);
 		Vector2[] tmp = new Vector2[(int)(Mathf.Max(dir.magnitude / paintinterval,1f))];
-		//Debug.Log ("v1: " + v1.ToString() + " v2 : " + v2.ToString ());
-		//Debug.Log ("length between inputpoints: " + dir.magnitude + "interpolated input points: " + tmp.Length);
 		for (int i = 0; i < tmp.Length; ++i) 
 		{
 			//interpolate the points between the first and last position by moving the position paintinterval px to the next position
@@ -174,12 +222,25 @@ public class DrawingScript : MonoBehaviour
 	
 	void Stamp(int x, int y)
 	{
-		if (scaleFactor * brush.width != scaledBrushW) 
+		//Debug.Log ("stamp" + x + "|" + y);
+		if (scaleFactor * brush.width != scaledBrushW || first) 
 		{
 			brushRescale(scaleFactor);
 		}
 
 		UpdateScaledBrush(x, y);
+		texture.SetPixels(x, y, scaledBrushW, scaledBrushH, currentPx);
+	}
+
+	void EraseStamp(int x, int y)
+	{
+		//Debug.Log ("stamp" + x + "|" + y);
+		if (scaleFactor * brush.width != scaledBrushW || first) 
+		{
+			brushRescale(scaleFactor);
+		}
+		
+		UpdateScaledEraser(x, y);
 		texture.SetPixels(x, y, scaledBrushW, scaledBrushH, currentPx);
 	}
 
@@ -190,27 +251,26 @@ public class DrawingScript : MonoBehaviour
 		{
 			for (int j = 0; j < scaledBrushH; j++)
 			{
-				Color c1= scaledBrushPx[i + scaledBrushW * j];
-				if(c1.a != 1.0f)
-				{
-					currentPx[scaledBrushW * j + i] =  Color.Lerp(texture.GetPixel(x + i, y + j), c1, c1.a);
-					//Debug.Log (scaledBrushPx[i + scaledBrushW * j].ToString());
-				}
+				Color c = scaledBrushPx[i + scaledBrushW * j];
+				currentPx[scaledBrushW * j + i] = texture.GetPixel(x + i, y + j) + c * c.a;//Color.Lerp(texture.GetPixel(x + i, y + j), c, c.a);
 			}
 		}
 	}
 
-	void UpdateBrush(int x, int y)
+	void UpdateScaledEraser(int x, int y)
 	{
-		for (int i = 0; i < brush.width; ++i) 
+		for (int i = 0; i < scaledBrushW; i++) 
 		{
-			for (int j = 0; j < brush.height; ++j)
+			for (int j = 0; j < scaledBrushH; j++)
 			{
-				Color c1= brush.GetPixel(i, j);
-				if(c1.a != 1.0f)
+				Color c = scaledBrushPx[i + scaledBrushW * j];
+				if(c.a >= 0.3)
+					currentPx[scaledBrushW * j + i] = clearColor;
+				else
 				{
-					brushPx[brush.width * j + i] =  Color.Lerp(texture.GetPixel(x + i, y + j), c1, c1.a);
+					currentPx[scaledBrushW * j + i] = texture.GetPixel(x + i, y + j);
 				}
+				//Debug.Log (currentPx[scaledBrushW * j + i].ToString());
 			}
 		}
 	}
@@ -238,6 +298,17 @@ public class DrawingScript : MonoBehaviour
 				scaledBrushPx[x + scaledBrushW * y] = brush.GetPixel(Mathf.RoundToInt(x/factor), Mathf.RoundToInt(y/factor));
 			}
 		}
+	}
+
+	void floodTexture(Color color)
+	{
+		Color[] c = new Color[texture.width * texture.height];
+		for(int i = 0; i < c.Length; i++)
+		{
+			c[i] = color;
+		}
+
+		texture.SetPixels (c);
 	}
 
 }

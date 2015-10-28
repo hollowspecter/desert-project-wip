@@ -83,7 +83,7 @@ public class CharacterLogic : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (_animator && gamecam.CamState != ThirdPersonCam.CamStates.FirstPerson) {
+		if (_animator && gamecam.CamState != ThirdPersonCam.CamStates.FirstPerson || gamecam.CamState != ThirdPersonCam.CamStates.Map) {
             //Set animation stateInfo
             stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
             transInfo = _animator.GetAnimatorTransitionInfo(0);

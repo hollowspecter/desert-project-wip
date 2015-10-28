@@ -121,7 +121,8 @@ public class ThirdPersonCam : MonoBehaviour
         Behind,
         FirstPerson,
         Target,
-        Free
+        Free,
+		Map
     }
 
     public Vector3 RigToGoalDirection
@@ -353,8 +354,12 @@ public class ThirdPersonCam : MonoBehaviour
 					targetPosition = characterOffset + followTransform.up * distanceUpFree - savedRigToGoal * distanceAwayFree;
 				}
 
-
                 break;
+
+			case CamStates.Map:
+				//Move camera to firstPersonCamPos
+				targetPosition = firstPersonCamPos.Transform.position;
+				break;
         }
 
         //set the lookat weight - amount to use look at IK vs using
