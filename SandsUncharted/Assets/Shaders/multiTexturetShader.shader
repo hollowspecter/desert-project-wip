@@ -35,7 +35,7 @@
 			float4 drawC = tex2D (_DrawTex, IN.uv_DrawTex);
 			//fixed4 c =  lerp(mainC, drawC, drawC.a) * _Color;
 			fixed4 c =  (mainC * (1-drawC.a) + ((drawC + 0.3f * mainC) * drawC.a)) * _Color;
-			o.Albedo = c.rgb;
+			o.Albedo = c.rgb * 0.5f;
 			// Metallic and smoothness come from slider variables
 			o.Metallic = _Metallic * drawC.a;
 			o.Smoothness = _Glossiness * drawC.a;

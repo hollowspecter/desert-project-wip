@@ -131,6 +131,8 @@ public class ThirdPersonCamera : MonoBehaviour
 	private Vector3 characterOffset;
 	private Vector3 targetPosition;	
 	
+	private GameObject map;
+	
 	#endregion
 	
 	
@@ -165,7 +167,8 @@ public class ThirdPersonCamera : MonoBehaviour
 		Behind,			// Single analog stick, Japanese-style; character orbits around camera; default for games like Mario64 and 3D Zelda series
 		FirstPerson,	// Traditional 1st person look around
 		Target,			// L-targeting variation on "Behind" mode
-		Free			// High angle; character moves relative to camera facing direction
+		Free,			// High angle; character moves relative to camera facing direction
+		Map
 	}
 
 	public Vector3 RigToGoalDirection
@@ -231,6 +234,12 @@ public class ThirdPersonCamera : MonoBehaviour
 		distanceUpFree = distanceUp;
 		distanceAwayFree = distanceAway;
 		savedRigToGoal = RigToGoalDirection;
+
+		map = GameObject.Find("MapAndBrush");
+		if (map == null)
+			Debug.LogError ("no map");
+		else
+			map.SetActive (false);
 	}
 	
 	/// <summary>
@@ -265,6 +274,7 @@ public class ThirdPersonCamera : MonoBehaviour
 		float mouseWheelScaled = mouseWheel * mouseWheelSensitivity;
 		float leftTrigger = Input.GetAxis("Target");
 		bool bButtonPressed = Input.GetButton("B");
+		bool xButtonPressed = Input.GetButton("X");
 		bool qKeyDown = Input.GetKey(KeyCode.Q);
 		bool eKeyDown = Input.GetKey(KeyCode.E);
 		bool lShiftKeyDown = Input.GetKey(KeyCode.LeftShift);
@@ -320,10 +330,25 @@ public class ThirdPersonCamera : MonoBehaviour
 			}*/
 
 			// * Behind the back *
-			if ((camState == CamStates.FirstPerson && bButtonPressed) || 
+			if (((camState == CamStates.FirstPerson) && bButtonPressed) || 
 				(camState == CamStates.Target && leftTrigger <= TARGETING_THRESHOLD))
 			{
 				camState = CamStates.Behind;	
+			}
+
+			if(xButtonPressed && camState == CamStates.Behind)
+			{
+				Debug.Log("Map");
+				camState = CamStates.Map;
+				map.SetActive(true);
+				map.transform.SetParent(null);
+			}
+			if(eKeyDown && camState == CamStates.Map)
+			{
+				Debug.Log("Map stop");
+				camState = CamStates.Behind;
+				map.SetActive(false);
+				map.transform.SetParent(follow.gameObject.transform);
 			}
 		}
 		
@@ -445,13 +470,26 @@ public class ThirdPersonCamera : MonoBehaviour
 				}
 
 				break;*/
+
+			case CamStates.Map:
+				// Move camera to firstPersonCamPos
+				targetPosition = map.transform.position + map.transform.up * 1f;
+				
+				// Smoothly transition look direction towards firstPersonCamPos when entering first person mode
+				lookAt = Vector3.Lerp(targetPosition + followXform.forward, this.transform.position + this.transform.forward, camSmoothDampTime * Time.deltaTime);
+				Debug.DrawRay(Vector3.zero, lookAt, Color.black);
+				Debug.DrawRay(Vector3.zero, targetPosition + followXform.forward, Color.white);	
+				Debug.DrawRay(Vector3.zero, firstPersonCamPos.XForm.position + firstPersonCamPos.XForm.forward, Color.cyan);
+
+				lookAt = (Vector3.Lerp(map.transform.position , lookAt, camSmoothDampTime * Time.deltaTime));
+				break;
 		}
 
         //set the lookat weight - amount to use look at IK vs using
         //the heads animation
         follow.setLookVars(headLookAt, lookWeight);
 
-		CompensateForWalls(characterOffset, ref targetPosition);		
+		//CompensateForWalls(characterOffset, ref targetPosition);		
 		SmoothPosition(cameraXform.position, targetPosition);	
 		transform.LookAt(lookAt);	
 

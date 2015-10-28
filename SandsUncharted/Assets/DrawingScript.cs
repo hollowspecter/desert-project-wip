@@ -15,7 +15,7 @@ public class DrawingScript : MonoBehaviour
 	Vector2 oldUV;
 	Vector2 pixelUV;
 
-    float reticleSpeed = 0.8f;
+    float reticleSpeed = 0.6f;
 
 	float paintinterval = 1f; // how many pixels between two drawpositions
 
@@ -71,7 +71,7 @@ public class DrawingScript : MonoBehaviour
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
 
-        Vector3 axisVector = new Vector3(h, 0, v);
+        Vector3 axisVector = h * transform.right + v * transform.forward;
         axisVector = axisVector.sqrMagnitude >= 0.03 ? axisVector : new Vector3();
 		brushCircle.transform.position += (reticleSpeed * reticleSpeed) * axisVector * Time.deltaTime; //squared speed to get a better controllable curve
 
@@ -81,8 +81,8 @@ public class DrawingScript : MonoBehaviour
 		}
 
 		brushCircle.transform.position = new Vector3 (Mathf.Clamp (brushCircle.transform.position.x, mesh.bounds.min.x + borderWidth, mesh.bounds.max.x - borderWidth),
-		                                             brushCircle.transform.position.y,
-		                                             Mathf.Clamp (brushCircle.transform.position.z, mesh.bounds.min.z + borderWidth, mesh.bounds.max.z - borderWidth));
+														brushCircle.transform.position.y,
+		                                             	Mathf.Clamp (brushCircle.transform.position.z, mesh.bounds.min.z + borderWidth, mesh.bounds.max.z - borderWidth));
 		 
         /* get  drawPosition from brushreticle*/
 
@@ -93,6 +93,7 @@ public class DrawingScript : MonoBehaviour
             {
                 oldUV = pixelUV;
                 pixelUV = reticleHit.textureCoord;
+				//Debug.Log (reticleHit.textureCoord);
 
                 pixelUV.x *= texture.width;
 			    pixelUV.y *= texture.height;
@@ -106,6 +107,10 @@ public class DrawingScript : MonoBehaviour
 
                 Draw(oldUV, pixelUV);
             }
+			else
+			{
+				Debug.LogError("Raycast did not hit!");
+			}
 
         }
 
@@ -152,7 +157,7 @@ public class DrawingScript : MonoBehaviour
 		}
 
 		//rescale based on speed slow = big / fast = small
-		scaleFactor = Mathf.Clamp(scaleFactor + (((1f - axisVector.magnitude * axisVector.magnitude) * 2f) - 1f) /* * Random.Range(-0.2f, 1f)*/ * Time.deltaTime, setScale*0.75f, setScale * 1.25f);
+		//scaleFactor = Mathf.Clamp(scaleFactor + (((1f - axisVector.magnitude * axisVector.magnitude) * 2f) - 1f) /* * Random.Range(-0.2f, 1f)*/ * Time.deltaTime, setScale*0.75f, setScale * 1.25f);
 
 
         if (Input.GetButtonUp("B") || Input.GetButtonUp("A")) 
@@ -166,7 +171,8 @@ public class DrawingScript : MonoBehaviour
     void Draw(Vector2 OldUV, Vector2 NewUV)
     {
 		//Debug.Log ("old: " + OldUV.ToString () + "new: " + NewUV.ToString ());
-		if (!first) {
+		if (!first) 
+		{
 			Vector2[] positions = FindStampPositions (OldUV, NewUV);
 			//Debug.Log (positions.Length.ToString ());
 			for (int i = 0; i < positions.Length; ++i) 

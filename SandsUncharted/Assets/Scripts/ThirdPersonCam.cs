@@ -213,16 +213,19 @@ public class ThirdPersonCam : MonoBehaviour
         Vector3 targetPosition = Vector3.zero;
 
         //Determine camera state
-        if (Input.GetAxis("Target") > TARGET_TRIGGER_TRESHHOLD) {
+        if (Input.GetAxis("Target") > TARGET_TRIGGER_TRESHHOLD) 
+		{
             barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, wideScreen, targetingTime);
             camState = CamStates.Target;
         }
-        else {
+        else 
+		{
             barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, 0f, targetingTime);
 
             //*First Person*
             if (rightY < fpsThreshold && camState != CamStates.FirstPerson &&  camState != CamStates.Free && !characterLogic.IsInLocomotion()) {
                 //reset look before entering the first person mode
+				Debug.Log("fps");
                 xAxisRot = 0;
                 lookWeight = 0f;
                 camState = CamStates.FirstPerson;
@@ -239,6 +242,12 @@ public class ThirdPersonCam : MonoBehaviour
                 camState == CamStates.Target && (Input.GetAxis("Target") <= TARGET_TRIGGER_TRESHHOLD)) {
                 camState = CamStates.Behind;
             }
+
+			if(Input.GetButton("A"))
+		  	{
+				Debug.Log("Map");
+				camState = CamStates.Map;
+			}
          }
 
         switch (camState) {
@@ -359,6 +368,9 @@ public class ThirdPersonCam : MonoBehaviour
 			case CamStates.Map:
 				//Move camera to firstPersonCamPos
 				targetPosition = firstPersonCamPos.Transform.position;
+
+				//smoothly transitionlook direction towards fpsCamPos when entering first person mode
+				lookAt = Vector3.Lerp(targetPosition + followTransform.forward, this.transform.position + this.transform.forward, camSmoothDampTime * Time.deltaTime);
 				break;
         }
 

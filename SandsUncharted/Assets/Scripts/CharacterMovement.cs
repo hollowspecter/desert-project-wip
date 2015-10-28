@@ -120,7 +120,7 @@ public class CharacterMovement : MonoBehaviour
         speed = speed > speedMaximum ? speedMaximum : speed;
         angle = charAngle;
 
-        speed = (camera.CamState == ThirdPersonCamera.CamStates.FirstPerson) ? 0f : speed;
+		speed = (camera.CamState == ThirdPersonCamera.CamStates.FirstPerson || camera.CamState == ThirdPersonCamera.CamStates.Map) ? 0f : speed;
         _animator.SetFloat("Speed", speed);
     }
 
@@ -129,7 +129,7 @@ public class CharacterMovement : MonoBehaviour
     /// </summary>
     void FixedUpdate()
     {
-        if (camera.CamState != ThirdPersonCamera.CamStates.FirstPerson) {
+        if (camera.CamState != ThirdPersonCamera.CamStates.FirstPerson && camera.CamState != ThirdPersonCamera.CamStates.Map) {
             //Rotate
             Quaternion shift = Quaternion.Euler(new Vector3(0, angle, 0));
             Quaternion targetRotation = _transform.rotation * shift;
