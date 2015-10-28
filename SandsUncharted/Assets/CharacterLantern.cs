@@ -54,11 +54,14 @@ public class CharacterLantern : MonoBehaviour
                 lantern.parent = handSlot;
                 lantern.localPosition = Vector3.zero;
                 lantern.localRotation = Quaternion.identity;
+                lantern.GetComponentInChildren<CharacterJoint>().connectedBody = handSlot.GetComponent<Rigidbody>();
             }
             else {
                 lantern.parent = beltSlot;
                 lantern.localPosition = Vector3.zero;
                 lantern.localRotation = Quaternion.identity;
+                lantern.GetComponentInChildren<CharacterJoint>().connectedBody = beltSlot.GetComponent<Rigidbody>();
+
             }
             usingLantern = !usingLantern;
             lightSwitch.SwitchLight(usingLantern);
