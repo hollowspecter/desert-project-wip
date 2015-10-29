@@ -7,9 +7,9 @@ using UnityEngine;
 using System.Collections;
 
 /// <summary>
-/// #DESCRIPTION OF CLASS#
+/// A State to shut down the game.
 /// </summary>
-public class InGameState : State
+public class QuitState : State
 {
     #region variables (private)
 
@@ -21,36 +21,30 @@ public class InGameState : State
 
     #region Unity event functions
 
-    ///<summary>
-    ///Use this for very first initialization
-    ///</summary>
-    void Awake()
+    protected override void UpdateActive()
     {
-        gameManager = GameManager.Instance();
-        Active = false;
+
     }
 
-    void Update()
+    protected override void Initialise()
     {
-        if (Active) {
-            if (Input.GetKeyUp(KeyCode.K)) {
-                gameManager.ChangeToState(GameState.Exit);
-            }
-        }
+
     }
 
     #endregion
 
     #region Methods
-    
+
     public override void EnterState()
     {
-        Debug.Log("Entered InGameState");
+        Debug.Log("Entered Quit State");
+        Application.Quit();
     }
 
     public override void ExitState()
     {
-        Debug.Log("Exited InGame State");
+        Debug.Log("Exited Quit State");
     }
     #endregion
+
 }

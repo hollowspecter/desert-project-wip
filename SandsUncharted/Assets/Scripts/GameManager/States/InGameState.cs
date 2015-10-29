@@ -7,12 +7,12 @@ using UnityEngine;
 using System.Collections;
 
 /// <summary>
-/// #DESCRIPTION OF CLASS#
+/// State that is the Main Game State
 /// </summary>
-public class QuitState : State
+public class InGameState : State
 {
     #region variables (private)
-
+    private ControlManager Control;
     #endregion
 
     #region Properties (public)
@@ -21,35 +21,30 @@ public class QuitState : State
 
     #region Unity event functions
 
-    ///<summary>
-    ///Use this for very first initialization
-    ///</summary>
-    void Awake()
+    protected override void Initialise()
     {
-        gameManager = GameManager.Instance();
-        Active = false;
+        Control = ControlManager.Instance();
     }
 
-    void Update()
+    protected override void UpdateActive()
     {
-        if (Active) {
 
-        }
     }
 
     #endregion
 
     #region Methods
-
+    
     public override void EnterState()
     {
-        Debug.Log("Entered Quit State");
-        Application.Quit();
+        Debug.Log("Entered InGameState");
     }
 
     public override void ExitState()
     {
-        Debug.Log("Exited Quit State");
+        Debug.Log("Exited InGame State");
     }
     #endregion
+
+
 }

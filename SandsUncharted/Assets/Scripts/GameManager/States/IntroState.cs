@@ -7,7 +7,7 @@ using UnityEngine;
 using System.Collections;
 
 /// <summary>
-/// #DESCRIPTION OF CLASS#
+/// A Test State. Is the very first gamestate
 /// </summary>
 public class IntroState : State
 {
@@ -21,24 +21,18 @@ public class IntroState : State
 
     #region Unity event functions
 
-    ///<summary>
-    ///Use this for very first initialization
-    ///</summary>
-    void Awake()
+    protected override void Initialise()
     {
-        gameManager = GameManager.Instance();
-        Active = false;
+
     }
 
     private float timer = 0;
-    void Update()
+    protected override void UpdateActive()
     {
-        if (Active) {
-            Debug.Log("Updating Intro State");
-            timer += Time.deltaTime;
-            if (timer > 1f)
-                gameManager.ChangeToState(GameState.InGame);
-        }
+        Debug.Log("Updating Intro State");
+        timer += Time.deltaTime;
+        if (timer > 1f)
+            gameManager.ChangeToState(GameState.InGame);
     }
 
     #endregion
@@ -54,4 +48,6 @@ public class IntroState : State
         Debug.Log("Exited Intro State");
     }
     #endregion
+
+
 }
