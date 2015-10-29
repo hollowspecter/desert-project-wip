@@ -34,7 +34,12 @@ public class DrawingScript : MonoBehaviour
 	float maxPX = 64f;
 
 	MeshRenderer mesh;
-	float borderWidth = 0.15f;
+	float meshWidth;
+	float meshHeight;
+	float border = 0.05f;
+
+	Transform rightEdge;
+	Transform topEdge;
 
 	void Awake() 
 	{
@@ -48,6 +53,12 @@ public class DrawingScript : MonoBehaviour
 			Debug.LogError("no mesh");
 		}
 		mesh.material.SetTexture("_DrawTex", texture);
+
+		meshWidth = mesh.bounds.size.x;
+		meshHeight = mesh.bounds.size.z;
+
+		rightEdge = transform.parent.FindChild("rightEdge");
+		topEdge = transform.parent.FindChild("topEdge");
 
 		brushPx = brush.GetPixels ();
 		oldUV = pixelUV = new Vector2 ();
@@ -80,11 +91,18 @@ public class DrawingScript : MonoBehaviour
 			Debug.LogError("no mesh in update");
 		}
 
-		brushCircle.transform.position = new Vector3 (Mathf.Clamp (brushCircle.transform.position.x, mesh.bounds.min.x + borderWidth, mesh.bounds.max.x - borderWidth),
-														brushCircle.transform.position.y,
-		                                             	Mathf.Clamp (brushCircle.transform.position.z, mesh.bounds.min.z + borderWidth, mesh.bounds.max.z - borderWidth));
-		 
-        /* get  drawPosition from brushreticle*/
+		//clamp the brushposition to the mapborder
+		/*brushCircle.transform.position = new Vector3(Mathf.Clamp (brushCircle.transform.position.x,
+		                                                            transform.position.x - (rightEdge.position - transform.position).x + border,
+		                                                         	rightEdge.position.x - border),
+                                                     	brushCircle.transform.position.y,
+                                                    	Mathf.Clamp (brushCircle.transform.position.z,
+		             												transform.position.z - (topEdge.position - transform.position).z + border,
+		          												   	topEdge.position.z - border));
+*/
+
+		brushCircle.transform.localPosition = new Vector3 (Mathf.Clamp (brushCircle.transform.localPosition.x, topEdge.localPosition.x + border, rightEdge.localPosition.x - border), brushCircle.transform.localPosition.y, Mathf.Clamp(brushCircle.transform.localPosition.z, topEdge.localPosition.z + border, rightEdge.localPosition.z - border));
+		/* get  drawPosition from brushreticle*/
 
         if(Input.GetButton("A"))
         {
@@ -157,7 +175,7 @@ public class DrawingScript : MonoBehaviour
 		}
 
 		//rescale based on speed slow = big / fast = small
-		//scaleFactor = Mathf.Clamp(scaleFactor + (((1f - axisVector.magnitude * axisVector.magnitude) * 2f) - 1f) /* * Random.Range(-0.2f, 1f)*/ * Time.deltaTime, setScale*0.75f, setScale * 1.25f);
+		scaleFactor = Mathf.Clamp(scaleFactor + (((1f - axisVector.magnitude * axisVector.magnitude) * 2f) - 1f) /* * Random.Range(-0.2f, 1f)*/ * Time.deltaTime, setScale*0.75f, setScale * 1.25f);
 
 
         if (Input.GetButtonUp("B") || Input.GetButtonUp("A")) 
@@ -170,7 +188,7 @@ public class DrawingScript : MonoBehaviour
     
     void Draw(Vector2 OldUV, Vector2 NewUV)
     {
-		//Debug.Log ("old: " + OldUV.ToString () + "new: " + NewUV.ToString ());
+		Debug.Log ("old: " + OldUV.ToString () + "new: " + NewUV.ToString ());
 		if (!first) 
 		{
 			Vector2[] positions = FindStampPositions (OldUV, NewUV);
@@ -284,8 +302,13 @@ public class DrawingScript : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
-        Gizmos.DrawRay(brushCircle.transform.position, -brushCircle.transform.up);
+		Gizmos.DrawLine(transform.position, brushCircle.transform.position);
         
+		Gizmos.color = Color.red;
+		Gizmos.DrawLine (transform.position, rightEdge.position);
+		Gizmos.color = Color.blue;
+		Gizmos.DrawLine (transform.position, topEdge.position);
+
     }
 
 	void brushRescale(float factor)
