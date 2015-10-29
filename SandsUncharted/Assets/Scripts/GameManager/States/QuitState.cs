@@ -21,7 +21,7 @@ public class QuitState : State
 
     #region Unity event functions
 
-    protected override void UpdateActive()
+    public override void UpdateActive(double deltaTime)
     {
 
     }

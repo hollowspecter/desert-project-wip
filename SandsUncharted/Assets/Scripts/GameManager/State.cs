@@ -14,10 +14,16 @@ using System.Collections;
 /// </summary>
 public abstract class State : MonoBehaviour
 {
-    protected GameManager gameManager;
+    protected StateMachine stateMachine; // parent state machine
+    protected GameManager gameManager; // parent state machine
 
     [HideInInspector]
     public bool Active;
+
+    public void setParentStateMachine(StateMachine s)
+    {
+        stateMachine = s;
+    }
 
     /// <summary>
     /// Initialises the gameManager Instance Active field.
@@ -25,25 +31,25 @@ public abstract class State : MonoBehaviour
     /// </summary>
     void Awake()
     {
-        gameManager = GameManager.Instance();
         Active = false;
+        gameManager = GameManager.Instance();
         Initialise();
     }
 
-    /// <summary>
-    /// Wraps up the Update function.
-    /// Do not Override or use when derive from State
-    /// </summary>
-    void Update()
-    {
-        if (Active) UpdateActive();
-    }
+   ///// <summary>
+   ///// Wraps up the Update function.
+   ///// Do not Override or use when derive from State
+   ///// </summary>
+   //void Update()
+   //{
+   //    if (Active) UpdateActive();
+   //}
 
     /// <summary>
     /// Override this as your Update Function in the State.
     /// Is only called when the current state is active
     /// </summary>
-    abstract protected void UpdateActive();
+    abstract public void UpdateActive(double deltaTime);
 
     /// <summary>
     /// Override this as your Awake/Start/Init Function

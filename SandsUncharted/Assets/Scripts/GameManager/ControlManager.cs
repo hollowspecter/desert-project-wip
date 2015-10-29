@@ -83,64 +83,64 @@ public class ControlManager : MonoBehaviour
      */
 
     /* TRIGGER */
-    public float getLeftX(GameState state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.leftX) : 0; }
-    public float getLeftY(GameState state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.leftY) : 0; }
-    public float getRightX(GameState state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.rightX) : 0; }
-    public float getRightY(GameState state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.rightY) : 0; }
-    public float getTrigger(GameState state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.trigger) : 0; }
-    public float getDpadX(GameState state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.dpadX) : 0; }
-    public float getDpadY(GameState state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.dpadY) : 0; }
+    public float getLeftX(string state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.leftX) : 0; }
+    public float getLeftY(string state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.leftY) : 0; }
+    public float getRightX(string state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.rightX) : 0; }
+    public float getRightY(string state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.rightY) : 0; }
+    public float getTrigger(string state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.trigger) : 0; }
+    public float getDpadX(string state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.dpadX) : 0; }
+    public float getDpadY(string state) { return gameManager.IsActive(state) ? Input.GetAxis(currentControls.dpadY) : 0; }
 
     /* BUTTONS */
 
     //ButtonA
-    public bool getButtonA(GameState state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonA) : false; }
-    public bool getButtonADown(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonA) : false; }
-    public bool getButtonAUp(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonA) : false; }
+    public bool getButtonA(string state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonA) : false; }
+    public bool getButtonADown(string state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonA) : false; }
+    public bool getButtonAUp(string state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonA) : false; }
 
     //ButtonB
-    public bool getButtonB(GameState state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonB) : false; }
-    public bool getButtonBDown(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonB) : false; }
-    public bool getButtonBUp(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonB) : false; }
+    public bool getButtonB(string state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonB) : false; }
+    public bool getButtonBDown(string state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonB) : false; }
+    public bool getButtonBUp(string state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonB) : false; }
 
     //ButtonX
-    public bool getButtonX(GameState state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonX) : false; }
-    public bool getButtonXDown(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonX) : false; }
-    public bool getButtonXUp(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonX) : false; }
+    public bool getButtonX(string state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonX) : false; }
+    public bool getButtonXDown(string state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonX) : false; }
+    public bool getButtonXUp(string state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonX) : false; }
 
     //ButtonY
-    public bool getButtonY(GameState state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonY) : false; }
-    public bool getButtonYDown(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonY) : false; }
-    public bool getButtonYUp(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonY) : false; }
+    public bool getButtonY(string state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonY) : false; }
+    public bool getButtonYDown(string state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonY) : false; }
+    public bool getButtonYUp(string state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonY) : false; }
 
     //Button Start
-    public bool getButtonStart(GameState state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonStart) : false; }
-    public bool getButtonStartDown(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonStart) : false; }
-    public bool getButtonStartUp(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonStart) : false; }
+    public bool getButtonStart(string state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonStart) : false; }
+    public bool getButtonStartDown(string state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonStart) : false; }
+    public bool getButtonStartUp(string state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonStart) : false; }
 
     //Button Back
-    public bool getButtonBack(GameState state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonBack) : false; }
-    public bool getButtonBackDown(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonBack) : false; }
-    public bool getButtonBackUp(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonBack) : false; }
+    public bool getButtonBack(string state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonBack) : false; }
+    public bool getButtonBackDown(string state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonBack) : false; }
+    public bool getButtonBackUp(string state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonBack) : false; }
 
     //Button Left Shoulder
-    public bool getButtonLeftShoulder(GameState state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonLeftShoulder) : false; }
-    public bool getButtonLeftShoulderDown(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonLeftShoulder) : false; }
-    public bool getButtonLeftShoulderUp(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonLeftShoulder) : false; }
+    public bool getButtonLeftShoulder(string state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonLeftShoulder) : false; }
+    public bool getButtonLeftShoulderDown(string state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonLeftShoulder) : false; }
+    public bool getButtonLeftShoulderUp(string state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonLeftShoulder) : false; }
 
     //Button Right Shoulder
-    public bool getButtonRightShoulder(GameState state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonRightShoulder) : false; }
-    public bool getButtonRightShoulderDown(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonRightShoulder) : false; }
-    public bool getButtonRightShoulderUp(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonRightShoulder) : false; }
+    public bool getButtonRightShoulder(string state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonRightShoulder) : false; }
+    public bool getButtonRightShoulderDown(string state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonRightShoulder) : false; }
+    public bool getButtonRightShoulderUp(string state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonRightShoulder) : false; }
 
     //Button Left Stick
-    public bool getButtonLeftStick(GameState state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonLeftStick) : false; }
-    public bool getButtonLeftStickDown(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonLeftStick) : false; }
-    public bool getButtonLeftStickUp(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonLeftStick) : false; }
+    public bool getButtonLeftStick(string state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonLeftStick) : false; }
+    public bool getButtonLeftStickDown(string state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonLeftStick) : false; }
+    public bool getButtonLeftStickUp(string state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonLeftStick) : false; }
 
     //Button Right Stick
-    public bool getButtonRightStick(GameState state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonRightStick) : false; }
-    public bool getButtonRightStickDown(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonRightStick) : false; }
-    public bool getButtonRightStickUp(GameState state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonRightStick) : false; }
+    public bool getButtonRightStick(string state) { return gameManager.IsActive(state) ? Input.GetButton(currentControls.buttonRightStick) : false; }
+    public bool getButtonRightStickDown(string state) { return gameManager.IsActive(state) ? Input.GetButtonDown(currentControls.buttonRightStick) : false; }
+    public bool getButtonRightStickUp(string state) { return gameManager.IsActive(state) ? Input.GetButtonUp(currentControls.buttonRightStick) : false; }
     #endregion
 }

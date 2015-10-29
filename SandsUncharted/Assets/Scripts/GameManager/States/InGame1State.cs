@@ -9,7 +9,7 @@ using System.Collections;
 /// <summary>
 /// State that is the Main Game State
 /// </summary>
-public class InGameState : State
+public class InGame1State : State
 {
     #region variables (private)
     private ControlManager Control;
@@ -26,9 +26,11 @@ public class InGameState : State
         Control = ControlManager.Instance();
     }
 
-    protected override void UpdateActive()
+    public override void UpdateActive(double deltaTime)
     {
-
+        if (Control.getButtonADown("InGame1")) {
+            stateMachine.ChangeToState("InGame2");
+        }
     }
 
     #endregion
@@ -37,12 +39,12 @@ public class InGameState : State
     
     public override void EnterState()
     {
-        Debug.Log("Entered InGameState");
+        Debug.Log("Entered InGame1 State");
     }
 
     public override void ExitState()
     {
-        Debug.Log("Exited InGame State");
+        Debug.Log("Exited InGame1 State");
     }
     #endregion
 

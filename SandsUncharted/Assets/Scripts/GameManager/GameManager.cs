@@ -5,6 +5,7 @@
 
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
 /// The different states the game can be in.
@@ -24,6 +25,7 @@ public enum GameState { Intro, InGame, Quit, NUMOFSTATES };
 /// Manages the Game State Machine.
 /// Here you need to initialise the different states.
 /// </summary>
+
 public class GameManager : MonoBehaviour
 {
     #region singleton
@@ -42,11 +44,8 @@ public class GameManager : MonoBehaviour
     #endregion
 
     #region variables (private)
-
-    [SerializeField]
-    private GameState currentStateDisplayed;
-
-    private State[] states = new State[(int)GameState.NUMOFSTATES]; // all the GameStates
+    private Dictionary<string, State> allStates;
+    private StateMachine stateMachine;
 
     #endregion
 
@@ -63,65 +62,55 @@ public class GameManager : MonoBehaviour
     ///</summary>
     void Awake()
     {
-        // Initialise the States
-        states[(int)GameState.Intro] = GetComponentInChildren<IntroState>();
-        states[(int)GameState.InGame] = GetComponentInChildren<InGameState>();
-        states[(int)GameState.Quit] = GetComponentInChildren<QuitState>();
+        allStates = new Dictionary<string, State>();
 
-        // Check if all the states have been initialised correctly
-        for (int i=0; i<states.Length; ++i){
-            if (states[i]==null){
-                Debug.LogError("State "+i+" has not been initialised correctly. Please attach the State to the States Gameobject under GameManger");
-                Application.Quit();
-            }
-        }
+        // Initialise the States and Statemachines
+        stateMachine = GetComponent<StateMachine>();
 
-        // Enter the first State
-        GameState defaultState = (GameState) 0;
-        currentState = defaultState;
-        UpdateDisplayedState();
+        StateMachine ingameStateMachine = transform.GetChild(0).GetComponent<StateMachine>();
+        State introState = GetComponentInChildren<IntroState>();
+        State ingame1State = GetComponentInChildren<InGame1State>();
+        State ingame2State = GetComponentInChildren<InGame2State>();
+        State quitState = GetComponentInChildren<QuitState>();
 
-        states[(int)currentState].EnterState();
-        states[(int)currentState].Active = true;
+        //layer 1
+        ingameStateMachine.setParentStateMachine(stateMachine);
+        introState.setParentStateMachine(stateMachine);
+        quitState.setParentStateMachine(stateMachine);
+
+        stateMachine.AddState("Intro", introState);
+        stateMachine.AddState("InGame", ingameStateMachine);
+        stateMachine.AddState("Quit", quitState);
+
+        //layer 2
+        ingame1State.setParentStateMachine(ingameStateMachine);
+        ingame2State.setParentStateMachine(ingameStateMachine);
+
+        ingameStateMachine.AddState("InGame1", ingame1State);
+        ingameStateMachine.AddState("InGame2", ingame2State);
+
+        //add them all to all states
+        allStates.Add("Intro", introState);
+        allStates.Add("InGame", ingameStateMachine);
+        allStates.Add("Quit", quitState);
+        allStates.Add("InGame1", ingame1State);
+        allStates.Add("InGame2", ingame2State);
+
+        stateMachine.EnterState();
+    }
+
+    void Update()
+    {
+        stateMachine.UpdateActive(Time.deltaTime);
     }
 
     #endregion
 
     #region Methods
 
-    /// <summary>
-    /// Calls the ExitState() method of the old State
-    /// and the EnterState() method of the new State.
-    /// Sets old state inactive and new one Active;
-    /// </summary>
-    /// <param name="gameState">GameState to change to</param>
-    public void ChangeToState(GameState gameState)
+    public bool IsActive(string state)
     {
-        states[(int)currentState].ExitState();
-        states[(int)currentState].Active = false;
-        states[(int)gameState].EnterState();
-        states[(int)gameState].Active = true;
-        currentState = gameState;
-
-        UpdateDisplayedState();
-    }
-
-    /// <summary>
-    /// Checks if the given state is currently Active
-    /// </summary>
-    /// <param name="state"></param>
-    /// <returns></returns>
-    public bool IsActive(GameState state)
-    {
-        return states[(int)state].Active;
-    }
-
-    /// <summary>
-    /// Updates the State displayed in the Inspector
-    /// </summary>
-    private void UpdateDisplayedState()
-    {
-        currentStateDisplayed = currentState;
+        return allStates[state].Active;
     }
     #endregion
 }

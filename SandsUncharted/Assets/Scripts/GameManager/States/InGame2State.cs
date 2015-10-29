@@ -7,12 +7,12 @@ using UnityEngine;
 using System.Collections;
 
 /// <summary>
-/// A Test State. Is the very first gamestate
+/// State that is the Main Game State
 /// </summary>
-public class IntroState : State
+public class InGame2State : State
 {
     #region variables (private)
-
+    private ControlManager Control;
     #endregion
 
     #region Properties (public)
@@ -23,29 +23,28 @@ public class IntroState : State
 
     protected override void Initialise()
     {
-
+        Control = ControlManager.Instance();
     }
 
-    private float timer = 0;
     public override void UpdateActive(double deltaTime)
     {
-        Debug.Log("Updating Intro State");
-        timer += Time.deltaTime;
-        if (timer > 1f)
-            stateMachine.ChangeToState("InGame");
+        if (Control.getButtonADown("InGame2")) {
+            stateMachine.ChangeToState("Quit");
+        }
     }
 
     #endregion
 
     #region Methods
+
     public override void EnterState()
     {
-        Debug.Log("Entered Intro State");
+        Debug.Log("Entered InGame2 State");
     }
 
     public override void ExitState()
     {
-        Debug.Log("Exited Intro State");
+        Debug.Log("Exited InGame2 State");
     }
     #endregion
 
