@@ -274,7 +274,7 @@ public class ThirdPersonCamera : MonoBehaviour
 		float mouseWheelScaled = mouseWheel * mouseWheelSensitivity;
 		float leftTrigger = Input.GetAxis("Target");
 		bool bButtonPressed = Input.GetButton("B");
-		bool xButtonPressed = Input.GetButton("X");
+		bool xButtonPressed = Input.GetButtonUp("X");
 		bool qKeyDown = Input.GetKey(KeyCode.Q);
 		bool eKeyDown = Input.GetKey(KeyCode.E);
 		bool lShiftKeyDown = Input.GetKey(KeyCode.LeftShift);
@@ -342,8 +342,9 @@ public class ThirdPersonCamera : MonoBehaviour
 				camState = CamStates.Map;
 				map.SetActive(true);
 				map.transform.SetParent(null);
+				xButtonPressed = false;
 			}
-			if(eKeyDown && camState == CamStates.Map)
+			if(xButtonPressed && camState == CamStates.Map)
 			{
 				Debug.Log("Map stop");
 				camState = CamStates.Behind;

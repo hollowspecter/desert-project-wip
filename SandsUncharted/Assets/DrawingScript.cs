@@ -16,6 +16,7 @@ public class DrawingScript : MonoBehaviour
 	Vector2 pixelUV;
 
     float reticleSpeed = 0.6f;
+	Vector3 speed = new Vector3();
 
 	float paintinterval = 1f; // how many pixels between two drawpositions
 
@@ -38,8 +39,8 @@ public class DrawingScript : MonoBehaviour
 	float meshHeight;
 	float border = 0.05f;
 
-	Transform rightEdge;
-	Transform topEdge;
+	Transform maxCorner;
+	Transform minCorner;
 
 	void Awake() 
 	{
@@ -57,8 +58,8 @@ public class DrawingScript : MonoBehaviour
 		meshWidth = mesh.bounds.size.x;
 		meshHeight = mesh.bounds.size.z;
 
-		rightEdge = transform.parent.FindChild("rightEdge");
-		topEdge = transform.parent.FindChild("topEdge");
+		maxCorner = transform.parent.FindChild("rightEdge");
+		minCorner = transform.parent.FindChild("topEdge");
 
 		brushPx = brush.GetPixels ();
 		oldUV = pixelUV = new Vector2 ();
@@ -84,26 +85,25 @@ public class DrawingScript : MonoBehaviour
 
         Vector3 axisVector = h * transform.right + v * transform.forward;
         axisVector = axisVector.sqrMagnitude >= 0.03 ? axisVector : new Vector3();
-		brushCircle.transform.position += (reticleSpeed * reticleSpeed) * axisVector * Time.deltaTime; //squared speed to get a better controllable curve
+		float acc = 1.25f;
+		Debug.DrawRay (brushCircle.transform.position, axisVector);
+		speed += acc * axisVector * Time.deltaTime;
+
+		brushCircle.transform.position += speed * Time.deltaTime;
+
+		speed *= 0.75f;//friction
+
+		//brushCircle.transform.position += (reticleSpeed * reticleSpeed) * axisVector * Time.deltaTime; //squared speed to get a better controllable curve
 
 		if (mesh == null) 
 		{
 			Debug.LogError("no mesh in update");
 		}
+		//clamp brushposition to mapborder
+		brushCircle.transform.localPosition = new Vector3 (Mathf.Clamp (brushCircle.transform.localPosition.x, minCorner.localPosition.x + border, maxCorner.localPosition.x - border), brushCircle.transform.localPosition.y, Mathf.Clamp(brushCircle.transform.localPosition.z, minCorner.localPosition.z + border, maxCorner.localPosition.z - border));
 
-		//clamp the brushposition to the mapborder
-		/*brushCircle.transform.position = new Vector3(Mathf.Clamp (brushCircle.transform.position.x,
-		                                                            transform.position.x - (rightEdge.position - transform.position).x + border,
-		                                                         	rightEdge.position.x - border),
-                                                     	brushCircle.transform.position.y,
-                                                    	Mathf.Clamp (brushCircle.transform.position.z,
-		             												transform.position.z - (topEdge.position - transform.position).z + border,
-		          												   	topEdge.position.z - border));
-*/
 
-		brushCircle.transform.localPosition = new Vector3 (Mathf.Clamp (brushCircle.transform.localPosition.x, topEdge.localPosition.x + border, rightEdge.localPosition.x - border), brushCircle.transform.localPosition.y, Mathf.Clamp(brushCircle.transform.localPosition.z, topEdge.localPosition.z + border, rightEdge.localPosition.z - border));
-		/* get  drawPosition from brushreticle*/
-
+		/* draw on buttonpressfrom brushreticle*/
         if(Input.GetButton("A"))
         {
             RaycastHit reticleHit;
@@ -302,12 +302,14 @@ public class DrawingScript : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
-		Gizmos.DrawLine(transform.position, brushCircle.transform.position);
+		Gizmos.DrawRay(brushCircle.transform.position, speed);
         
 		Gizmos.color = Color.red;
-		Gizmos.DrawLine (transform.position, rightEdge.position);
+		if(maxCorner != null)
+			Gizmos.DrawLine (transform.position, maxCorner.position);
 		Gizmos.color = Color.blue;
-		Gizmos.DrawLine (transform.position, topEdge.position);
+		if(minCorner != null)
+			Gizmos.DrawLine (transform.position, minCorner.position);
 
     }
 
