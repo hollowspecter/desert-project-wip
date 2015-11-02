@@ -43,8 +43,6 @@ public class ControlManager : MonoBehaviour
 
     [SerializeField]
     private ControlMapping defaultControls; // Default mapping
-    [SerializeField]
-    private ControlMapping userControls; // User Mapping
 
     private ControlMapping currentControls;
     private GameManager gameManager;
@@ -65,18 +63,6 @@ public class ControlManager : MonoBehaviour
     }
 
     #region Methods
-
-    /// <summary>
-    /// Swap Controls between Default Control Mapping and User-Modifiable Control Mapping
-    /// </summary>
-    /// <param name="b">If true, the defaultControls will be used. Otherwise the users.</param>
-    public void UseDefaultControls(bool b)
-    {
-        if (b)
-            currentControls = defaultControls;
-        else
-            currentControls = userControls;
-    }
 
     /*
      * Input Wrapping Methods

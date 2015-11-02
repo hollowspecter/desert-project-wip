@@ -67,34 +67,37 @@ public class GameManager : MonoBehaviour
         // Initialise the States and Statemachines
         stateMachine = GetComponent<StateMachine>();
 
-        StateMachine ingameStateMachine = transform.GetChild(0).GetComponent<StateMachine>();
-        State introState = GetComponentInChildren<IntroState>();
-        State ingame1State = GetComponentInChildren<InGame1State>();
-        State ingame2State = GetComponentInChildren<InGame2State>();
-        State quitState = GetComponentInChildren<QuitState>();
+        StateMachine inGameStateMachine = transform.GetComponentInChildren<InGameStateMachine>();
+        State behindBackState = GetComponentInChildren<BehindBackState>();
+        State firstPersonState = GetComponentInChildren<FirstPersonState>();
+        State targetState = GetComponentInChildren<TargetState>();
+        State drawState = GetComponentInChildren<DrawState>();
+        State pauseState = GetComponentInChildren<PauseState>();
 
         //layer 1
-        ingameStateMachine.setParentStateMachine(stateMachine);
-        introState.setParentStateMachine(stateMachine);
-        quitState.setParentStateMachine(stateMachine);
+        inGameStateMachine.setParentStateMachine(stateMachine);
+        pauseState.setParentStateMachine(stateMachine);
 
-        stateMachine.AddState("Intro", introState);
-        stateMachine.AddState("InGame", ingameStateMachine);
-        stateMachine.AddState("Quit", quitState);
+        stateMachine.AddState("InGame", inGameStateMachine);
+        stateMachine.AddState("Pause", pauseState);
 
         //layer 2
-        ingame1State.setParentStateMachine(ingameStateMachine);
-        ingame2State.setParentStateMachine(ingameStateMachine);
+        behindBackState.setParentStateMachine(inGameStateMachine);
+        firstPersonState.setParentStateMachine(inGameStateMachine);
+        targetState.setParentStateMachine(inGameStateMachine);
+        drawState.setParentStateMachine(inGameStateMachine);
 
-        ingameStateMachine.AddState("InGame1", ingame1State);
-        ingameStateMachine.AddState("InGame2", ingame2State);
+        inGameStateMachine.AddState("BehindBack", behindBackState);
+        inGameStateMachine.AddState("FirstPerson", firstPersonState);
+        inGameStateMachine.AddState("Target", targetState);
+        inGameStateMachine.AddState("Draw", drawState);
 
-        //add them all to all states
-        allStates.Add("Intro", introState);
-        allStates.Add("InGame", ingameStateMachine);
-        allStates.Add("Quit", quitState);
-        allStates.Add("InGame1", ingame1State);
-        allStates.Add("InGame2", ingame2State);
+        //add them all to all states DEPRECATED
+        allStates.Add("InGame", inGameStateMachine);
+        allStates.Add("Pause", pauseState);
+        allStates.Add("BehindBack", behindBackState);
+        allStates.Add("Target", targetState);
+        allStates.Add("Draw", drawState);
 
         stateMachine.EnterState();
     }

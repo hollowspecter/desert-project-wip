@@ -7,46 +7,45 @@ using UnityEngine;
 using System.Collections;
 
 /// <summary>
-/// State that is the Main Game State
+/// #DESCRIPTION OF CLASS#
 /// </summary>
-public class InGame1State : State
+public class PauseState : State
 {
     #region variables (private)
-    private ControlManager Control;
+    [SerializeField]
+    private string unpauseButton = "Start";
     #endregion
 
     #region Properties (public)
-
     #endregion
 
     #region Unity event functions
 
-    protected override void Initialise()
-    {
-        Control = ControlManager.Instance();
-    }
-
     public override void UpdateActive(double deltaTime)
     {
-        if (Control.getButtonADown("InGame1")) {
-            stateMachine.ChangeToState("InGame2");
+        if (Input.GetButtonDown(unpauseButton)) {
+            stateMachine.ChangeToState("InGameStateMachine");
         }
+    }
+
+    protected override void Initialise()
+    {
+
     }
 
     #endregion
 
     #region Methods
-    
+
     public override void EnterState()
     {
-        Debug.Log("Entered InGame1 State");
+        Debug.Log("Entered Pause State");
+        Application.Quit();
     }
 
     public override void ExitState()
     {
-        Debug.Log("Exited InGame1 State");
+        Debug.Log("Exited Pause State");
     }
     #endregion
-
-
 }

@@ -19,6 +19,10 @@ public abstract class State : MonoBehaviour
 
     [HideInInspector]
     public bool Active;
+    
+    // delegate and events
+    public delegate void InputActionHandler();
+    public delegate void InputAxisHandler(float xAxis, float yAxis);
 
     public void setParentStateMachine(StateMachine s)
     {
@@ -35,15 +39,6 @@ public abstract class State : MonoBehaviour
         gameManager = GameManager.Instance();
         Initialise();
     }
-
-   ///// <summary>
-   ///// Wraps up the Update function.
-   ///// Do not Override or use when derive from State
-   ///// </summary>
-   //void Update()
-   //{
-   //    if (Active) UpdateActive();
-   //}
 
     /// <summary>
     /// Override this as your Update Function in the State.

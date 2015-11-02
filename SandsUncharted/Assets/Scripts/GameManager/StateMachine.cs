@@ -13,10 +13,10 @@ using System.Collections.Generic;
 public class StateMachine : State
 {
     [SerializeField]
-    private Dictionary<string, State> states;
+    protected Dictionary<string, State> states;
 
-    string currentState = "";
-    string defaultState = "";
+    protected string currentState = "";
+    protected string defaultState = "";
 
     public void ChangeToState(string newState)
     {
@@ -56,6 +56,8 @@ public class StateMachine : State
 
     public override void UpdateActive(double deltaTime)
     {
+        Debug.Log("Called Base StateMachine Update Active");
+
         if (currentState.Length == 0) {
             ChangeToState(defaultState);
         }
@@ -79,6 +81,12 @@ public class StateMachine : State
     public override void ExitState()
     {
         Active = false;
+
+        // make that so the state does not change when reentering the statemachine
+        if (currentState.Length > 0) {
+            defaultState = currentState;
+        }
+
         Debug.Log("Exited State Machine");
     }
 }
