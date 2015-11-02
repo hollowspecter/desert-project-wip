@@ -274,10 +274,11 @@ public class ThirdPersonCamera : MonoBehaviour
 		float mouseWheelScaled = mouseWheel * mouseWheelSensitivity;
 		float leftTrigger = Input.GetAxis("Target");
 		bool bButtonPressed = Input.GetButton("B");
-		bool xButtonPressed = Input.GetButtonUp("X");
+		bool xButtonPressed = Input.GetButton("X");
 		bool qKeyDown = Input.GetKey(KeyCode.Q);
 		bool eKeyDown = Input.GetKey(KeyCode.E);
 		bool lShiftKeyDown = Input.GetKey(KeyCode.LeftShift);
+        bool startButtonUp = Input.GetButtonUp("Start");
 
 		// Abstraction to set right Y when using mouse
 		if (mouseWheel != 0)
@@ -303,7 +304,7 @@ public class ThirdPersonCamera : MonoBehaviour
 		
 		// Determine camera state
 		// * Targeting *
-		if (leftTrigger > TARGETING_THRESHOLD)
+		if (leftTrigger > TARGETING_THRESHOLD && camState != CamStates.Map)
 		{
 			barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, widescreen, targetingTime);
 			
@@ -314,7 +315,7 @@ public class ThirdPersonCamera : MonoBehaviour
 			barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, 0f, targetingTime);
 			
 			// * First Person *
-			if (rightY > firstPersonThreshold && camState != CamStates.Free && !follow.isMoving())
+			if (rightY > firstPersonThreshold && camState == CamStates.Behind && !follow.isMoving())
 			{
 				// Reset look before entering the first person mode
 				xAxisRot = 0;
@@ -336,21 +337,21 @@ public class ThirdPersonCamera : MonoBehaviour
 				camState = CamStates.Behind;	
 			}
 
-			if(xButtonPressed && camState == CamStates.Behind)
+			if(startButtonUp && camState == CamStates.Behind)
 			{
 				Debug.Log("Map");
 				camState = CamStates.Map;
 				map.SetActive(true);
 				map.transform.SetParent(null);
-				xButtonPressed = false;
+				startButtonUp = false;
 			}
-			if(xButtonPressed && camState == CamStates.Map)
+			if(startButtonUp && camState == CamStates.Map)
 			{
 				Debug.Log("Map stop");
 				camState = CamStates.Behind;
 				map.SetActive(false);
 				map.transform.SetParent(follow.gameObject.transform);
-			}
+            }
 		}
 		
          //Set the Look At Weight - amount to use look at IK vs using the head's animation

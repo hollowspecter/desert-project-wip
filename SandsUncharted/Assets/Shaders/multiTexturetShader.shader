@@ -37,8 +37,8 @@
 			fixed4 c =  (mainC * (1-drawC.a) + ((drawC + 0.3f * mainC) * drawC.a)) * _Color;
 			o.Albedo = c.rgb * 0.5f;
 			// Metallic and smoothness come from slider variables
-			o.Metallic = _Metallic * drawC.a;
-			o.Smoothness = _Glossiness * drawC.a;
+			o.Metallic = _Metallic * drawC.a * 0.5f;
+			o.Smoothness = _Glossiness * drawC.a * 0.5f;
 			o.Alpha = c.a;
 		}
 		ENDCG
