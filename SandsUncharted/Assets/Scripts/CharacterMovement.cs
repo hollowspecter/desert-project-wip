@@ -79,6 +79,7 @@ public class CharacterMovement : MonoBehaviour
         }
     }
 
+
     ///<summary>
     ///Use this for initialization
     ///</summary>
@@ -104,10 +105,6 @@ public class CharacterMovement : MonoBehaviour
         // Set animation stateinfo
         stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
 
-        // Pull values from joystick
-        leftX = Input.GetAxis("Horizontal");
-        leftY = Input.GetAxis("Vertical");
-
         // Reset speed and angle
         float charSpeed = 0f;
         float charAngle = 0f;
@@ -120,7 +117,7 @@ public class CharacterMovement : MonoBehaviour
         speed = speed > speedMaximum ? speedMaximum : speed;
         angle = charAngle;
 
-        speed = (camera.CamState == ThirdPersonCamera.CamStates.FirstPerson) ? 0f : speed;
+        //speed = (camera.CamState == ThirdPersonCamera.CamStates.FirstPerson) ? 0f : speed; //NO NEED ANYMORE
         _animator.SetFloat("Speed", speed);
     }
 
@@ -129,7 +126,7 @@ public class CharacterMovement : MonoBehaviour
     /// </summary>
     void FixedUpdate()
     {
-        if (camera.CamState != ThirdPersonCamera.CamStates.FirstPerson) {
+       // if (camera.CamState != ThirdPersonCamera.CamStates.FirstPerson) {
             //Rotate
             Quaternion shift = Quaternion.Euler(new Vector3(0, angle, 0));
             Quaternion targetRotation = _transform.rotation * shift;
@@ -139,7 +136,7 @@ public class CharacterMovement : MonoBehaviour
             Vector3 movement = _transform.forward * speed;
             movement.y = _rigidbody.velocity.y;
             _rigidbody.velocity = movement;
-        }        
+       // }        
     }
 
     ///<summary>
@@ -214,5 +211,25 @@ public class CharacterMovement : MonoBehaviour
     }
     #endregion
 
+    #region Delegate Functions
 
+    void RetrieveMovementInput(float leftX, float leftY)
+    {
+        this.leftX = leftX;
+        this.leftY = leftY;
+    }
+
+    void OnEnable()
+    {
+        BehindBackState.Walk += RetrieveMovementInput;
+        TargetState.Walk += RetrieveMovementInput;
+    }
+
+    void OnDisable()
+    {
+        BehindBackState.Walk -= RetrieveMovementInput;
+        TargetState.Walk -= RetrieveMovementInput;
+    }
+
+    #endregion
 }

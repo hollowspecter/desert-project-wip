@@ -38,7 +38,6 @@ public class StateTemplate : State
     public override void EnterState()
     {
         Debug.Log("Entered Quit State");
-        Application.Quit();
     }
 
     public override void ExitState()

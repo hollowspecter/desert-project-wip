@@ -36,6 +36,8 @@ public class BehindBackState : State
     public static event InputAxisHandler Walk;
     public static event InputActionHandler Interact;
     public static event InputActionHandler LeftHand;
+    public static event InputActionHandler OnBehindBackEnter;
+    public static event InputActionHandler OnBehindBackExit;
     #endregion
 
     #region Unity event functions
@@ -51,11 +53,13 @@ public class BehindBackState : State
         Walk(xAxis, yAxis);
 
         if (Input.GetButtonDown(interactButton)) {
-            Interact();
+            if (Interact != null)
+                Interact();
         }
 
         if (Input.GetButtonDown(leftHandButton)) {
-            LeftHand();
+            if (LeftHand != null)
+                LeftHand();
         }
 
         /*
@@ -67,12 +71,13 @@ public class BehindBackState : State
         }
 
         float leftTrigger = Input.GetAxis(targetTriggerAxis);
-        if (leftTrigger < leftTriggerThreshold) {
+        if (leftTrigger > leftTriggerThreshold) {
             stateMachine.ChangeToState("Target");
         }
 
         float rightY = Input.GetAxis("RightStickY");
         if (rightY > firstPersonThreshold && !character.isMoving()) {
+            Debug.Log("right Y: " + rightY + "; threshold: " + firstPersonThreshold);
             stateMachine.ChangeToState("FirstPerson");
         }
     }
@@ -89,12 +94,13 @@ public class BehindBackState : State
     public override void EnterState()
     {
         Debug.Log("Entered Behind Back State");
-        Application.Quit();
+        OnBehindBackEnter();
     }
 
     public override void ExitState()
     {
         Debug.Log("Exited Behind Back State");
+        OnBehindBackExit();
     }
     #endregion
 }

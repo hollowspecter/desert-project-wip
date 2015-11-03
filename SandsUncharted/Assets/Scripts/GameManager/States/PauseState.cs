@@ -40,7 +40,6 @@ public class PauseState : State
     public override void EnterState()
     {
         Debug.Log("Entered Pause State");
-        Application.Quit();
     }
 
     public override void ExitState()

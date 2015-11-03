@@ -56,7 +56,7 @@ public class StateMachine : State
 
     public override void UpdateActive(double deltaTime)
     {
-        Debug.Log("Called Base StateMachine Update Active");
+        //Debug.Log("Called Base StateMachine Update Active");
 
         if (currentState.Length == 0) {
             ChangeToState(defaultState);

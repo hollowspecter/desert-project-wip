@@ -17,7 +17,7 @@ public class InGameStateMachine : StateMachine
     public override void UpdateActive(double deltaTime)
     {
         base.UpdateActive(deltaTime);
-        Debug.Log("Call derived UpdateActive from State Machine In Game");
+        //Debug.Log("Call derived UpdateActive from State Machine In Game");
 
         // Trigger Pause
         if (Input.GetButtonDown(pauseButton)) {

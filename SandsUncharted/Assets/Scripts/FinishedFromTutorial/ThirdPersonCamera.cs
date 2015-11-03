@@ -124,15 +124,23 @@ public class ThirdPersonCamera : MonoBehaviour
 	private Vector3 savedRigToGoal;
 	private float distanceAwayFree;
 	private float distanceUpFree;	
-	private Vector2 rightStickPrevFrame = Vector2.zero;
 	private float lastStickMin = float.PositiveInfinity;	// Used to prevent from zooming in when holding back on the right stick/scrollwheel
 	private Vector3 nearClipDimensions = Vector3.zero; // width, height, radius
 	private Vector3[] viewFrustum;
 	private Vector3 characterOffset;
-	private Vector3 targetPosition;	
-	
+	private Vector3 targetPosition;
+    private GameManager gameManager;
+    private Vector3 lookAt;
+
+    // delegate event handling
+    private delegate void CameraUpdateHandler();
+    private event CameraUpdateHandler OnCameraLateUpdate;
+	private float behindBackLeftX = 0f;
+	private float behindBackLeftY = 0f;
+    private float firstPersonLeftX = 0f;
+    private float firstPersonLeftY = 0f;
+
 	#endregion
-	
 	
 	#region Properties (public)	
 
@@ -191,6 +199,8 @@ public class ThirdPersonCamera : MonoBehaviour
 	/// </summary>
 	void Start ()
 	{
+        gameManager = GameManager.Instance();
+
 		cameraXform = this.transform;//.parent;
 		if (cameraXform == null)
 		{
@@ -255,211 +265,153 @@ public class ThirdPersonCamera : MonoBehaviour
 	void LateUpdate()
 	{		
 		viewFrustum = DebugDraw.CalculateViewFrustum(GetComponent<Camera>(), ref nearClipDimensions);
-
-		// Pull values from controller/keyboard
-		float rightX = Input.GetAxis("RightStickX");
-		float rightY = Input.GetAxis("RightStickY");
-		float leftX = Input.GetAxis("Horizontal");
-		float leftY = Input.GetAxis("Vertical");
-		float mouseWheel = Input.GetAxis("Mouse ScrollWheel");
-		float mouseWheelScaled = mouseWheel * mouseWheelSensitivity;
-		float leftTrigger = Input.GetAxis("Target");
-		bool bButtonPressed = Input.GetButton("B");
-		bool qKeyDown = Input.GetKey(KeyCode.Q);
-		bool eKeyDown = Input.GetKey(KeyCode.E);
-		bool lShiftKeyDown = Input.GetKey(KeyCode.LeftShift);
-
-		// Abstraction to set right Y when using mouse
-		if (mouseWheel != 0)
-		{
-			rightY = mouseWheelScaled;
-		}
-		if (qKeyDown)
-		{
-			rightX = 1;
-		}
-		if (eKeyDown)
-		{
-			rightX = -1;
-		}
-		if (lShiftKeyDown)
-		{
-			leftTrigger = 1;
-		}
 		
 		characterOffset = followXform.position + (distanceUp * followXform.up);
-		Vector3 lookAt = characterOffset;
+		lookAt = characterOffset;
 		targetPosition = Vector3.zero;
-		
-		// Determine camera state
-		// * Targeting *
-		if (leftTrigger > TARGETING_THRESHOLD)
-		{
-			barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, widescreen, targetingTime);
-			
-			camState = CamStates.Target;
-		}
-		else
-		{			
-			barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, 0f, targetingTime);
-			
-			// * First Person *
-			if (rightY > firstPersonThreshold && camState != CamStates.Free && !follow.isMoving())
-			{
-				// Reset look before entering the first person mode
-				xAxisRot = 0;
-				lookWeight = 0f;
-				camState = CamStates.FirstPerson;
-			}
 
-			// * Free *
-			/*if ((rightY < freeThreshold || mouseWheel < 0f) && System.Math.Round(follow.Speed, 2) == 0)
-			{
-				camState = CamStates.Free;
-				savedRigToGoal = Vector3.zero;
-			}*/
-
-			// * Behind the back *
-			if ((camState == CamStates.FirstPerson && bButtonPressed) || 
-				(camState == CamStates.Target && leftTrigger <= TARGETING_THRESHOLD))
-			{
-				camState = CamStates.Behind;	
-			}
-		}
-		
-         //Set the Look At Weight - amount to use look at IK vs using the head's animation
-        //follow.Animator.SetLookAtWeight(lookWeight);
-		
-		// Execute camera state
-		switch (camState)
-		{
-			case CamStates.Behind:
-				ResetCamera();
-			
-				// Only update camera look direction if moving
-                if (follow.Speed > follow.MovementThreshold && follow.isMoving() /*&& !follow.IsInPivot()*/)
-				{
-					lookDir = Vector3.Lerp(followXform.right * (leftX < 0 ? 1f : -1f), followXform.forward * (leftY < 0 ? -1f : 1f), Mathf.Abs(Vector3.Dot(this.transform.forward, followXform.forward)));
-					Debug.DrawRay(this.transform.position, lookDir, Color.white);
-				
-					// Calculate direction from camera to player, kill Y, and normalize to give a valid direction with unit magnitude
-					curLookDir = Vector3.Normalize(characterOffset - this.transform.position);
-					curLookDir.y = 0;
-					Debug.DrawRay(this.transform.position, curLookDir, Color.green);
-				
-					// Damping makes it so we don't update targetPosition while pivoting; camera shouldn't rotate around player
-					curLookDir = Vector3.SmoothDamp(curLookDir, lookDir, ref velocityLookDir, lookDirDampTime);
-				}				
-				
-				targetPosition = characterOffset + followXform.up * distanceUp - Vector3.Normalize(curLookDir) * distanceAway;
-				Debug.DrawLine(followXform.position, targetPosition, Color.magenta);
-				
-				break;
-			case CamStates.Target:
-				ResetCamera();
-				lookDir = followXform.forward;
-				curLookDir = followXform.forward;
-				
-				targetPosition = characterOffset + followXform.up * distanceUp - lookDir * distanceAway;
-
-                //zero out the lookweight
-                lookWeight = Mathf.Lerp(lookWeight, 0.0f, Time.deltaTime * firstPersonLookSpeed);
-				
-				break;
-			case CamStates.FirstPerson:	
-				// Looking up and down
-				// Calculate the amount of rotation and apply to the firstPersonCamPos GameObject
-			    xAxisRot += (leftY * 0.5f * firstPersonLookSpeed);			
-    			xAxisRot = Mathf.Clamp(xAxisRot, firstPersonXAxisClamp.x, firstPersonXAxisClamp.y); 
-				firstPersonCamPos.XForm.localRotation = Quaternion.Euler(xAxisRot, 0, 0);
-							
-				// Superimpose firstPersonCamPos GameObject's rotation on camera
-				Quaternion rotationShift = Quaternion.FromToRotation(this.transform.forward, firstPersonCamPos.XForm.forward);		
-				this.transform.rotation = rotationShift * this.transform.rotation;		
-				
-				// Move character model's head
-                lookWeight = Mathf.Lerp(lookWeight, 1.0f, Time.deltaTime * firstPersonLookSpeed);
-                headLookAt = firstPersonCamPos.XForm.position + firstPersonCamPos.XForm.forward;
-				
-				// Looking left and right
-				// Similarly to how character is rotated while in locomotion, use Quaternion * to add rotation to character
-				Vector3 rotationAmount = Vector3.Lerp(Vector3.zero, new Vector3(0f, fPSRotationDegreePerSecond * (leftX < 0f ? -1f : 1f), 0f), Mathf.Abs(leftX));
-				Quaternion deltaRotation = Quaternion.Euler(rotationAmount * Time.deltaTime);
-	        	follow.transform.rotation = (follow.transform.rotation * deltaRotation);
-				
-				// Move camera to firstPersonCamPos
-				targetPosition = firstPersonCamPos.XForm.position;
-			
-				// Smoothly transition look direction towards firstPersonCamPos when entering first person mode
-				lookAt = Vector3.Lerp(targetPosition + followXform.forward, this.transform.position + this.transform.forward, camSmoothDampTime * Time.deltaTime);
-				Debug.DrawRay(Vector3.zero, lookAt, Color.black);
-				Debug.DrawRay(Vector3.zero, targetPosition + followXform.forward, Color.white);	
-				Debug.DrawRay(Vector3.zero, firstPersonCamPos.XForm.position + firstPersonCamPos.XForm.forward, Color.cyan);
-			
-				// Choose lookAt target based on distance
-				lookAt = (Vector3.Lerp(this.transform.position + this.transform.forward, lookAt, Vector3.Distance(this.transform.position, firstPersonCamPos.XForm.position)));
-				break;
-			/*case CamStates.Free:
-				lookWeight = Mathf.Lerp(lookWeight, 0.0f, Time.deltaTime * firstPersonLookSpeed);
-
-				Vector3 rigToGoal = characterOffset - cameraXform.position;
-				rigToGoal.y = 0f;
-				Debug.DrawRay(cameraXform.transform.position, rigToGoal, Color.red);
-				
-				// Panning in and out
-				// If statement works for positive values; don't tween if stick not increasing in either direction; also don't tween if user is rotating
-				// Checked against rightStickThreshold because very small values for rightY mess up the Lerp function
-				if (rightY < lastStickMin && rightY < -1f * rightStickThreshold && rightY <= rightStickPrevFrame.y && Mathf.Abs(rightX) < rightStickThreshold)
-				{
-					// Zooming out
-					distanceUpFree = Mathf.Lerp(distanceUp, distanceUp * distanceUpMultiplier, Mathf.Abs(rightY));
-					distanceAwayFree = Mathf.Lerp(distanceAway, distanceAway * distanceAwayMultipler, Mathf.Abs(rightY));
-					targetPosition = characterOffset + followXform.up * distanceUpFree - RigToGoalDirection * distanceAwayFree;
-					lastStickMin = rightY;
-                }
-				else if (rightY > rightStickThreshold && rightY >= rightStickPrevFrame.y && Mathf.Abs(rightX) < rightStickThreshold)
-				{
-                	// Zooming in
-                	// Subtract height of camera from height of player to find Y distance
-					distanceUpFree = Mathf.Lerp(Mathf.Abs(transform.position.y - characterOffset.y), camMinDistFromChar.y, rightY);
-					// Use magnitude function to find X distance	
-					distanceAwayFree = Mathf.Lerp(rigToGoal.magnitude, camMinDistFromChar.x, rightY);		
-					targetPosition = characterOffset + followXform.up * distanceUpFree - RigToGoalDirection * distanceAwayFree;		
-					lastStickMin = float.PositiveInfinity;
-				}				
-                                
-				// Store direction only if right stick inactive
-				if (rightX != 0 || rightY != 0)
-				{
-					savedRigToGoal = RigToGoalDirection;
-				}
-				
-			
-				// Rotating around character
-				cameraXform.RotateAround(characterOffset, followXform.up, freeRotationDegreePerSecond * (Mathf.Abs(rightX) > rightStickThreshold ? rightX : 0f));
-								
-				// Still need to track camera behind player even if they aren't using the right stick; achieve this by saving distanceAwayFree every frame
-				if (targetPosition == Vector3.zero)
-				{
-					targetPosition = characterOffset + followXform.up * distanceUpFree - savedRigToGoal * distanceAwayFree;
-				}
-
-				break;*/
-		}
+        OnCameraLateUpdate();
 
         //set the lookat weight - amount to use look at IK vs using
         //the heads animation
         follow.setLookVars(headLookAt, lookWeight);
 
 		CompensateForWalls(characterOffset, ref targetPosition);		
-		SmoothPosition(cameraXform.position, targetPosition);	
-		transform.LookAt(lookAt);	
-
-		// Make sure to cache the unscaled mouse wheel value if using mouse/keyboard instead of controller
-		rightStickPrevFrame = new Vector2(rightX, rightY);//mouseWheel != 0 ? mouseWheelScaled : rightY);
+		SmoothPosition(cameraXform.position, targetPosition);
+        transform.LookAt(lookAt);	
 	}
 	
 	#endregion
+
+    #region First Person
+
+    void OnFirstPersonEnter()
+    {
+        OnCameraLateUpdate += FirstPerson;
+    }
+
+    void FirstPerson()
+    {
+        barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, 0f, targetingTime);
+
+        // Looking up and down
+		// Calculate the amount of rotation and apply to the firstPersonCamPos GameObject
+		xAxisRot += (firstPersonLeftY * 0.5f * firstPersonLookSpeed);			
+    	xAxisRot = Mathf.Clamp(xAxisRot, firstPersonXAxisClamp.x, firstPersonXAxisClamp.y); 
+		firstPersonCamPos.XForm.localRotation = Quaternion.Euler(xAxisRot, 0, 0);
+					
+		// Superimpose firstPersonCamPos GameObject's rotation on camera
+		Quaternion rotationShift = Quaternion.FromToRotation(this.transform.forward, firstPersonCamPos.XForm.forward);		
+		this.transform.rotation = rotationShift * this.transform.rotation;		
+		
+		// Move character model's head
+        lookWeight = Mathf.Lerp(lookWeight, 1.0f, Time.deltaTime * firstPersonLookSpeed);
+        headLookAt = firstPersonCamPos.XForm.position + firstPersonCamPos.XForm.forward;
+		
+		// Looking left and right
+		// Similarly to how character is rotated while in locomotion, use Quaternion * to add rotation to character
+		Vector3 rotationAmount = Vector3.Lerp(Vector3.zero, new Vector3(0f, fPSRotationDegreePerSecond * (firstPersonLeftX < 0f ? -1f : 1f), 0f), Mathf.Abs(firstPersonLeftX));
+		Quaternion deltaRotation = Quaternion.Euler(rotationAmount * Time.deltaTime);
+	    follow.transform.rotation = (follow.transform.rotation * deltaRotation);
+		
+		// Move camera to firstPersonCamPos
+		targetPosition = firstPersonCamPos.XForm.position;
+		
+		// Smoothly transition look direction towards firstPersonCamPos when entering first person mode
+		lookAt = Vector3.Lerp(targetPosition + followXform.forward, this.transform.position + this.transform.forward, camSmoothDampTime * Time.deltaTime);
+		Debug.DrawRay(Vector3.zero, lookAt, Color.black);
+		Debug.DrawRay(Vector3.zero, targetPosition + followXform.forward, Color.white);	
+		Debug.DrawRay(Vector3.zero, firstPersonCamPos.XForm.position + firstPersonCamPos.XForm.forward, Color.cyan);
+		
+		// Choose lookAt target based on distance
+		lookAt = (Vector3.Lerp(this.transform.position + this.transform.forward, lookAt, Vector3.Distance(this.transform.position, firstPersonCamPos.XForm.position)));
+    }
+
+    void OnFirstPersonExit()
+    {
+        OnCameraLateUpdate -= FirstPerson;
+    }
+
+    void SetFirstPersonLeftStick(float x, float y)
+    {
+        firstPersonLeftX = x;
+        firstPersonLeftY = y;
+    }
+
+    #endregion
+
+    #region Behind Back
+
+    void OnBehindBackEnter()
+    {
+        OnCameraLateUpdate += BehindBack;
+    }
+
+    void BehindBack()
+    {
+        ResetCamera();
+
+        barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, 0f, targetingTime);
+			
+		// Only update camera look direction if moving
+        if (follow.Speed > follow.MovementThreshold && follow.isMoving() /*&& !follow.IsInPivot()*/)
+		{
+			lookDir = Vector3.Lerp(followXform.right * (behindBackLeftX < 0 ? 1f : -1f), followXform.forward * (behindBackLeftY < 0 ? -1f : 1f), Mathf.Abs(Vector3.Dot(this.transform.forward, followXform.forward)));
+			Debug.DrawRay(this.transform.position, lookDir, Color.white);
+		
+			// Calculate direction from camera to player, kill Y, and normalize to give a valid direction with unit magnitude
+			curLookDir = Vector3.Normalize(characterOffset - this.transform.position);
+			curLookDir.y = 0;
+			Debug.DrawRay(this.transform.position, curLookDir, Color.green);
+		
+			// Damping makes it so we don't update targetPosition while pivoting; camera shouldn't rotate around player
+			curLookDir = Vector3.SmoothDamp(curLookDir, lookDir, ref velocityLookDir, lookDirDampTime);
+		}				
+		
+		targetPosition = characterOffset + followXform.up * distanceUp - Vector3.Normalize(curLookDir) * distanceAway;
+		Debug.DrawLine(followXform.position, targetPosition, Color.magenta);
+    }
+
+    void OnBehindBackExit()
+    {
+        OnCameraLateUpdate -= BehindBack;
+    }
+
+    void SetBehindbackLeftStick(float x, float y)
+    {
+        behindBackLeftX = x;
+        behindBackLeftY = y;
+    }
+
+    #endregion
+
+    #region Targeting
+
+    void OnTargetEnter()
+    {
+        OnCameraLateUpdate += Targeting;
+    }
+
+    void Targeting()
+    {
+		barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, widescreen, targetingTime);
+
+        ResetCamera();
+		lookDir = followXform.forward;
+		curLookDir = followXform.forward;
+		
+		targetPosition = characterOffset + followXform.up * distanceUp - lookDir * distanceAway;
+
+        //zero out the lookweight
+        lookWeight = Mathf.Lerp(lookWeight, 0.0f, Time.deltaTime * firstPersonLookSpeed);
+    }
+
+    void OnTargetExit()
+    {
+        OnCameraLateUpdate -= Targeting;
+    }
+
+    #endregion
 	
 	
 	#region Methods
@@ -535,6 +487,47 @@ public class ThirdPersonCamera : MonoBehaviour
 		lookWeight = Mathf.Lerp(lookWeight, 0.0f, Time.deltaTime * firstPersonLookSpeed);
 		transform.localRotation = Quaternion.Lerp(transform.localRotation, Quaternion.identity, Time.deltaTime);
 	}
+
+    private void ResetOnFirstPersonEnter()
+    {
+        // Reset look before entering the first person mode
+        xAxisRot = 0;
+        lookWeight = 0f;
+    }
 	
 	#endregion Methods
+
+    #region Delegate Event Functions
+
+    void OnEnable()
+    {
+        FirstPersonState.onFirstPersonEnter += ResetOnFirstPersonEnter;
+        FirstPersonState.onFirstPersonEnter += OnFirstPersonEnter;
+        FirstPersonState.onFirstPersonExit += OnFirstPersonExit;
+        FirstPersonState.lookAround += SetFirstPersonLeftStick;
+
+        TargetState.OnTargetEnter += OnTargetEnter;
+        TargetState.OnTargetExit += OnTargetExit;
+
+        BehindBackState.OnBehindBackEnter += OnBehindBackEnter;
+        BehindBackState.OnBehindBackExit += OnBehindBackExit;
+        BehindBackState.Walk += SetBehindbackLeftStick;
+    }
+
+    void OnDisable()
+    {
+        FirstPersonState.onFirstPersonEnter -= ResetOnFirstPersonEnter;
+        FirstPersonState.onFirstPersonEnter -= OnFirstPersonEnter;
+        FirstPersonState.onFirstPersonExit -= OnFirstPersonExit;
+        FirstPersonState.lookAround -= SetFirstPersonLeftStick;
+
+        TargetState.OnTargetEnter -= OnTargetEnter;
+        TargetState.OnTargetExit -= OnTargetExit;
+
+        BehindBackState.OnBehindBackEnter -= OnBehindBackEnter;
+        BehindBackState.OnBehindBackExit -= OnBehindBackExit;
+        BehindBackState.Walk -= SetBehindbackLeftStick;
+    }
+
+    #endregion
 }

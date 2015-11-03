@@ -26,6 +26,8 @@ public class FirstPersonState : State
 
     #region Properties (public)
     public static event InputAxisHandler lookAround;
+    public static event InputActionHandler onFirstPersonEnter;
+    public static event InputActionHandler onFirstPersonExit;
     #endregion
 
     #region Unity event functions
@@ -38,7 +40,8 @@ public class FirstPersonState : State
 
         float xAxis = Input.GetAxis(lookX);
         float yAxis = Input.GetAxis(lookY);
-        lookAround(xAxis, yAxis);
+        if (lookAround != null)
+            lookAround(xAxis, yAxis);
 
         /*
          * State Changing
@@ -49,7 +52,7 @@ public class FirstPersonState : State
         }
 
         float leftTrigger = Input.GetAxis(targetTriggerAxis);
-        if (leftTrigger < leftTriggerThreshold) {
+        if (leftTrigger > leftTriggerThreshold) {
             stateMachine.ChangeToState("Target");
         }
     }
@@ -66,7 +69,7 @@ public class FirstPersonState : State
     public override void EnterState()
     {
         Debug.Log("Entered First Person State");
-        Application.Quit();
+        onFirstPersonEnter();
     }
 
     public override void ExitState()
