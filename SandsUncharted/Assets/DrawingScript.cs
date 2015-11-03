@@ -18,7 +18,7 @@ public class DrawingScript : MonoBehaviour
 	Vector2 oldUV;
 	Vector2 pixelUV;
     
-    float reticleAcceleration = 1.6f;
+    float reticleAcceleration = 4.0f;
 	Vector3 speed = new Vector3();
 
 	float paintinterval = 1f; // how many pixels between two drawpositions
@@ -426,26 +426,20 @@ public class DrawingScript : MonoBehaviour
     {
         if (currBackup != 0)
         {
-            //Shift the current backup to slot 1
+            //Shift the current backup to slot 0
             ResetBackupPositions();
-            //Copy the texture into the first slot
-            CopyTexture(texture, backups[0]);
-            //set the backup to -1 to indicate that there was a new backup saved
-            currBackup = 0;
         }
-
-        else
-        {
-            Debug.Log("Backup");
-            //Move the Backups over one slot
-            ShiftBackups();
-            //Copy the texture into the first slot
-            CopyTexture(texture, backups[0]);
-            //set the backup to -1 to indicate that there was a new backup saved
-            currBackup = 0;
-        }
+        
+        Debug.Log("Backup");
+        //Move the Backups over one slot
+        ShiftBackups();
+        //Copy the texture into the first slot
+        CopyTexture(texture, backups[0]);
+        //set the backup to -1 to indicate that there was a new backup saved
+        currBackup = 0;
 
         numBackups = (int)Mathf.Min((numBackups + 1), maxBackups-1);
+        Debug.Log("num: " + numBackups);
     }
 
     void GetBackup(bool undo)
@@ -458,7 +452,7 @@ public class DrawingScript : MonoBehaviour
         //if we are in the last slot we cannot undo
         else if(currBackup == numBackups && undo)
         {
-            Debug.Log("no older version");
+            Debug.Log("No older version");
         }
         //else, we just switch over to the next or last backup by changing currbackup
         else
@@ -490,7 +484,7 @@ public class DrawingScript : MonoBehaviour
     //Move your current backup to slot 1 because you changed in while of undoing
     void ResetBackupPositions()
     {
-        int offset = (int) Mathf.Max(currBackup - 1, 0);
+        int offset = (int) Mathf.Max(currBackup, 0);
         for(int i = currBackup; i <= numBackups; ++i)
         {
             CopyTexture(backups[i], backups[i - offset]);
@@ -498,7 +492,8 @@ public class DrawingScript : MonoBehaviour
             //Debug.Log(i + " -> " + (i - offset));
         }
 
-        numBackups = maxBackups - currBackup;
+        numBackups = numBackups - offset;
+        Debug.Log("num: " + numBackups);
     }
 
 }
