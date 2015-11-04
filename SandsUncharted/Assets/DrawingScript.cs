@@ -19,7 +19,8 @@ public class DrawingScript : MonoBehaviour
 	Vector2 pixelUV;
 
     Vector3 axisVector;
-    float reticleAcceleration = 4.0f;
+    float reticleAcceleration = 4.5f;
+    float maxSpeed = 10f;
 	Vector3 speed = new Vector3();
 
 	float paintinterval = 1f; // how many pixels between two drawpositions
@@ -113,9 +114,10 @@ public class DrawingScript : MonoBehaviour
 
         /****move Reticle based on acceleration and right stick vector****/
         speed += reticleAcceleration * axisVector * Time.deltaTime; //make velocityvector
-        brushCircle.transform.position += speed * Time.deltaTime; //make movementvector
+        brushCircle.transform.localPosition += speed * Time.deltaTime; //make movementvector
         speed *= 0.75f;//friction
 
+        Debug.Log("Speed: " + speed.magnitude);
 
         //brushCircle.transform.position += (reticleSpeed * reticleSpeed) * axisVector * Time.deltaTime; //squared speed to get a better controllable curve
 
@@ -248,7 +250,7 @@ public class DrawingScript : MonoBehaviour
 	{
 		
 		Vector2 dir = (v2 - v1);
-		Vector2[] tmp = new Vector2[(int)(Mathf.Max(dir.magnitude / paintinterval,1f))];
+		Vector2[] tmp = new Vector2[(int)(Mathf.Clamp(dir.magnitude / paintinterval, 1f, 5f))];
 		for (int i = 0; i < tmp.Length; ++i) 
 		{
 			//interpolate the points between the first and last position by moving the position paintinterval px to the next position
@@ -261,7 +263,7 @@ public class DrawingScript : MonoBehaviour
 	
 	void Stamp(int x, int y)
 	{
-		Debug.Log ("stamp" + x + "|" + y);
+		//Debug.Log ("stamp" + x + "|" + y);
 	    BrushRescale(scaleFactor, brush);
 
 		UpdateScaledBrush(x, y);
@@ -326,7 +328,7 @@ public class DrawingScript : MonoBehaviour
     //make the moveVector for the brush movement
     void MakeMoveVector(float h, float v)
     {
-        axisVector = h * transform.right + v * transform.forward;
+        axisVector = h * (transform.worldToLocalMatrix * transform.right).normalized + v * (transform.worldToLocalMatrix * transform.forward).normalized;
         axisVector = axisVector.sqrMagnitude >= 0.03 ? axisVector : new Vector3();
     }
 

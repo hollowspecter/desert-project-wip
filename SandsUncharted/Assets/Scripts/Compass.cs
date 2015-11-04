@@ -18,7 +18,12 @@ public class Compass : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        Quaternion northRotation = Quaternion.LookRotation(north, transform.up);
-        needle.rotation = Quaternion.RotateTowards(needle.rotation, northRotation, 10f);
+        if(gameObject.activeSelf)
+        {
+            Quaternion northRotation = Quaternion.LookRotation(Vector3.ProjectOnPlane(north, transform.up), transform.up);
+            needle.rotation = Quaternion.RotateTowards(needle.rotation, northRotation, 2f);
+        }
+
+        Rigidbody r = new Rigidbody();
 	}
 }
