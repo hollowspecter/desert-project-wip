@@ -47,8 +47,8 @@ public class DrawingScript : MonoBehaviour
 	float meshHeight;
 	float border = 0.05f;
 
-	Transform maxCorner;
-	Transform minCorner;
+	Transform rightCorner;
+	Transform leftCorner;
 
 
     Texture2D[] backups;
@@ -60,11 +60,11 @@ public class DrawingScript : MonoBehaviour
 
     void Awake() 
 	{
-        maxCorner = transform.parent.FindChild("rightEdge");
-        minCorner = transform.parent.FindChild("topEdge");
+        rightCorner = transform.parent.FindChild("rightEdge");
+        leftCorner = transform.parent.FindChild("leftEdge");
 
         cam = GameObject.Find("Main Camera").GetComponent<Camera>();
-        float ratioWH = (maxCorner.position - minCorner.position).x / (maxCorner.position - minCorner.position).z;
+        float ratioWH = (rightCorner.position - leftCorner.position).x / (rightCorner.position - leftCorner.position).z;
 		texture = new Texture2D((int)(texSize * ratioWH), texSize, TextureFormat.ARGB32, false);
 		clearColor  = new Color(0f,0f,0f,0f);
 		FloodTexture (clearColor, texture);
@@ -117,7 +117,7 @@ public class DrawingScript : MonoBehaviour
         brushCircle.transform.localPosition += speed * Time.deltaTime; //make movementvector
         speed *= 0.75f;//friction
 
-        Debug.Log("Speed: " + speed.magnitude);
+       // Debug.Log("Speed: " + speed.magnitude);
 
         //brushCircle.transform.position += (reticleSpeed * reticleSpeed) * axisVector * Time.deltaTime; //squared speed to get a better controllable curve
 
@@ -125,8 +125,15 @@ public class DrawingScript : MonoBehaviour
 		{
 			Debug.LogError("no mesh in update");
 		}
-		//clamp brushposition to mapborder
-		brushCircle.transform.localPosition = new Vector3 (Mathf.Clamp (brushCircle.transform.localPosition.x, minCorner.localPosition.x + border, maxCorner.localPosition.x - border), brushCircle.transform.localPosition.y, Mathf.Clamp(brushCircle.transform.localPosition.z, minCorner.localPosition.z + border, maxCorner.localPosition.z - border));
+        //clamp brushposition to mapborder
+        Vector3 localMinPos = new Vector3(Mathf.Min(leftCorner.localPosition.x, rightCorner.localPosition.x), 0f, Mathf.Min(leftCorner.localPosition.z, rightCorner.localPosition.z));
+        Vector3 localMaxPos = new Vector3(Mathf.Max(leftCorner.localPosition.x, rightCorner.localPosition.x), 0f, Mathf.Max(leftCorner.localPosition.z, rightCorner.localPosition.z));
+
+        brushCircle.transform.localPosition = new Vector3 (Mathf.Clamp(brushCircle.transform.localPosition.x, localMinPos.x + border, localMaxPos.x - border), brushCircle.transform.localPosition.y, Mathf.Clamp(brushCircle.transform.localPosition.z, localMinPos.z + border, localMaxPos.z - border));
+
+
+        
+        //brushCircle.transform.localPosition = new Vector3(Mathf.Clamp(brushCircle.transform.localPosition.x, minPosParent.x + border, maxPosParent.x - border), brushCircle.transform.localPosition.y, Mathf.Clamp(brushCircle.transform.localPosition.z, minPosParent.z + border, maxPosParent.z - border));
 
         //rescale based on speed slow = big / fast = small
         scaleFactor = Mathf.Clamp(scaleFactor + (((1f - axisVector.magnitude * axisVector.magnitude) * 2f) - 1f) /* * Random.Range(-0.2f, 1f)*/ * Time.deltaTime, setScale * 0.75f, setScale * 1.25f);
@@ -468,7 +475,7 @@ public class DrawingScript : MonoBehaviour
             {
                 currBackup = (int)Mathf.Max(currBackup - 1, 0f);
             }
-            Debug.Log((undo ? "undo " : "redo ") + currBackup);
+            //Debug.Log((undo ? "undo " : "redo ") + currBackup);
             CopyTexture(backups[currBackup], texture);
         }
     }
