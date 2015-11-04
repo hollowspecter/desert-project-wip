@@ -17,7 +17,8 @@ public class DrawingScript : MonoBehaviour
 	bool first;
 	Vector2 oldUV;
 	Vector2 pixelUV;
-    
+
+    Vector3 axisVector;
     float reticleAcceleration = 4.0f;
 	Vector3 speed = new Vector3();
 
@@ -80,7 +81,7 @@ public class DrawingScript : MonoBehaviour
 		oldUV = pixelUV = new Vector2 ();
 		first = true;
 		brushCircle.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
-		brushRescale (scaleFactor, brush);
+		BrushRescale (scaleFactor, brush);
 
         backups = new Texture2D[maxBackups];
         for(int i = 0; i < maxBackups; ++i)
@@ -105,102 +106,44 @@ public class DrawingScript : MonoBehaviour
 
         //Debug.DrawLine(ray.origin, mouseHit.point, Color.red);
 
-        /****move Reticle with joystick****/
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        
+        /*********REFACTOR THIS*********************/
+        MakeMoveVector(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+        /*********REFACTOR THIS*********************/
 
-        Vector3 axisVector = h * transform.right + v * transform.forward;
-        axisVector = axisVector.sqrMagnitude >= 0.03 ? axisVector : new Vector3();
-        //Debug.DrawRay (brushCircle.transform.position, axisVector);
-		speed += reticleAcceleration * axisVector * Time.deltaTime;
+        /****move Reticle based on acceleration and right stick vector****/
+        speed += reticleAcceleration * axisVector * Time.deltaTime; //make velocityvector
+        brushCircle.transform.position += speed * Time.deltaTime; //make movementvector
+        speed *= 0.75f;//friction
 
-		brushCircle.transform.position += speed * Time.deltaTime;
 
-		speed *= 0.75f;//friction
+        //brushCircle.transform.position += (reticleSpeed * reticleSpeed) * axisVector * Time.deltaTime; //squared speed to get a better controllable curve
 
-		//brushCircle.transform.position += (reticleSpeed * reticleSpeed) * axisVector * Time.deltaTime; //squared speed to get a better controllable curve
-
-		if (mesh == null) 
+        if (mesh == null) 
 		{
 			Debug.LogError("no mesh in update");
 		}
 		//clamp brushposition to mapborder
 		brushCircle.transform.localPosition = new Vector3 (Mathf.Clamp (brushCircle.transform.localPosition.x, minCorner.localPosition.x + border, maxCorner.localPosition.x - border), brushCircle.transform.localPosition.y, Mathf.Clamp(brushCircle.transform.localPosition.z, minCorner.localPosition.z + border, maxCorner.localPosition.z - border));
 
-        /* free brush scaling */
-
-        float scaleAxis = Input.GetAxis("RightStickX");
-        if (Mathf.Abs(scaleAxis) > 0.2)
-        {
-            if (scaleAxis < 0)
-            {
-                scaleFactor = Mathf.Clamp(scaleFactor + (-1.0f * scaleSpeed * Time.deltaTime), minPX / brush.width, maxPX / brush.width);
-                setScale = scaleFactor;
-            }
-            else
-            {
-                scaleFactor = Mathf.Clamp(scaleFactor + (1.0f * scaleSpeed * Time.deltaTime), minPX / brush.width, maxPX / brush.width);
-                setScale = scaleFactor;
-            }
-
-            brushCircle.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
-
-        }
-
         //rescale based on speed slow = big / fast = small
         scaleFactor = Mathf.Clamp(scaleFactor + (((1f - axisVector.magnitude * axisVector.magnitude) * 2f) - 1f) /* * Random.Range(-0.2f, 1f)*/ * Time.deltaTime, setScale * 0.75f, setScale * 1.25f);
 
+        /*********REFACTOR THIS*********************/
 
         /* draw on buttonpressfrom brushreticle*/
         if (Input.GetButton("A"))
         {
-            RaycastHit reticleHit;
-            if (Physics.Raycast(new Ray(brushCircle.transform.position, -brushCircle.transform.up), out reticleHit))
-            {
-                oldUV = pixelUV;
-                pixelUV = reticleHit.textureCoord;
-				//Debug.Log (reticleHit.textureCoord);
-
-                pixelUV.x *= texture.width;
-			    pixelUV.y *= texture.height;
-			    if(first)
-			    {
-					Debug.Log ("first");
-				    oldUV = pixelUV;
-                    setScale = brushScale;
-					brushRescale (scaleFactor, brush);
-			    }
-
-                Draw(oldUV, pixelUV);
-            }
-			else
-			{
-				Debug.LogError("Raycast did not hit!");
-			}
-
+            if(DrawRaycast())
+                 Draw();
         }
 
 		else if (Input.GetButton ("B")) 
 		{
-			RaycastHit reticleHit;
-			if (Physics.Raycast(new Ray(brushCircle.transform.position, -brushCircle.transform.up), out reticleHit))
-			{
-				oldUV = pixelUV;
-				pixelUV = reticleHit.textureCoord;
-				
-				pixelUV.x *= texture.width;
-				pixelUV.y *= texture.height;
-
-				if(first)
-				{
-					Debug.Log ("first");
-					oldUV = pixelUV;
-                    setScale = eraseScale;
-					brushRescale (scaleFactor, brush);
-				}
-				
-				Erase(oldUV, pixelUV);
-			}
+			if(DrawRaycast())
+            {
+                Erase();
+            }
 		}
 
         else if(Input.GetButtonUp("Y"))
@@ -211,8 +154,7 @@ public class DrawingScript : MonoBehaviour
         //clear the texture
         else if(Input.GetButtonUp("X"))
         {
-            FloodTexture(clearColor, texture);
-            NewBackup();
+            ClearTexture();
         }
 
         else if(Input.GetButtonDown("LB"))
@@ -230,16 +172,17 @@ public class DrawingScript : MonoBehaviour
 			first = true;
             NewBackup();
 		}
-	}
 
-    
-    void Draw(Vector2 OldUV, Vector2 NewUV)
-    {
-		//Debug.Log ("old: " + OldUV.ToString () + "new: " + NewUV.ToString ());
-		if (!first) 
+        /*********REFACTOR THIS*********************/
+    }
+
+
+    void Draw()
+    {  
+        if (!first) 
 		{
             Debug.Log("notfirststamp");
-			Vector2[] positions = FindStampPositions (OldUV, NewUV);
+			Vector2[] positions = FindStampPositions (oldUV, pixelUV);
 			for (int i = 0; i < positions.Length; ++i) 
 			{
 				Vector2 p = positions [i];
@@ -248,18 +191,21 @@ public class DrawingScript : MonoBehaviour
 		} 
 		else 
 		{
-            Debug.Log("firststamp");
-			Stamp ((int)NewUV.x - scaledBrushW / 2, (int)NewUV.y - scaledBrushH / 2);
+            Debug.Log("first");
+            oldUV = pixelUV;
+            setScale = brushScale;
+            BrushRescale(scaleFactor, brush);
+			Stamp ((int)pixelUV.x - scaledBrushW / 2, (int)pixelUV.y - scaledBrushH / 2);
             first = false;
         }
         texture.Apply(true);
     }
 
-	void Erase(Vector2 OldUV, Vector2 NewUV)
+	void Erase()
 	{
-		//Debug.Log ("old: " + OldUV.ToString () + "new: " + NewUV.ToString ());
-		if (!first) {
-			Vector2[] positions = FindStampPositions (OldUV, NewUV);
+        if (!first)
+        {
+			Vector2[] positions = FindStampPositions (oldUV, pixelUV);
 			//Debug.Log (positions.Length.ToString ());
 			for (int i = 0; i < positions.Length; ++i) 
 			{
@@ -267,14 +213,35 @@ public class DrawingScript : MonoBehaviour
 				if (p.x >= 0 && p.x + scaledBrushW <= texture.width && p.y >= 0 && p.y + scaledBrushH <= texture.height)
 					EraseStamp((int)p.x - scaledBrushW / 2, (int)p.y - scaledBrushH / 2);
 			}
-		} 
-		else 
-		{
-			EraseStamp((int)NewUV.x - scaledBrushW / 2, (int)NewUV.y - scaledBrushH / 2);
+		}
+        else
+        {
+            Debug.Log("first");
+            oldUV = pixelUV;
+            setScale = eraseScale;
+            BrushRescale(scaleFactor, brush);
+            EraseStamp((int)pixelUV.x - scaledBrushW / 2, (int)pixelUV.y - scaledBrushH / 2);
             first = false;
         }
+
 		texture.Apply(true);
 	}
+
+    bool DrawRaycast()
+    {
+        RaycastHit reticleHit;
+        if (Physics.Raycast(new Ray(brushCircle.transform.position, -brushCircle.transform.up), out reticleHit))
+        {
+            oldUV = pixelUV;
+            pixelUV = reticleHit.textureCoord;
+
+            pixelUV.x *= texture.width;
+            pixelUV.y *= texture.height;
+            return true;
+        }
+
+        return false;
+    }
 	
 	
 	Vector2[] FindStampPositions(Vector2 v1, Vector2 v2)
@@ -295,7 +262,7 @@ public class DrawingScript : MonoBehaviour
 	void Stamp(int x, int y)
 	{
 		Debug.Log ("stamp" + x + "|" + y);
-	    brushRescale(scaleFactor, brush);
+	    BrushRescale(scaleFactor, brush);
 
 		UpdateScaledBrush(x, y);
 		texture.SetPixels(x, y, scaledBrushW, scaledBrushH, currentPx);
@@ -304,7 +271,7 @@ public class DrawingScript : MonoBehaviour
 	void EraseStamp(int x, int y)
 	{
 		//Debug.Log ("stamp" + x + "|" + y);
-	    brushRescale(scaleFactor, brush);
+	    BrushRescale(scaleFactor, brush);
 		
 		UpdateScaledEraser(x, y);
 		texture.SetPixels(x, y, scaledBrushW, scaledBrushH, currentPx);
@@ -356,7 +323,35 @@ public class DrawingScript : MonoBehaviour
         */
     }
 
-	void brushRescale(float factor, Texture2D b)
+    //make the moveVector for the brush movement
+    void MakeMoveVector(float h, float v)
+    {
+        axisVector = h * transform.right + v * transform.forward;
+        axisVector = axisVector.sqrMagnitude >= 0.03 ? axisVector : new Vector3();
+    }
+
+    //Rescale the brush based on an axis value (Right stick not needed)
+    void FreeBrushSize(float scaleAxis)
+    {
+        if (Mathf.Abs(scaleAxis) > 0.2)
+        {
+            if (scaleAxis < 0)
+            {
+                scaleFactor = Mathf.Clamp(scaleFactor + (-1.0f * scaleSpeed * Time.deltaTime), minPX / brush.width, maxPX / brush.width);
+                setScale = scaleFactor;
+            }
+            else
+            {
+                scaleFactor = Mathf.Clamp(scaleFactor + (1.0f * scaleSpeed * Time.deltaTime), minPX / brush.width, maxPX / brush.width);
+                setScale = scaleFactor;
+            }
+
+            brushCircle.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
+
+        }
+    }
+
+    void BrushRescale(float factor, Texture2D b)
 	{
 		scaledBrushW = (int) (b.width * factor);
 		scaledBrushH = (int) (b.height * factor);
@@ -385,6 +380,12 @@ public class DrawingScript : MonoBehaviour
 		tex.SetPixels (c);
         tex.Apply();
 	}
+
+    void ClearTexture()
+    {
+        FloodTexture(clearColor, texture);
+        NewBackup();
+    }
 
     void SaveTexture()
     {
@@ -419,7 +420,6 @@ public class DrawingScript : MonoBehaviour
             target.Apply();
         }    
     }
-
 
     //BACKUP METHODS for undoing
     void NewBackup()
