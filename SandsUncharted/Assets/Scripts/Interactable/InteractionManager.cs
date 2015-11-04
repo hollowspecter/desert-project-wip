@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class InteractionManager : MonoBehaviour
 {
@@ -9,19 +10,39 @@ public class InteractionManager : MonoBehaviour
 
     private Interactable currInteractable; //The currently selected Interactable
 
-    private Camera _cam; // a reference to the main camera
+    private Transform _camT; // a reference to the main camera
+
+    [SerializeField]
+    public GameObject Panel;
 
 	// Use this for initialization
 	void Start ()
     {
         interactables = new List<Interactable>();
-        //_cam = GameObject.Find("Camera").transform.FindChild("MainCamera").GetComponent<Camera>();
+        _camT = GameObject.Find("Camera").transform.Find("Main Camera");
 	}
 	
 	// Update is called once per frame
 	void Update ()
     {
+
         ChooseCurrInteractable();
+
+        if(currInteractable != null && currInteractable.CheckInteractionAngle())
+        {
+            Panel.SetActive(true);
+            Text text = Panel.GetComponentInChildren<Text>();
+            text.text = currInteractable.GetInteractionString();
+        }
+        else
+        {
+            Panel.SetActive(false);
+        }
+
+        if(Input.GetButtonDown("A"))
+        {
+            currInteractable.Interact();
+        }
 	}
 
     public void AddInteractable(Interactable i)
@@ -59,16 +80,19 @@ public class InteractionManager : MonoBehaviour
 
         foreach(Interactable i in interactables)
         {
-            float distance = Vector3.Distance(i.transform.position, transform.position);
-            float angle = Vector3.Angle(Vector3.ProjectOnPlane((i.transform.position - transform.position), Vector3.up), Vector3.ProjectOnPlane(transform.forward, Vector3.up));
-            
-            //if the angle between the cameradirection and the vector to the object is low enough and the distance is closer than the distance to the current candidate
-            if (angle < maxAngle && candidateDistance > distance)
+            if (i.CheckInteractionAngle())
             {
-                candidateDistance = distance;
-                candidateAngle = angle;
-                bestCandidate = i;
-                Debug.Log("foundya");
+                float distance = Vector3.Distance(i.transform.position, transform.position);
+                float angle = Vector3.Angle(Vector3.ProjectOnPlane((i.transform.position - _camT.position), Vector3.up), Vector3.ProjectOnPlane(_camT.forward, Vector3.up));
+
+                //if the angle between the cameradirection and the vector to the object is low enough and the distance is closer than the distance to the current candidate
+                if (angle < maxAngle && candidateDistance > distance)
+                {
+                    candidateDistance = distance;
+                    candidateAngle = angle;
+                    bestCandidate = i;
+                    Debug.Log("foundya");
+                }
             }
         }
         currInteractable = bestCandidate;
@@ -79,7 +103,7 @@ public class InteractionManager : MonoBehaviour
     {
         if(currInteractable != null)
         {
-            Gizmos.color = Color.blue;
+            Gizmos.color = currInteractable.CheckInteractionAngle()? Color.blue : Color.red;
             Gizmos.DrawLine(transform.position, currInteractable.transform.position);
         }
     }

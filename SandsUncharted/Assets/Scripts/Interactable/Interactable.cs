@@ -12,7 +12,9 @@ public class Interactable : MonoBehaviour, IInteractable
 
     private Vector3 LookAtPosition; //The position the Camera should look at when the Object is interacted upon
 
-    private float maxInteractionAngle = 120f; //The maximum angle at which the Object can be interacted with, centered around the forward axis of the object
+    private const float maxInteractionAngle = 120f; //The maximum angle at which the Object can be interacted with, centered around the forward axis of the object
+
+    private const bool isTargettable = true; //can the Object be targetted with the targetcamera
 
     void Awake()
     {
@@ -64,7 +66,7 @@ public class Interactable : MonoBehaviour, IInteractable
     }
 
     //Check if the Angle to the player is within the Interaction angle
-    bool CheckInteractionAngle()
+    public bool CheckInteractionAngle()
     {
         if (manager != null)
         {
@@ -87,5 +89,10 @@ public class Interactable : MonoBehaviour, IInteractable
         //if(manager != null)
             //Gizmos.DrawLine(manager.transform.position, transform.position);
         
+    }
+
+    public string GetInteractionString()
+    {
+        return interactionString;
     }
 }
