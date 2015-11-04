@@ -98,9 +98,8 @@ public class ThirdPersonCamera : MonoBehaviour
 	private float mouseWheelSensitivity = 3.0f;
 	[SerializeField]
 	private float compensationOffset = 0.2f;
-	[SerializeField]
-	private CamStates startingState = CamStates.Free;
-	
+    [SerializeField]
+    private Transform mapTransform;
 	
 	// Smoothing and damping
     private Vector3 velocityCamSmooth = Vector3.zero;	
@@ -206,7 +205,7 @@ public class ThirdPersonCamera : MonoBehaviour
 		{
 			Debug.LogError("Parent camera to empty GameObject.", this);
 		}
-		
+
         //follow = GameObject.FindWithTag("Player").GetComponent<CharacterControllerLogic>();
         follow = GameObject.FindWithTag("Player").GetComponent<CharacterMovement>();
         if (follow == null) {
@@ -214,6 +213,11 @@ public class ThirdPersonCamera : MonoBehaviour
         }
 
 		followXform = GameObject.FindWithTag("Player").transform;
+
+        mapTransform = followXform.FindChild("MapAndBrush");
+        if (mapTransform == null) {
+            Debug.LogError("Map Transform could not been found.", this);
+        }
 		
 		lookDir = followXform.forward;
 		curLookDir = followXform.forward;
@@ -233,8 +237,6 @@ public class ThirdPersonCamera : MonoBehaviour
 				new GameObject().transform,
 				follow.transform
 			);	
-
-		camState = startingState;
 
 		// Intialize values to avoid having 0s
 		characterOffset = followXform.position + new Vector3(0f, distanceUp, 0f);
@@ -270,7 +272,8 @@ public class ThirdPersonCamera : MonoBehaviour
 		lookAt = characterOffset;
 		targetPosition = Vector3.zero;
 
-        OnCameraLateUpdate();
+        if (OnCameraLateUpdate != null)
+            OnCameraLateUpdate();
 
         //set the lookat weight - amount to use look at IK vs using
         //the heads animation
@@ -282,6 +285,49 @@ public class ThirdPersonCamera : MonoBehaviour
 	}
 	
 	#endregion
+
+    #region Map Mode
+
+    void OnMapModeEnter()
+    {
+        OnCameraLateUpdate += MapCamera;
+    }
+
+    void MapCamera()
+    {
+        // Move camera to firstPersonCamPos
+        targetPosition = mapTransform.position + mapTransform.up * 1f;
+        
+        // Smoothly transition look direction when entering mode
+        lookAt = Vector3.Lerp(targetPosition + followXform.forward, cameraXform.position + cameraXform.forward, camSmoothDampTime * Time.deltaTime);
+        lookAt = Vector3.Lerp(mapTransform.position, lookAt, camSmoothDampTime * Time.deltaTime);
+
+        /*DIFFERENT but not PERFECT*/
+        //// Looking up and down
+        //// Calculate the amount of rotation and apply to the firstPersonCamPos GameObject
+        //xAxisRot = 65f;
+        //firstPersonCamPos.XForm.localRotation = Quaternion.Euler(xAxisRot, 0, 0);
+        //
+        //// Superimpose firstPersonCamPos GameObject's rotation on camera
+        //Quaternion rotationShift = Quaternion.FromToRotation(this.transform.forward, firstPersonCamPos.XForm.forward);
+        //this.transform.rotation = rotationShift * this.transform.rotation;	
+        //
+        //// Move camera to firstPersonCamPos
+        //targetPosition = firstPersonCamPos.XForm.position;
+        //
+        //// Smoothly transition look direction towards firstPersonCamPos when entering first person mode
+        //lookAt = Vector3.Lerp(targetPosition + followXform.forward, this.transform.position + this.transform.forward, camSmoothDampTime * Time.deltaTime);
+        //
+        //// Choose lookAt target based on distance
+        //lookAt = (Vector3.Lerp(this.transform.position + this.transform.forward, lookAt, Vector3.Distance(this.transform.position, firstPersonCamPos.XForm.position)));
+    }
+
+    void OnMapModeExit()
+    {
+        OnCameraLateUpdate -= MapCamera;
+    }
+
+    #endregion
 
     #region First Person
 
@@ -319,9 +365,6 @@ public class ThirdPersonCamera : MonoBehaviour
 		
 		// Smoothly transition look direction towards firstPersonCamPos when entering first person mode
 		lookAt = Vector3.Lerp(targetPosition + followXform.forward, this.transform.position + this.transform.forward, camSmoothDampTime * Time.deltaTime);
-		Debug.DrawRay(Vector3.zero, lookAt, Color.black);
-		Debug.DrawRay(Vector3.zero, targetPosition + followXform.forward, Color.white);	
-		Debug.DrawRay(Vector3.zero, firstPersonCamPos.XForm.position + firstPersonCamPos.XForm.forward, Color.cyan);
 		
 		// Choose lookAt target based on distance
 		lookAt = (Vector3.Lerp(this.transform.position + this.transform.forward, lookAt, Vector3.Distance(this.transform.position, firstPersonCamPos.XForm.position)));
@@ -512,6 +555,9 @@ public class ThirdPersonCamera : MonoBehaviour
         BehindBackState.OnBehindBackEnter += OnBehindBackEnter;
         BehindBackState.OnBehindBackExit += OnBehindBackExit;
         BehindBackState.Walk += SetBehindbackLeftStick;
+
+        DrawState.OnDrawEnter += OnMapModeEnter;
+        DrawState.OnDrawExit += OnMapModeExit;
     }
 
     void OnDisable()
@@ -527,6 +573,9 @@ public class ThirdPersonCamera : MonoBehaviour
         BehindBackState.OnBehindBackEnter -= OnBehindBackEnter;
         BehindBackState.OnBehindBackExit -= OnBehindBackExit;
         BehindBackState.Walk -= SetBehindbackLeftStick;
+
+        DrawState.OnDrawEnter -= OnMapModeEnter;
+        DrawState.OnDrawExit -= OnMapModeExit;
     }
 
     #endregion
