@@ -13,6 +13,10 @@ public class TargetState : State
 {
     #region variables (private)
     [SerializeField]
+    private string interactButton = "A";
+    [SerializeField]
+    private string leftHandButton = "X";
+    [SerializeField]
     private string targetTriggerAxis = "Target";
     [SerializeField]
     private float leftTriggerThreshold = 0.01f;
@@ -27,6 +31,8 @@ public class TargetState : State
     #endregion
     public static event InputAxisHandler Walk;
 
+    public static event InputActionHandler Interact;
+    public static event InputActionHandler LeftHand;
     public static event InputActionHandler OnTargetEnter;
     public static event InputActionHandler OnTargetExit;
     #region Unity event functions
@@ -40,6 +46,17 @@ public class TargetState : State
         float yAxis = Input.GetAxis(walkY);
         Walk(xAxis, yAxis);
 
+        if (Input.GetButtonDown(interactButton)) {
+            if (Interact != null)
+                Interact();
+        }
+
+        if (Input.GetButtonDown(leftHandButton)) {
+            if (LeftHand != null)
+                LeftHand();
+        }
+
+        /* State Changes */
         if (leftTrigger < leftTriggerThreshold) {
             stateMachine.ChangeToState("BehindBack");
         }

@@ -46,26 +46,23 @@ public class CharacterLantern : MonoBehaviour
         lightSwitch = lantern.GetComponentInChildren<LightSwitch>();
     }
 
-    void Update()
+    void ToggleLantern()
     {
-        if (Input.GetKeyUp(KeyCode.L)) 
-        {
-            if (!usingLantern) {
-                lantern.parent = handSlot;
-                lantern.localPosition = Vector3.zero;
-                lantern.localRotation = Quaternion.identity;
-                lantern.GetComponentInChildren<CharacterJoint>().connectedBody = handSlot.GetComponent<Rigidbody>();
-            }
-            else {
-                lantern.parent = beltSlot;
-                lantern.localPosition = Vector3.zero;
-                lantern.localRotation = Quaternion.identity;
-                lantern.GetComponentInChildren<CharacterJoint>().connectedBody = beltSlot.GetComponent<Rigidbody>();
+        if (!usingLantern) {
+            lantern.parent = handSlot;
+            lantern.localPosition = Vector3.zero;
+            lantern.localRotation = Quaternion.identity;
+            lantern.GetComponentInChildren<CharacterJoint>().connectedBody = handSlot.GetComponent<Rigidbody>();
+        }
+        else {
+            lantern.parent = beltSlot;
+            lantern.localPosition = Vector3.zero;
+            lantern.localRotation = Quaternion.identity;
+            lantern.GetComponentInChildren<CharacterJoint>().connectedBody = beltSlot.GetComponent<Rigidbody>();
 
-            }
-            usingLantern = !usingLantern;
-            lightSwitch.SwitchLight(usingLantern);
-        }        
+        }
+        usingLantern = !usingLantern;
+        lightSwitch.SwitchLight(usingLantern);
     }
 
     //a callback for calculating IK
@@ -95,6 +92,21 @@ public class CharacterLantern : MonoBehaviour
     #endregion
 
     #region Methods
+
+    #endregion
+
+    #region InputState Machine Methods
+
+    void OnEnable()
+    {
+        BehindBackState.LeftHand += ToggleLantern;
+    }
+
+    void OnDisable()
+    {
+        BehindBackState.LeftHand -= ToggleLantern;
+
+    }
 
     #endregion
 }

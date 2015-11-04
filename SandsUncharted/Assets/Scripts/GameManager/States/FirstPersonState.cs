@@ -75,6 +75,7 @@ public class FirstPersonState : State
     public override void ExitState()
     {
         Debug.Log("Exited First Person State");
+        onFirstPersonExit();
     }
     #endregion
 }

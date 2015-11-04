@@ -77,7 +77,7 @@ public class BehindBackState : State
 
         float rightY = Input.GetAxis("RightStickY");
         if (rightY > firstPersonThreshold && !character.isMoving()) {
-            Debug.Log("right Y: " + rightY + "; threshold: " + firstPersonThreshold);
+            //Debug.Log("right Y: " + rightY + "; threshold: " + firstPersonThreshold);
             stateMachine.ChangeToState("FirstPerson");
         }
     }
