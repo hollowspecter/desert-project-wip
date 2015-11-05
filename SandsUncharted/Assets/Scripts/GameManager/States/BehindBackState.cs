@@ -67,18 +67,18 @@ public class BehindBackState : State
          */
 
         if (Input.GetButtonDown(drawModeButton)) {
-            stateMachine.ChangeToState("Draw");
+            stateMachine.ChangeToState(StateNames.DrawState);
         }
 
         float leftTrigger = Input.GetAxis(targetTriggerAxis);
         if (leftTrigger > leftTriggerThreshold) {
-            stateMachine.ChangeToState("Target");
+            stateMachine.ChangeToState(StateNames.TargetState);
         }
 
         float rightY = Input.GetAxis("RightStickY");
         if (rightY > firstPersonThreshold && !character.isMoving()) {
             //Debug.Log("right Y: " + rightY + "; threshold: " + firstPersonThreshold);
-            stateMachine.ChangeToState("FirstPerson");
+            stateMachine.ChangeToState(StateNames.FirstPersonState);
         }
     }
 

@@ -48,12 +48,12 @@ public class FirstPersonState : State
          */
 
         if (Input.GetButtonDown(backButton)) {
-            stateMachine.ChangeToState("BehindBack");
+            stateMachine.ChangeToState(StateNames.BehindBackState);
         }
 
         float leftTrigger = Input.GetAxis(targetTriggerAxis);
         if (leftTrigger > leftTriggerThreshold) {
-            stateMachine.ChangeToState("Target");
+            stateMachine.ChangeToState(StateNames.TargetState);
         }
     }
 

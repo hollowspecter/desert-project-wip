@@ -19,7 +19,7 @@ public class DrawingScript : MonoBehaviour
 	Vector2 pixelUV;
 
     Vector3 axisVector;
-    float reticleAcceleration = 4.0f;
+    float reticleAcceleration = 2.8f;
 	Vector3 speed = new Vector3();
 
 	float paintinterval = 1f; // how many pixels between two drawpositions

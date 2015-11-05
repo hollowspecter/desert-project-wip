@@ -21,7 +21,7 @@ public class InGameStateMachine : StateMachine
 
         // Trigger Pause
         if (Input.GetButtonDown(pauseButton)) {
-            stateMachine.ChangeToState("Pause");
+            stateMachine.ChangeToState(StateNames.PauseState);
         }
     }
 

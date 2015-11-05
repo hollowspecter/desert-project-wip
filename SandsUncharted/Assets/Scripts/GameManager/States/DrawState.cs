@@ -54,18 +54,28 @@ public class DrawState : State
         if (MoveCursor != null)
             MoveCursor(moveX, moveY);
 
-        if (Input.GetButton(drawButton)) Draw();
-        if (Input.GetButton(eraseButton)) Erase();
-        if (Input.GetButton(clearButton)) Clear();
-        if (Input.GetButtonDown(undoButton)) Undo();
-        if (Input.GetButtonDown(redoButton)) Redo();
+        if (Input.GetButton(drawButton)) {
+            if (Draw != null) Draw();
+        }
+        if (Input.GetButton(eraseButton)) {
+            if (Erase != null) Erase();
+        }
+        if (Input.GetButton(clearButton)) {
+            if (Clear != null) Clear();
+        }
+        if (Input.GetButtonDown(undoButton)) {
+            if (Undo != null) Undo();
+        }
+        if (Input.GetButtonDown(redoButton)) {
+            if (Redo != null) Redo();
+        }
 
         if (Input.GetButtonUp(drawButton) || Input.GetButtonUp(eraseButton))
             LiftedPen();
 
         /* State Changing */
         if (Input.GetButtonDown(backButton)) {
-            stateMachine.ChangeToState("BehindBack");
+            stateMachine.ChangeToState(StateNames.BehindBackState);
         }
     }
 

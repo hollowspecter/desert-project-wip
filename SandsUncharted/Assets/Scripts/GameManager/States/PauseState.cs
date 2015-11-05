@@ -17,6 +17,8 @@ public class PauseState : State
     #endregion
 
     #region Properties (public)
+    public static InputActionHandler Pause;
+    public static InputActionHandler Unpause;
     #endregion
 
     #region Unity event functions
@@ -24,7 +26,7 @@ public class PauseState : State
     public override void UpdateActive(double deltaTime)
     {
         if (Input.GetButtonDown(unpauseButton)) {
-            stateMachine.ChangeToState("InGameStateMachine");
+            stateMachine.ChangeToState("InGame");
         }
     }
 
@@ -40,11 +42,13 @@ public class PauseState : State
     public override void EnterState()
     {
         Debug.Log("Entered Pause State");
+        Pause();
     }
 
     public override void ExitState()
     {
         Debug.Log("Exited Pause State");
+        Unpause();
     }
     #endregion
 }

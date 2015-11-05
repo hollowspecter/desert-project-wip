@@ -58,7 +58,7 @@ public class TargetState : State
 
         /* State Changes */
         if (leftTrigger < leftTriggerThreshold) {
-            stateMachine.ChangeToState("BehindBack");
+            stateMachine.ChangeToState(StateNames.BehindBackState);
         }
     }
 

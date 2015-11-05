@@ -219,16 +219,24 @@ public class CharacterMovement : MonoBehaviour
         this.leftY = leftY;
     }
 
+    void ResetMovement()
+    {
+        leftX = 0f;
+        leftY = 0f;
+    }
+
     void OnEnable()
     {
         BehindBackState.Walk += RetrieveMovementInput;
         TargetState.Walk += RetrieveMovementInput;
+        DrawState.OnDrawEnter += ResetMovement;
     }
 
     void OnDisable()
     {
         BehindBackState.Walk -= RetrieveMovementInput;
         TargetState.Walk -= RetrieveMovementInput;
+        DrawState.OnDrawEnter -= ResetMovement;
     }
 
     #endregion

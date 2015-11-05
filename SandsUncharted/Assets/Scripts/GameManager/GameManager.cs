@@ -78,8 +78,8 @@ public class GameManager : MonoBehaviour
         inGameStateMachine.setParentStateMachine(stateMachine);
         pauseState.setParentStateMachine(stateMachine);
 
-        stateMachine.AddState("InGame", inGameStateMachine);
-        stateMachine.AddState("Pause", pauseState);
+        stateMachine.AddState(StateNames.InGameStateMachine, inGameStateMachine);
+        stateMachine.AddState(StateNames.PauseState, pauseState);
 
         //layer 2
         behindBackState.setParentStateMachine(inGameStateMachine);
@@ -87,17 +87,17 @@ public class GameManager : MonoBehaviour
         targetState.setParentStateMachine(inGameStateMachine);
         drawState.setParentStateMachine(inGameStateMachine);
 
-        inGameStateMachine.AddState("BehindBack", behindBackState);
-        inGameStateMachine.AddState("FirstPerson", firstPersonState);
-        inGameStateMachine.AddState("Target", targetState);
-        inGameStateMachine.AddState("Draw", drawState);
+        inGameStateMachine.AddState(StateNames.BehindBackState, behindBackState);
+        inGameStateMachine.AddState(StateNames.FirstPersonState, firstPersonState);
+        inGameStateMachine.AddState(StateNames.TargetState, targetState);
+        inGameStateMachine.AddState(StateNames.DrawState, drawState);
 
         //add them all to all states DEPRECATED
-        allStates.Add("InGame", inGameStateMachine);
-        allStates.Add("Pause", pauseState);
-        allStates.Add("BehindBack", behindBackState);
-        allStates.Add("Target", targetState);
-        allStates.Add("Draw", drawState);
+        allStates.Add(StateNames.InGameStateMachine, inGameStateMachine);
+        allStates.Add(StateNames.PauseState, pauseState);
+        allStates.Add(StateNames.BehindBackState, behindBackState);
+        allStates.Add(StateNames.TargetState, targetState);
+        allStates.Add(StateNames.DrawState, drawState);
 
         stateMachine.EnterState();
     }

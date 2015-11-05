@@ -297,29 +297,8 @@ public class ThirdPersonCamera : MonoBehaviour
     {
         // Move camera to firstPersonCamPos
         targetPosition = mapTransform.position + mapTransform.up * 1f;
-        
-        // Smoothly transition look direction when entering mode
-        lookAt = Vector3.Lerp(targetPosition + followXform.forward, cameraXform.position + cameraXform.forward, camSmoothDampTime * Time.deltaTime);
-        lookAt = Vector3.Lerp(mapTransform.position, lookAt, camSmoothDampTime * Time.deltaTime);
-
-        /*DIFFERENT but not PERFECT*/
-        //// Looking up and down
-        //// Calculate the amount of rotation and apply to the firstPersonCamPos GameObject
-        //xAxisRot = 65f;
-        //firstPersonCamPos.XForm.localRotation = Quaternion.Euler(xAxisRot, 0, 0);
-        //
-        //// Superimpose firstPersonCamPos GameObject's rotation on camera
-        //Quaternion rotationShift = Quaternion.FromToRotation(this.transform.forward, firstPersonCamPos.XForm.forward);
-        //this.transform.rotation = rotationShift * this.transform.rotation;	
-        //
-        //// Move camera to firstPersonCamPos
-        //targetPosition = firstPersonCamPos.XForm.position;
-        //
-        //// Smoothly transition look direction towards firstPersonCamPos when entering first person mode
-        //lookAt = Vector3.Lerp(targetPosition + followXform.forward, this.transform.position + this.transform.forward, camSmoothDampTime * Time.deltaTime);
-        //
-        //// Choose lookAt target based on distance
-        //lookAt = (Vector3.Lerp(this.transform.position + this.transform.forward, lookAt, Vector3.Distance(this.transform.position, firstPersonCamPos.XForm.position)));
+        // Look at the map
+        lookAt = mapTransform.position;
     }
 
     void OnMapModeExit()
