@@ -12,6 +12,8 @@ public class InteractionManager : MonoBehaviour
 
     private Transform _camT; // a reference to the main camera
 
+    private bool canInteract;
+
     [SerializeField]
     public GameObject Panel;
 
@@ -91,7 +93,7 @@ public class InteractionManager : MonoBehaviour
                     candidateDistance = distance;
                     candidateAngle = angle;
                     bestCandidate = i;
-                    Debug.Log("foundya");
+                    //Debug.Log("foundya");
                 }
             }
         }

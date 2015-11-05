@@ -1,35 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Interactable : MonoBehaviour, IInteractable
+public abstract class Interactable : MonoBehaviour, IInteractable
 {
-    [SerializeField]
-    private string interactionString = "Interact"; //The string to be displayed next to the button prompt
+    protected string interactionString = "Interact"; //The string to be displayed next to the button prompt
 
     private SphereCollider coll; //The sphere trigger of this object
 
     private InteractionManager manager; //The Interaction manager on the player
 
-    private Vector3 LookAtPosition; //The position the Camera should look at when the Object is interacted upon
-
     private const float maxInteractionAngle = 120f; //The maximum angle at which the Object can be interacted with, centered around the forward axis of the object
 
-    private const bool isTargettable = true; //can the Object be targetted with the targetcamera
-
     void Awake()
-    {
-        Init();
-    }
-	
-	// Update is called once per frame
-	void Update ()
-    {
-	    
-	}
-
-
-    //Initialization method
-    void Init()
     {
         coll = GetComponent<SphereCollider>();
         if (coll == null)
@@ -41,13 +23,16 @@ public class Interactable : MonoBehaviour, IInteractable
         {
             Debug.LogError("manager is null");
         }
+
+        Init();
     }
 
+    //Initialization method
+    public abstract void Init();
+
     //This method will hold the objects specific interaction
-    public void Interact()
-    {
-        Debug.Log("I have been interacted with");
-    }
+    public abstract void Interact();
+
 
     void OnTriggerEnter(Collider c)
     {
@@ -85,9 +70,6 @@ public class Interactable : MonoBehaviour, IInteractable
 
     void OnDrawGizmos()
     {
-        //Gizmos.color = CheckInteractionAngle() ? Color.green : Color.red;
-        //if(manager != null)
-            //Gizmos.DrawLine(manager.transform.position, transform.position);
         
     }
 
