@@ -50,7 +50,7 @@ public class DrawingScript : MonoBehaviour
 	Transform minCorner;
 
 
-    Texture2D[] backups;
+    Color[][] backups;
     int maxBackups = 5;
     int numBackups = 0;
     int currBackup  = 0;
@@ -87,11 +87,11 @@ public class DrawingScript : MonoBehaviour
 		brushCircle.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
 		BrushRescale (scaleFactor, brush);
 
-        backups = new Texture2D[maxBackups];
+        backups = new Color[maxBackups][];
         for(int i = 0; i < maxBackups; ++i)
         {
-            backups[i] = new Texture2D((int)(texSize * ratioWH), texSize, TextureFormat.ARGB32, false);
-            FloodTexture(clearColor, backups[i]);
+            backups[i] = new Color[(int)((texSize * ratioWH) * texSize)];
+            FloodArray(clearColor, backups[i]);
         }
 
         NewBackup();
@@ -335,8 +335,17 @@ public class DrawingScript : MonoBehaviour
         tex.Apply();
 	}
 
+    void FloodArray(Color color, Color[] array)
+    {
+        for (int i = 0; i < array.Length; i++)
+        {
+            array[i] = color;
+        }
+    }
+
     void ClearTexture()
     {
+        Debug.Log("clear texture");
         FloodTexture(clearColor, texture);
         NewBackup();
     }
@@ -366,13 +375,21 @@ public class DrawingScript : MonoBehaviour
         Debug.Log("load");
     }
 
-    void CopyTexture(Texture2D source, Texture2D target)
+    void CopyToTexture(Color[] source, Texture2D target)
     {
-        if(source.width == target.width && source.height == target.height)
+        if(source.Length == target.width * target.height)
         {
-            target.SetPixels(source.GetPixels());
+            target.SetPixels(source);
             target.Apply();
         }    
+    }
+
+    void CopyArray(Color[] source, Color[] target)
+    {
+        for(int i = 0; i < source.Length; ++i)
+        {
+            target[i] = source[i];
+        }
     }
 
     //BACKUP METHODS for undoing
@@ -388,7 +405,7 @@ public class DrawingScript : MonoBehaviour
         //Move the Backups over one slot
         ShiftBackups();
         //Copy the texture into the first slot
-        CopyTexture(texture, backups[0]);
+        CopyArray(texture.GetPixels(), backups[0]);
         //set the backup to -1 to indicate that there was a new backup saved
         currBackup = 0;
 
@@ -421,7 +438,7 @@ public class DrawingScript : MonoBehaviour
                 currBackup = (int)Mathf.Max(currBackup - 1, 0f);
             }
             Debug.Log((undo ? "undo " : "redo ") + currBackup);
-            CopyTexture(backups[currBackup], texture);
+            CopyToTexture(backups[currBackup], texture);
         }
     }
 
@@ -430,7 +447,7 @@ public class DrawingScript : MonoBehaviour
     {
         for(int i = maxBackups-2; i >= 0; --i)
         {
-            CopyTexture(backups[i], backups[i + 1]);
+            CopyArray(backups[i], backups[i + 1]);
             //Debug.Log(i + " -> " + (i +1));
         }
     }
@@ -441,8 +458,8 @@ public class DrawingScript : MonoBehaviour
         int offset = (int) Mathf.Max(currBackup, 0);
         for(int i = currBackup; i <= numBackups; ++i)
         {
-            CopyTexture(backups[i], backups[i - offset]);
-            FloodTexture(clearColor, backups[i]);
+            CopyArray(backups[i], backups[i - offset]);
+            FloodArray(clearColor, backups[i]);
             //Debug.Log(i + " -> " + (i - offset));
         }
 
@@ -490,6 +507,7 @@ public class DrawingScript : MonoBehaviour
 
     void OnClear()
     {
+        Debug.Log("clear");
         ClearTexture();
     }
 
@@ -500,16 +518,19 @@ public class DrawingScript : MonoBehaviour
 
     void Undo()
     {
+        Debug.Log("undo");
         GetBackup(true);
     }
 
     void Redo()
     {
+        Debug.Log("redo");
         GetBackup(false);
     }
 
     void OnLiftedPen()
     {
+        Debug.Log("lift");
         first = true;
         NewBackup();
     }

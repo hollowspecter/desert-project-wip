@@ -28,6 +28,7 @@ public class DrawState : State
     private string moveCursorX = "Horizontal";
     [SerializeField]
     private string moveCursorY = "Vertical";
+
     #endregion
 
     #region Properties (public)
@@ -46,6 +47,11 @@ public class DrawState : State
 
     #region Unity event functions
 
+    void Update()
+    {
+
+    }
+
     public override void UpdateActive(double deltaTime)
     {
         /* Input Handling */
@@ -54,19 +60,25 @@ public class DrawState : State
         if (MoveCursor != null)
             MoveCursor(moveX, moveY);
 
-        if (Input.GetButton(drawButton)) {
+        if (Input.GetButton(drawButton))
+        {
             if (Draw != null) Draw();
         }
-        if (Input.GetButton(eraseButton)) {
+        if (Input.GetButton(eraseButton))
+        {
             if (Erase != null) Erase();
         }
-        if (Input.GetButton(clearButton)) {
+
+        if (Input.GetButtonDown(clearButton))
+        {
             if (Clear != null) Clear();
         }
-        if (Input.GetButtonDown(undoButton)) {
+        if (Input.GetButtonDown(undoButton))
+        {
             if (Undo != null) Undo();
         }
-        if (Input.GetButtonDown(redoButton)) {
+        if (Input.GetButtonDown(redoButton))
+        {
             if (Redo != null) Redo();
         }
 
@@ -74,7 +86,8 @@ public class DrawState : State
             LiftedPen();
 
         /* State Changing */
-        if (Input.GetButtonDown(backButton)) {
+        if (Input.GetButtonDown(backButton))
+        {
             stateMachine.ChangeToState(StateNames.BehindBackState);
         }
     }
@@ -92,6 +105,7 @@ public class DrawState : State
     {
         Debug.Log("Entered Draw State");
         OnDrawEnter();
+        //Debug.Log("redo:" + redoButton + " undo: " + undoButton);
     }
 
     public override void ExitState()
