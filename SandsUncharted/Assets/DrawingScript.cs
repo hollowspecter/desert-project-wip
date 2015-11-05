@@ -67,7 +67,7 @@ public class DrawingScript : MonoBehaviour
         minCorner = transform.parent.FindChild("topEdge");
 
         cam = GameObject.Find("Main Camera").GetComponent<Camera>();
-        float ratioWH = (maxCorner.position - minCorner.position).x / (maxCorner.position - minCorner.position).z;
+        float ratioWH = 2f;
 		texture = new Texture2D((int)(texSize * ratioWH), texSize, TextureFormat.ARGB32, false);
 		clearColor  = new Color(0f,0f,0f,0f);
 		FloodTexture (clearColor, texture);
