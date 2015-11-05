@@ -12,7 +12,7 @@ public class InteractionManager : MonoBehaviour
 
     private Transform _camT; // a reference to the main camera
 
-    private bool canInteract;
+    private bool canInteract = true;
 
     [SerializeField]
     public GameObject Panel;
@@ -30,7 +30,7 @@ public class InteractionManager : MonoBehaviour
 
         ChooseCurrInteractable();
 
-        if(currInteractable != null && currInteractable.CheckInteractionAngle())
+        if(currInteractable != null && currInteractable.CheckInteractionAngle() && canInteract)
         {
             Panel.SetActive(true);
             Text text = Panel.GetComponentInChildren<Text>();
@@ -43,7 +43,7 @@ public class InteractionManager : MonoBehaviour
 
         if(Input.GetButtonDown("A"))
         {
-            currInteractable.Interact();
+           currInteractable.Interact();
         }
 	}
 
@@ -100,6 +100,17 @@ public class InteractionManager : MonoBehaviour
         currInteractable = bestCandidate;
 
     }
+    
+    public void SetCanInteract(bool b)
+    {
+        canInteract = b;
+    }
+
+    public bool GetCanInteract()
+    {
+        return canInteract;
+    }
+
 
     void OnDrawGizmos()
     {

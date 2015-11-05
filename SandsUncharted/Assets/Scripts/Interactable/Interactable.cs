@@ -7,7 +7,7 @@ public abstract class Interactable : MonoBehaviour, IInteractable
 
     private SphereCollider coll; //The sphere trigger of this object
 
-    private InteractionManager manager; //The Interaction manager on the player
+    protected InteractionManager manager; //The Interaction manager on the player
 
     private const float maxInteractionAngle = 120f; //The maximum angle at which the Object can be interacted with, centered around the forward axis of the object
 
