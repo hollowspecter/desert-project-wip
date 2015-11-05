@@ -28,11 +28,13 @@ public class DrawState : State
     private string moveCursorX = "Horizontal";
     [SerializeField]
     private string moveCursorY = "Vertical";
-
+    [SerializeField]
+    private string triggerAxis = "Target";
     #endregion
 
     #region Properties (public)
     public static event InputAxisHandler MoveCursor;
+    public static event InputAxisHandler TurnMap;
 
     public static event InputActionHandler Draw;
     public static event InputActionHandler Erase;
@@ -59,6 +61,10 @@ public class DrawState : State
         float moveY = Input.GetAxis(moveCursorY);
         if (MoveCursor != null)
             MoveCursor(moveX, moveY);
+
+        float trigger = Input.GetAxis("Target");
+        if (TurnMap != null)
+            TurnMap(trigger, 0f);
 
         if (Input.GetButton(drawButton))
         {
