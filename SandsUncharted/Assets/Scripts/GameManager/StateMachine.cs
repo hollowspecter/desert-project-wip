@@ -4,6 +4,7 @@
 ///</summary>
 
 using UnityEngine;
+using UnityEngine.Assertions;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -13,7 +14,7 @@ using System.Collections.Generic;
 public class StateMachine : State
 {
     [SerializeField]
-    protected Dictionary<string, State> states;
+    private Dictionary<string, State> states;
 
     protected string currentState = "";
     protected string defaultState = "";
@@ -45,6 +46,9 @@ public class StateMachine : State
 
     public void AddState(string name, State state)
     {
+        Assert.IsNotNull<State>(state);
+        Assert.IsNotNull<string>(name);
+        Assert.IsNotNull<Dictionary<string, State>>(states);
         states.Add(name, state);
 
         if (defaultState.Length == 0) {
@@ -61,6 +65,7 @@ public class StateMachine : State
         if (currentState.Length == 0) {
             ChangeToState(defaultState);
         }
+        
         states[currentState].UpdateActive(deltaTime);
     }
 
