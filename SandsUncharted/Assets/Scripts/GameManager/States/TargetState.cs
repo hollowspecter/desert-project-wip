@@ -31,10 +31,12 @@ public class TargetState : State
     #endregion
     public static event InputAxisHandler Walk;
 
-    public static event InputActionHandler Interact;
     public static event InputActionHandler LeftHand;
     public static event InputActionHandler OnTargetEnter;
     public static event InputActionHandler OnTargetExit;
+
+    public static event InputInteractionHandler Interact;
+
     #region Unity event functions
 
     public override void UpdateActive(double deltaTime)
@@ -48,7 +50,8 @@ public class TargetState : State
 
         if (Input.GetButtonDown(interactButton)) {
             if (Interact != null)
-                Interact();
+                if (Interact())
+                    stateMachine.ChangeToState(StateNames.InteractionState);
         }
 
         if (Input.GetButtonDown(leftHandButton)) {

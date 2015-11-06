@@ -34,10 +34,12 @@ public class BehindBackState : State
 
     #region Properties (public)
     public static event InputAxisHandler Walk;
-    public static event InputActionHandler Interact;
     public static event InputActionHandler LeftHand;
     public static event InputActionHandler OnBehindBackEnter;
     public static event InputActionHandler OnBehindBackExit;
+
+    public static event InputInteractionHandler Interact;
+
     #endregion
 
     #region Unity event functions
@@ -54,7 +56,8 @@ public class BehindBackState : State
 
         if (Input.GetButtonDown(interactButton)) {
             if (Interact != null)
-                Interact();
+                if (Interact())
+                    stateMachine.ChangeToState(StateNames.InteractionState);
         }
 
         if (Input.GetButtonDown(leftHandButton)) {

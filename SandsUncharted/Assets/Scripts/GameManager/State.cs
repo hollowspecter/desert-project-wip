@@ -21,8 +21,9 @@ public abstract class State : MonoBehaviour
     public bool Active;
     
     // delegate and events
-    public delegate void InputActionHandler();
-    public delegate void InputAxisHandler(float xAxis, float yAxis);
+    public delegate void InputActionHandler(); // used for simple Events and Button Input
+    public delegate bool InputInteractionHandler(); // used for Interactions. Boolean returns true, if Interaction Happened
+    public delegate void InputAxisHandler(float xAxis, float yAxis); // used to transfer axis Input
 
     public void setParentStateMachine(StateMachine s)
     {

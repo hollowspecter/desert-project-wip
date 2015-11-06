@@ -22,7 +22,30 @@ public class ReadInteractable : Interactable
         Debug.Log("Move the camera to the beat!");
         manager.SetCanInteract(!manager.GetCanInteract());
         if(dialoguePanel != null)
-            dialoguePanel.SetActive(!dialoguePanel.activeSelf);
-
+            dialoguePanel.SetActive(true);
     }
+
+    bool ReadAndClose()
+    {
+        if (dialoguePanel != null) {
+            dialoguePanel.SetActive(false);
+            return true;
+        }
+        else
+            return false;
+    }
+
+    #region State Input Handling
+
+    void OnEnable()
+    {
+        InteractionState.InteractAndExit += ReadAndClose;
+    }
+
+    void OnDisable()
+    {
+        InteractionState.InteractAndExit -= ReadAndClose;
+    }
+
+    #endregion
 }

@@ -5,17 +5,13 @@ using UnityEngine.UI;
 
 public class InteractionManager : MonoBehaviour
 {
-
-    private List<Interactable> interactables; //List containing all the Interactables that we can currently interact with
-
-    private Interactable currInteractable; //The currently selected Interactable
-
-    private Transform _camT; // a reference to the main camera
-
-    private bool canInteract = true;
-
     [SerializeField]
-    public GameObject Panel;
+    private GameObject buttonPromptPanel;
+    
+    private List<Interactable> interactables; //List containing all the Interactables that we can currently interact with
+    private Interactable currInteractable; //The currently selected Interactable
+    private Transform _camT; // a reference to the main camera
+    private bool canInteract = true;
 
 	// Use this for initialization
 	void Start ()
@@ -27,23 +23,17 @@ public class InteractionManager : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-
         ChooseCurrInteractable();
 
         if(currInteractable != null && currInteractable.CheckInteractionAngle() && canInteract)
         {
-            Panel.SetActive(true);
-            Text text = Panel.GetComponentInChildren<Text>();
+            buttonPromptPanel.SetActive(true);
+            Text text = buttonPromptPanel.GetComponentInChildren<Text>();
             text.text = currInteractable.GetInteractionString();
         }
         else
         {
-            Panel.SetActive(false);
-        }
-
-        if(Input.GetButtonDown("A"))
-        {
-           currInteractable.Interact();
+            buttonPromptPanel.SetActive(false);
         }
 	}
 
@@ -93,7 +83,6 @@ public class InteractionManager : MonoBehaviour
                     candidateDistance = distance;
                     candidateAngle = angle;
                     bestCandidate = i;
-                    //Debug.Log("foundya");
                 }
             }
         }
@@ -111,13 +100,38 @@ public class InteractionManager : MonoBehaviour
         return canInteract;
     }
 
-
     void OnDrawGizmos()
     {
         if(currInteractable != null)
         {
-            Gizmos.color = currInteractable.CheckInteractionAngle()? Color.blue : Color.red;
+            Gizmos.color = currInteractable.CheckInteractionAngle() ? Color.blue : Color.red;
             Gizmos.DrawLine(transform.position, currInteractable.transform.position);
         }
     }
+
+    #region State delegate Input Handling
+
+    bool Interact()
+    {
+        if (currInteractable != null) {
+            currInteractable.Interact();
+            return true;
+        }
+        else
+            return false;
+    }
+
+    void OnEnable()
+    {
+        TargetState.Interact += Interact;
+        BehindBackState.Interact += Interact;
+    }
+
+    void OnDisable()
+    {
+        TargetState.Interact -= Interact;
+        BehindBackState.Interact -= Interact;
+    }
+
+    #endregion
 }

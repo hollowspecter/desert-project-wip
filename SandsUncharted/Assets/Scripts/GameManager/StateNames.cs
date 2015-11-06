@@ -17,4 +17,5 @@ public class StateNames
     public static string InGameStateMachine = "InGame";
     public static string PauseState = "Pause";
     public static string TargetState = "Target";
+    public static string InteractionState = "Interaction";
 }
