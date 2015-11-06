@@ -5,11 +5,15 @@ using System.IO;
 
 public class DrawingScript : MonoBehaviour 
 {
-	public Texture2D brush;
-	public GameObject brushCircle;
+
+    [SerializeField]
+    private int texSize = 512;
+    [SerializeField]
+    private Texture2D brush;
+    [SerializeField]
+    private GameObject brushCircle;
 
     Texture2D texture;
-    int texSize = 512;
 
     Color clearColor;
     Camera cam;
@@ -70,6 +74,8 @@ public class DrawingScript : MonoBehaviour
 	{
         maxCorner = transform.Find("posCorner");
         minCorner = transform.Find("negCorner");
+        if (maxCorner != null)
+            Debug.LogError("no maxcorner");
 
         cam = GameObject.Find("Main Camera").GetComponent<Camera>();
         float ratioWH = 1f;
