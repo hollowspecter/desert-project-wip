@@ -16,6 +16,10 @@ public class DrawingScript : MonoBehaviour
     private string textureSlot = "_FrontDrawTex";
     [SerializeField]
     float reticleAcceleration = 2.8f;
+    [SerializeField]
+    float reticleScale = 12f;
+    [SerializeField]
+    float border = 0.12f;
 
     Texture2D texture;
 
@@ -48,7 +52,6 @@ public class DrawingScript : MonoBehaviour
 	float minScale = 0.25f;
 	float maxScale = 1f;
 
-    float reticleScale = 12f;
 
 	float minPX = 16f;
 	float maxPX = 64f;
@@ -56,7 +59,6 @@ public class DrawingScript : MonoBehaviour
 	MeshRenderer mesh;
 	float meshWidth;
 	float meshHeight;
-	float border = 0.5f;
 
 	Transform maxCorner;
 	Transform minCorner;
@@ -146,7 +148,11 @@ public class DrawingScript : MonoBehaviour
 			Debug.LogError("no mesh in update");
 		}
 		//clamp brushposition to mapborder
-		brushCircle.transform.localPosition = new Vector3 (Mathf.Clamp (brushCircle.transform.localPosition.x, minCorner.localPosition.x + border, maxCorner.localPosition.x - border), brushCircle.transform.localPosition.y, Mathf.Clamp(brushCircle.transform.localPosition.z, minCorner.localPosition.z + border, maxCorner.localPosition.z - border));
+        float minX = Mathf.Min(minCorner.localPosition.x, maxCorner.localPosition.x);
+        float maxX = Mathf.Max(minCorner.localPosition.x, maxCorner.localPosition.x);
+        float minZ = Mathf.Min(minCorner.localPosition.z, maxCorner.localPosition.z);
+        float maxZ = Mathf.Max(minCorner.localPosition.z, maxCorner.localPosition.z);
+		brushCircle.transform.localPosition = new Vector3 (Mathf.Clamp (brushCircle.transform.localPosition.x, minX + border, maxX - border), brushCircle.transform.localPosition.y, Mathf.Clamp(brushCircle.transform.localPosition.z, minZ + border, maxZ - border));
 
         //rescale based on speed slow = big / fast = small
         scaleFactor = Mathf.Clamp(scaleFactor + (((1f - axisVector.magnitude * axisVector.magnitude) * 2f) - 1f) /* * Random.Range(-0.2f, 1f)*/ * Time.deltaTime, setScale * 0.75f, setScale * 1.25f);
