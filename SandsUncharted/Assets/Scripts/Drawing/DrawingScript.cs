@@ -12,6 +12,10 @@ public class DrawingScript : MonoBehaviour
     private Texture2D brush;
     [SerializeField]
     private GameObject brushCircle;
+    [SerializeField]
+    private string textureSlot = "_FrontDrawTex";
+    [SerializeField]
+    float reticleAcceleration = 2.8f;
 
     Texture2D texture;
 
@@ -23,7 +27,6 @@ public class DrawingScript : MonoBehaviour
 	Vector2 pixelUV;
 
     Vector3 axisVector;
-    float reticleAcceleration = 2.8f;
 	Vector3 speed = new Vector3();
 
     float turnAxis;
@@ -70,11 +73,17 @@ public class DrawingScript : MonoBehaviour
 
     //public GameObject uiPanel;
 
+    /*DrawingScript(int textureSize = 512, string textureName = "_FrontDrawTex")
+    {
+        texSize = textureSize;
+        textureName = textureSlot;
+    }*/
+
     void Awake() 
 	{
         maxCorner = transform.Find("posCorner");
         minCorner = transform.Find("negCorner");
-        if (maxCorner != null)
+        if (maxCorner == null)
             Debug.LogError("no maxcorner");
 
         cam = GameObject.Find("Main Camera").GetComponent<Camera>();
@@ -87,7 +96,7 @@ public class DrawingScript : MonoBehaviour
 		{
 			Debug.LogError("no mesh");
 		}
-		mesh.material.SetTexture("_DrawTex", texture);
+		mesh.material.SetTexture(textureSlot, texture);
 
 		meshWidth = mesh.bounds.size.x;
 		meshHeight = mesh.bounds.size.z;
@@ -313,7 +322,7 @@ public class DrawingScript : MonoBehaviour
                 setScale = scaleFactor;
             }
 
-            brushCircle.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
+            brushCircle.transform.localScale = new Vector3(scaleFactor * reticleScale, scaleFactor * reticleScale, scaleFactor * reticleScale);
 
         }
     }
@@ -399,7 +408,7 @@ public class DrawingScript : MonoBehaviour
 
     void CopyArray(Color[] source, Color[] target)
     {
-        for(int i = 0; i < source.Length; ++i)
+        for(int i = 0; i < target.Length; ++i)
         {
             target[i] = source[i];
         }
@@ -487,6 +496,12 @@ public class DrawingScript : MonoBehaviour
         transform.Rotate(Vector3.up * angle);
     }
 
+
+    public void SetReticleAcc(float acc)
+    {
+        reticleAcceleration = acc;
+    }
+
     #region Input Managing Methods
 
     void OnEnable()
@@ -568,6 +583,7 @@ public class DrawingScript : MonoBehaviour
         //Debug.Log("turninput" + axis);
         turnAxis = axis;
     }
+
 
     #endregion
 }
