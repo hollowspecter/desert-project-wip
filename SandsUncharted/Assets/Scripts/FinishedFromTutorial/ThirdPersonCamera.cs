@@ -100,7 +100,9 @@ public class ThirdPersonCamera : MonoBehaviour
 	private float compensationOffset = 0.2f;
     [SerializeField]
     private Transform mapTransform;
-	
+    [SerializeField]
+    private LayerMask playerLayer;
+
 	// Smoothing and damping
     private Vector3 velocityCamSmooth = Vector3.zero;	
 	[SerializeField]
@@ -296,7 +298,7 @@ public class ThirdPersonCamera : MonoBehaviour
     void MapCamera()
     {
         // Move camera to firstPersonCamPos
-        targetPosition = mapTransform.position + mapTransform.up * 1f;
+        targetPosition = mapTransform.position + mapTransform.up * 1.1f;
         // Look at the map
         lookAt = mapTransform.position;
     }
@@ -448,7 +450,7 @@ public class ThirdPersonCamera : MonoBehaviour
 	{
 		// Compensate for walls between camera
 		RaycastHit wallHit = new RaycastHit();		
-		if (Physics.Linecast(fromObject, toTarget, out wallHit)) 
+		if (Physics.Linecast(fromObject, toTarget, out wallHit, playerLayer)) 
 		{
 			Debug.DrawRay(wallHit.point, wallHit.normal, Color.red);
 			toTarget = wallHit.point;
@@ -465,8 +467,8 @@ public class ThirdPersonCamera : MonoBehaviour
 			RaycastHit cCWHit = new RaycastHit();
 			
 			// Cast lines in both directions around near clipping plane bounds
-			while (Physics.Linecast(viewFrustum[i], viewFrustum[(i + 1) % (viewFrustum.Length / 2)], out cWHit) ||
-			       Physics.Linecast(viewFrustum[(i + 1) % (viewFrustum.Length / 2)], viewFrustum[i], out cCWHit))
+			while (Physics.Linecast(viewFrustum[i], viewFrustum[(i + 1) % (viewFrustum.Length / 2)], out cWHit, playerLayer) ||
+			       Physics.Linecast(viewFrustum[(i + 1) % (viewFrustum.Length / 2)], viewFrustum[i], out cCWHit, playerLayer))
 			{
 				Vector3 normal = wallHit.normal;
 				if (wallHit.normal == Vector3.zero)

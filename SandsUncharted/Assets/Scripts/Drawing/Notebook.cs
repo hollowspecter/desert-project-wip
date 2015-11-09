@@ -46,7 +46,7 @@ public class Notebook : MonoBehaviour
             }
         }
 
-        if (Input.GetButtonDown("Back"))
+        if (Input.GetButtonDown("RB"))
         {
             ChangePage(true);
         }
@@ -120,9 +120,31 @@ public class Notebook : MonoBehaviour
         int currIndex = pages.IndexOf(currPage);
         if(forward)
         {
-            Debug.Log("we are at page:" + currIndex + " of:" + (pages.Count - 1));
+            Debug.Log("we are at page:" + currIndex + " of:" + (pages.Count - 1) + " wanting next page");
             //if we are on the last page, make a new page
             if(currIndex >= pages.Count - 1)
+            {
+                turningPage = pages[currIndex];
+                DeactivatePageDraw(turningPage);
+                NewPage();
+                DeactivatePageDraw(currPage);
+            }
+            else
+            {
+                turningPage = pages[currIndex];
+                DeactivatePageDraw(turningPage);
+                currPage = GetNextPage(currPage);
+                DeactivatePageDraw(currPage);
+            }
+
+            turningNext = true;
+        }
+
+        if (!forward)
+        {
+            Debug.Log("we are at page:" + currIndex + " of:" + (pages.Count - 1) + " wanting last page");
+            //if we are on the last page, make a new page
+            if (currIndex <= 0)
             {
                 turningPage = pages[currIndex];
                 DeactivatePageDraw(turningPage);
@@ -154,6 +176,7 @@ public class Notebook : MonoBehaviour
         g.transform.SetParent(transform);
         g.transform.localPosition = new Vector3();
         g.transform.localRotation = new Quaternion();
+        g.transform.localScale = new Vector3(0.6f, 0.6f, 0.6f);
         AddPage(g);
     }
 }
