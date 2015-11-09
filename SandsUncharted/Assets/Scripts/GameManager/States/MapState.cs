@@ -9,7 +9,7 @@ using System.Collections;
 /// <summary>
 /// #DESCRIPTION OF CLASS#
 /// </summary>
-public class DrawState : State
+public class MapState : State
 {
     #region variables (private)
     [SerializeField]

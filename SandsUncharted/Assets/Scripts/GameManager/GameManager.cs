@@ -77,7 +77,7 @@ public class GameManager : MonoBehaviour
 		State behindBackState = GetComponentInChildren<BehindBackState>();
 		State firstPersonState = GetComponentInChildren<FirstPersonState>();
 		State targetState = GetComponentInChildren<TargetState>();
-		State drawState = GetComponentInChildren<DrawState>();
+		State drawState = GetComponentInChildren<MapState>();
         State pauseState = GetComponentInChildren<PauseState>();
         State interactionState = GetComponentInChildren<InteractionState>();
     
@@ -98,7 +98,7 @@ public class GameManager : MonoBehaviour
 		inGameStateMachine.AddState(StateNames.BehindBackState, behindBackState);
 		inGameStateMachine.AddState(StateNames.FirstPersonState, firstPersonState);
 		inGameStateMachine.AddState(StateNames.TargetState, targetState);
-        inGameStateMachine.AddState(StateNames.DrawState, drawState);
+        inGameStateMachine.AddState(StateNames.MapState, drawState);
         inGameStateMachine.AddState(StateNames.InteractionState, interactionState);
 		
 		//add them all to all states DEPRECATED
@@ -106,7 +106,7 @@ public class GameManager : MonoBehaviour
 		allStates.Add(StateNames.PauseState, pauseState);
 		allStates.Add(StateNames.BehindBackState, behindBackState);
 		allStates.Add(StateNames.TargetState, targetState);
-        allStates.Add(StateNames.DrawState, drawState);
+        allStates.Add(StateNames.MapState, drawState);
         allStates.Add(StateNames.InteractionState, interactionState);
 		
 		stateMachine.EnterState();

@@ -20,7 +20,7 @@ public class ReadInteractable : Interactable
     public override void Interact()
     {
         Debug.Log("Move the camera to the beat!");
-        manager.SetCanInteract(!manager.GetCanInteract());
+        manager.SetCanInteract(false);
         if(dialoguePanel != null)
             dialoguePanel.SetActive(true);
     }
@@ -29,6 +29,7 @@ public class ReadInteractable : Interactable
     {
         if (dialoguePanel != null) {
             dialoguePanel.SetActive(false);
+            manager.SetCanInteract(true);
             return true;
         }
         else

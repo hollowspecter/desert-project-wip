@@ -33,13 +33,13 @@ public class ActivateMap : MonoBehaviour
 
     void OnEnable()
     {
-        DrawState.OnDrawEnter += OnActivateMap;
-        DrawState.OnDrawExit += OnDeactivateMap;
+        MapState.OnDrawEnter += OnActivateMap;
+        MapState.OnDrawExit += OnDeactivateMap;
     }
 
     void OnDisable()
     {
-        DrawState.OnDrawEnter -= OnActivateMap;
-        DrawState.OnDrawExit -= OnDeactivateMap;
+        MapState.OnDrawEnter -= OnActivateMap;
+        MapState.OnDrawExit -= OnDeactivateMap;
     }
 }

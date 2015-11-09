@@ -229,14 +229,14 @@ public class CharacterMovement : MonoBehaviour
     {
         BehindBackState.Walk += RetrieveMovementInput;
         TargetState.Walk += RetrieveMovementInput;
-        DrawState.OnDrawEnter += ResetMovement;
+        MapState.OnDrawEnter += ResetMovement;
     }
 
     void OnDisable()
     {
         BehindBackState.Walk -= RetrieveMovementInput;
         TargetState.Walk -= RetrieveMovementInput;
-        DrawState.OnDrawEnter -= ResetMovement;
+        MapState.OnDrawEnter -= ResetMovement;
     }
 
     #endregion

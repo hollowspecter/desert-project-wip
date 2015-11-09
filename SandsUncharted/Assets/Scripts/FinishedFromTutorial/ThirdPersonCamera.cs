@@ -108,6 +108,14 @@ public class ThirdPersonCamera : MonoBehaviour
     private Vector3 velocityLookDir = Vector3.zero;
 	[SerializeField]
 	private float lookDirDampTime = 0.1f;
+
+    // Interacting 
+    [SerializeField]
+    private float interactDistanceUp = 1f;
+    [SerializeField]
+    private float interactDistanceAway = 1f;
+    [SerializeField]
+    private float interactDistanceLeft = 1f;
 	
 	
 	// Private global only
@@ -130,6 +138,7 @@ public class ThirdPersonCamera : MonoBehaviour
 	private Vector3 targetPosition;
     private GameManager gameManager;
     private Vector3 lookAt;
+    private InteractionManager interactionMgr;
 
     // delegate event handling
     private delegate void CameraUpdateHandler();
@@ -211,6 +220,8 @@ public class ThirdPersonCamera : MonoBehaviour
         if (follow == null) {
             Debug.LogError("Could not find the player");
         }
+
+        interactionMgr = follow.GetComponent<InteractionManager>();
 
 		followXform = GameObject.FindWithTag("Player").transform;
 
@@ -295,6 +306,8 @@ public class ThirdPersonCamera : MonoBehaviour
 
     void MapCamera()
     {
+        barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, 0f, targetingTime);
+
         // Move camera to firstPersonCamPos
         targetPosition = mapTransform.position + mapTransform.up * 1f;
         // Look at the map
@@ -434,11 +447,39 @@ public class ThirdPersonCamera : MonoBehaviour
     }
 
     #endregion
-	
-	
-	#region Methods
-	
-	private void SmoothPosition(Vector3 fromPos, Vector3 toPos)
+
+    #region
+
+    void OnInteractionEnter()
+    {
+        OnCameraLateUpdate += Interacting;
+    }
+
+    void Interacting()
+    {
+        barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, 0f, targetingTime);
+
+        targetPosition = characterOffset +
+            followXform.up * interactDistanceUp -
+            followXform.forward * interactDistanceAway -
+            followXform.right * interactDistanceLeft;
+
+        Vector3 interactablePosition = interactionMgr.GetInteractable().transform.position;
+
+        lookAt = interactablePosition;
+    }
+
+    void OnInteractionExit()
+    {
+        OnCameraLateUpdate -= Interacting;
+    }
+
+    #endregion
+
+
+    #region Methods
+
+    private void SmoothPosition(Vector3 fromPos, Vector3 toPos)
 	{		
 		// Making a smooth transition between camera's current position and the position it wants to be in
 		cameraXform.position = Vector3.SmoothDamp(fromPos, toPos, ref velocityCamSmooth, camSmoothDampTime);
@@ -535,8 +576,11 @@ public class ThirdPersonCamera : MonoBehaviour
         BehindBackState.OnBehindBackExit += OnBehindBackExit;
         BehindBackState.Walk += SetBehindbackLeftStick;
 
-        DrawState.OnDrawEnter += OnMapModeEnter;
-        DrawState.OnDrawExit += OnMapModeExit;
+        MapState.OnDrawEnter += OnMapModeEnter;
+        MapState.OnDrawExit += OnMapModeExit;
+
+        InteractionState.OnEnter += OnInteractionEnter;
+        InteractionState.OnExit += OnInteractionExit;
     }
 
     void OnDisable()
@@ -553,8 +597,11 @@ public class ThirdPersonCamera : MonoBehaviour
         BehindBackState.OnBehindBackExit -= OnBehindBackExit;
         BehindBackState.Walk -= SetBehindbackLeftStick;
 
-        DrawState.OnDrawEnter -= OnMapModeEnter;
-        DrawState.OnDrawExit -= OnMapModeExit;
+        MapState.OnDrawEnter -= OnMapModeEnter;
+        MapState.OnDrawExit -= OnMapModeExit;
+
+        InteractionState.OnEnter -= OnInteractionEnter;
+        InteractionState.OnExit -= OnInteractionExit;
     }
 
     #endregion

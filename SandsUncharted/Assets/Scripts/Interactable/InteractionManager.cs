@@ -12,10 +12,12 @@ public class InteractionManager : MonoBehaviour
     private Interactable currInteractable; //The currently selected Interactable
     private Transform _camT; // a reference to the main camera
     private bool canInteract = true;
+    private Transform _transform;
 
 	// Use this for initialization
 	void Start ()
     {
+        _transform = GetComponent<Transform>();
         interactables = new List<Interactable>();
         _camT = GameObject.Find("Camera").transform.Find("Main Camera");
 	}
@@ -100,6 +102,11 @@ public class InteractionManager : MonoBehaviour
         return canInteract;
     }
 
+    public Interactable GetInteractable()
+    {
+        return currInteractable;
+    }
+
     void OnDrawGizmos()
     {
         if(currInteractable != null)
@@ -114,11 +121,23 @@ public class InteractionManager : MonoBehaviour
     bool Interact()
     {
         if (currInteractable != null) {
+            TurnTo();
             currInteractable.Interact();
             return true;
         }
         else
             return false;
+    }
+
+    void TurnTo()
+    {
+        Vector3 interactablePosition = currInteractable.transform.position;
+        interactablePosition = interactablePosition - _transform.position;
+        interactablePosition.y = 0;
+        float angle = Vector3.Angle(_transform.forward, interactablePosition);
+        float sign = Vector3.Cross(_transform.forward, interactablePosition).y;
+        sign = (sign < 0) ? -1 : 1;
+        _transform.Rotate(_transform.up, angle * sign);
     }
 
     void OnEnable()

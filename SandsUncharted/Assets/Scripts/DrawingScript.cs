@@ -471,26 +471,26 @@ public class DrawingScript : MonoBehaviour
 
     void OnEnable()
     {
-        DrawState.MoveCursor += ReceiveLeftStickInput;
-        DrawState.Draw += OnDraw;
-        DrawState.Erase += OnErase;
-        DrawState.OnDrawExit += OnDrawExit;
-        DrawState.Clear += OnClear;
-        DrawState.Undo += Undo;
-        DrawState.Redo += Redo;
-        DrawState.LiftedPen += OnLiftedPen;
+        MapState.MoveCursor += ReceiveLeftStickInput;
+        MapState.Draw += OnDraw;
+        MapState.Erase += OnErase;
+        MapState.OnDrawExit += OnDrawExit;
+        MapState.Clear += OnClear;
+        MapState.Undo += Undo;
+        MapState.Redo += Redo;
+        MapState.LiftedPen += OnLiftedPen;
     }
 
     void OnDisable()
     {
-        DrawState.MoveCursor -= ReceiveLeftStickInput;
-        DrawState.Draw -= OnDraw;
-        DrawState.Erase -= OnErase;
-        DrawState.OnDrawExit -= OnDrawExit;
-        DrawState.Clear -= OnClear;
-        DrawState.Undo -= Undo;
-        DrawState.Redo -= Redo;
-        DrawState.LiftedPen -= OnLiftedPen;
+        MapState.MoveCursor -= ReceiveLeftStickInput;
+        MapState.Draw -= OnDraw;
+        MapState.Erase -= OnErase;
+        MapState.OnDrawExit -= OnDrawExit;
+        MapState.Clear -= OnClear;
+        MapState.Undo -= Undo;
+        MapState.Redo -= Redo;
+        MapState.LiftedPen -= OnLiftedPen;
     }
 
     void OnDraw()

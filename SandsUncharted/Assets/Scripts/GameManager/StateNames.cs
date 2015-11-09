@@ -12,7 +12,7 @@ using System.Collections;
 public class StateNames
 {
     public static string BehindBackState = "BehindBack";
-    public static string DrawState = "Draw";
+    public static string MapState = "Map";
     public static string FirstPersonState = "FirstPerson";
     public static string InGameStateMachine = "InGame";
     public static string PauseState = "Pause";

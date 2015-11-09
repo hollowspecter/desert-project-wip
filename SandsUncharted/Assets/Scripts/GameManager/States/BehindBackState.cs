@@ -56,8 +56,10 @@ public class BehindBackState : State
 
         if (Input.GetButtonDown(interactButton)) {
             if (Interact != null)
-                if (Interact())
+                if (Interact()) {
+                    Walk(0f, 0f);
                     stateMachine.ChangeToState(StateNames.InteractionState);
+                }
         }
 
         if (Input.GetButtonDown(leftHandButton)) {
@@ -70,7 +72,7 @@ public class BehindBackState : State
          */
 
         if (Input.GetButtonDown(drawModeButton)) {
-            stateMachine.ChangeToState(StateNames.DrawState);
+            stateMachine.ChangeToState(StateNames.MapState);
         }
 
         float leftTrigger = Input.GetAxis(targetTriggerAxis);

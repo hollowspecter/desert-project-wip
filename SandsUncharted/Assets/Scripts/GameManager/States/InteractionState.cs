@@ -20,6 +20,8 @@ public class InteractionState : State
 
     #endregion
     public static InputInteractionHandler InteractAndExit;
+    public static InputActionHandler OnEnter;
+    public static InputActionHandler OnExit;
     #region Unity event functions
 
     public override void UpdateActive(double deltaTime)
@@ -46,11 +48,13 @@ public class InteractionState : State
 
     public override void EnterState()
     {
+        OnEnter();
         Debug.Log("Entered Interaction State");
     }
 
     public override void ExitState()
     {
+        OnExit();
         Debug.Log("Exited Interaction State");
     }
     #endregion
