@@ -159,7 +159,7 @@ public class Notebook : MonoBehaviour
                 DeactivatePageDraw(currPage);
             }
 
-            turningNext = true;
+            turningNext = true; 
         }
     }
 
