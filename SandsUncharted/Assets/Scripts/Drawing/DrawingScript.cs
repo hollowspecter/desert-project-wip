@@ -7,19 +7,19 @@ public class DrawingScript : MonoBehaviour
 {
 
     [SerializeField]
-    private int texSize = 512;
+    protected int texSize = 512;
     [SerializeField]
-    private Texture2D brush;
+    protected Texture2D brush;
     [SerializeField]
-    private GameObject brushCircle;
+    protected GameObject brushCircle;
     [SerializeField]
-    private string textureSlot = "_FrontDrawTex";
+    protected string textureSlot = "_FrontDrawTex";
     [SerializeField]
-    float reticleAcceleration = 2.8f;
+    protected float reticleAcceleration = 2.8f;
     [SerializeField]
-    float reticleScale = 12f;
+    protected float reticleScale = 12f;
     [SerializeField]
-    float border = 0.12f;
+    protected float border = 0.12f;
 
     Texture2D texture;
 
@@ -373,7 +373,7 @@ public class DrawingScript : MonoBehaviour
 
     void ClearTexture()
     {
-        Debug.Log("clear texture");
+       // Debug.Log("clear texture");
         FloodTexture(clearColor, texture);
         NewBackup();
     }
@@ -429,7 +429,7 @@ public class DrawingScript : MonoBehaviour
             ResetBackupPositions();
         }
         
-        Debug.Log("Backup");
+        //Debug.Log("Backup");
         //Move the Backups over one slot
         ShiftBackups();
         //Copy the texture into the first slot
@@ -438,7 +438,7 @@ public class DrawingScript : MonoBehaviour
         currBackup = 0;
 
         numBackups = (int)Mathf.Min((numBackups + 1), maxBackups-1);
-        Debug.Log("num: " + numBackups);
+        //Debug.Log("num: " + numBackups);
     }
 
     void GetBackup(bool undo)
@@ -446,12 +446,12 @@ public class DrawingScript : MonoBehaviour
         //if we are in slot 0 we cannot redo
         if(currBackup == 0 && !undo)
         {
-            Debug.Log("No newer versions");
+            //Debug.Log("No newer versions");
         }
         //if we are in the last slot we cannot undo
         else if(currBackup == numBackups && undo)
         {
-            Debug.Log("No older version");
+            //Debug.Log("No older version");
         }
         //else, we just switch over to the next or last backup by changing currbackup
         else
@@ -465,7 +465,7 @@ public class DrawingScript : MonoBehaviour
             {
                 currBackup = (int)Mathf.Max(currBackup - 1, 0f);
             }
-            Debug.Log((undo ? "undo " : "redo ") + currBackup);
+            //Debug.Log((undo ? "undo " : "redo ") + currBackup);
             CopyToTexture(backups[currBackup], texture);
         }
     }
@@ -492,7 +492,7 @@ public class DrawingScript : MonoBehaviour
         }
 
         numBackups = numBackups - offset;
-        Debug.Log("num: " + numBackups);
+        //Debug.Log("num: " + numBackups);
     }
 
     //Turn the map left or right 
@@ -510,7 +510,7 @@ public class DrawingScript : MonoBehaviour
 
     #region Input Managing Methods
 
-    void OnEnable()
+    protected virtual void OnOverrideEnable()
     {
         DrawState.MoveCursor += ReceiveLeftStickInput;
         DrawState.TurnMap += ReceiveTriggerInput;
@@ -523,62 +523,72 @@ public class DrawingScript : MonoBehaviour
         DrawState.LiftedPen += OnLiftedPen;
     }
 
-    void OnDisable()
+    protected virtual void OnOverrideDisable()
     {
-        DrawState.MoveCursor -= ReceiveLeftStickInput;
-        DrawState.TurnMap -= ReceiveTriggerInput;
-        DrawState.Draw -= OnDraw;
-        DrawState.Erase -= OnErase;
-        DrawState.OnDrawExit -= OnDrawExit;
-        DrawState.Clear -= OnClear;
-        DrawState.Undo -= Undo;
-        DrawState.Redo -= Redo;
-        DrawState.LiftedPen -= OnLiftedPen;
+        DrawState.MoveCursor    -= ReceiveLeftStickInput;
+        DrawState.TurnMap       -= ReceiveTriggerInput;
+        DrawState.Draw          -= OnDraw;
+        DrawState.Erase         -= OnErase;
+        DrawState.OnDrawExit    -= OnDrawExit;
+        DrawState.Clear         -= OnClear;
+        DrawState.Undo          -= Undo;
+        DrawState.Redo          -= Redo;
+        DrawState.LiftedPen     -= OnLiftedPen;
     }
 
-    void OnDraw()
+    void OnEnable()
+    {
+        OnOverrideEnable();
+    }
+
+    void OnDisable()
+    {
+        OnOverrideDisable();
+    }
+
+    protected void OnDraw()
     {
         if (DrawRaycast())
             Draw();
     }
 
-    void OnErase()
+    protected void OnErase()
     {
         if(DrawRaycast())
             Erase();
     }
 
-    void OnClear()
+    protected void OnClear()
     {
-        Debug.Log("clear");
+        //Debug.Log("clear");
         ClearTexture();
     }
 
-    void OnDrawExit()
+    protected void OnDrawExit()
     {
         SaveTexture();
     }
 
-    void Undo()
+    protected void Undo()
     {
-        Debug.Log("undo");
+        //Debug.Log("undo");
         GetBackup(true);
     }
 
-    void Redo()
+    protected void Redo()
     {
-        Debug.Log("redo");
+        //Debug.Log("redo");
         GetBackup(false);
     }
 
-    void OnLiftedPen()
+    protected void OnLiftedPen()
     {
-        Debug.Log("lift");
+        //Debug.Log("lift");
         first = true;
         NewBackup();
     }
 
-    void ReceiveLeftStickInput(float x, float y)
+    protected void ReceiveLeftStickInput(float x, float y)
     {
         leftX = x;
         leftY = y;

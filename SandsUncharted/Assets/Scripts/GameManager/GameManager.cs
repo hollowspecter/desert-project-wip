@@ -67,6 +67,10 @@ public class GameManager : MonoBehaviour
         // Initialise the States and Statemachines
         stateMachine = GetComponent<StateMachine>();
 
+        
+    }
+    void Start()
+    {
         StateMachine inGameStateMachine = transform.GetComponentInChildren<InGameStateMachine>();
         State behindBackState = GetComponentInChildren<BehindBackState>();
         State firstPersonState = GetComponentInChildren<FirstPersonState>();
