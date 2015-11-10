@@ -30,6 +30,12 @@ public class MapState : State
     private string moveCursorY = "Vertical";
     [SerializeField]
     private string triggerAxis = "Target";
+    [SerializeField]
+    private string toggleNotebookButton = "Back";
+    [SerializeField]
+    private string rightStickXAxis = "RightStickX";
+    [SerializeField]
+    private float rightStickThreshold = -0.1f;
 
     #endregion
 
@@ -44,16 +50,15 @@ public class MapState : State
     public static event InputActionHandler Clear;
     public static event InputActionHandler LiftedPen;
 
+    public static event InputInteractionHandler SwitchToNotebook; // returns true if Notebook is open and ready to switch to
+    public static event InputInteractionHandler ToggleNotebook; //should return true if you put it OUT
+                                                                //and false, if you put it away
+
     public static event InputActionHandler OnDrawEnter;
     public static event InputActionHandler OnDrawExit;
     #endregion
 
     #region Unity event functions
-
-    void Update()
-    {
-
-    }
 
     public override void UpdateActive(double deltaTime)
     {
@@ -65,7 +70,7 @@ public class MapState : State
 
         if(TurnMap != null)
         {
-            TurnMap(Input.GetAxis("Target"), 0f);
+            TurnMap(Input.GetAxis(triggerAxis), 0f);
         }
         if (Input.GetButton(drawButton))
         {
@@ -91,6 +96,26 @@ public class MapState : State
 
         if (Input.GetButtonUp(drawButton) || Input.GetButtonUp(eraseButton))
             LiftedPen();
+
+        /* Notebook Code */
+        // if the back button is pressed..
+        if (Input.GetButtonDown(toggleNotebookButton)) {
+            if (ToggleNotebook != null) {
+                // check, if you take out the notebook? If yes...
+                if (ToggleNotebook()) {
+                    //.. switch to the Notebook State
+                    stateMachine.ChangeToState(StateNames.NotebookState);
+                }
+            }
+        }
+        float rightX = Input.GetAxis(rightStickXAxis);
+        if (rightX < rightStickThreshold) {
+            if (SwitchToNotebook != null) {
+                if (SwitchToNotebook()) {
+                    stateMachine.ChangeToState(StateNames.NotebookState);
+                }
+            }
+        }
 
         /* State Changing */
         if (Input.GetButtonDown(backButton))
