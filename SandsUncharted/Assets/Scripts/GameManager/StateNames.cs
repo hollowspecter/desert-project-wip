@@ -18,4 +18,5 @@ public class StateNames
     public static string PauseState = "Pause";
     public static string TargetState = "Target";
     public static string InteractionState = "Interaction";
+    public static string NotebookState = "Notebook";
 }

@@ -18,6 +18,9 @@ public class StateMachine : State
 
     protected string currentState = "";
     protected string defaultState = "";
+    protected string previousState = "";
+
+    public string PreviousState { get { return previousState; } }
 
     public void ChangeToState(string newState)
     {
@@ -25,6 +28,7 @@ public class StateMachine : State
         if (currentState.Length != 0) {
             states[currentState].ExitState();
             states[currentState].Active = false;
+            previousState = currentState;
             currentState = "";
         }
 

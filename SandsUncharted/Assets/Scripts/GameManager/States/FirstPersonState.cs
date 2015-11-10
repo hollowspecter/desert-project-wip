@@ -22,12 +22,22 @@ public class FirstPersonState : State
     private string targetTriggerAxis = "Target";
     [SerializeField]
     private float leftTriggerThreshold = 0.01f;
+    [SerializeField]
+    private string toggleNotebookButton = "Back";
+    [SerializeField]
+    private string rightStickXAxis = "RightStickX";
+    [SerializeField]
+    private float rightStickThreshold = -0.1f;
     #endregion
 
     #region Properties (public)
     public static event InputAxisHandler lookAround;
     public static event InputActionHandler onFirstPersonEnter;
     public static event InputActionHandler onFirstPersonExit;
+
+    public static event InputInteractionHandler SwitchToNotebook; // returns true if Notebook is open and ready to switch to
+    public static event InputInteractionHandler ToggleNotebook; //should return true if you put it OUT
+                                                                //and false, if you put it away
     #endregion
 
     #region Unity event functions
@@ -54,6 +64,26 @@ public class FirstPersonState : State
         float leftTrigger = Input.GetAxis(targetTriggerAxis);
         if (leftTrigger > leftTriggerThreshold) {
             stateMachine.ChangeToState(StateNames.TargetState);
+        }
+
+        /* Notebook Code */
+        // if the back button is pressed..
+        if (Input.GetButtonDown(toggleNotebookButton)) {
+            if (ToggleNotebook != null) {
+                // check, if you take out the notebook? If yes...
+                if (ToggleNotebook()) {
+                    //.. switch to the Notebook State
+                    stateMachine.ChangeToState(StateNames.NotebookState);
+                }
+            }
+        }
+        float rightX = Input.GetAxis(rightStickXAxis);
+        if (rightX < rightStickThreshold) {
+            if (SwitchToNotebook != null) {
+                if (SwitchToNotebook()) {
+                    stateMachine.ChangeToState(StateNames.NotebookState);
+                }
+            }
         }
     }
 

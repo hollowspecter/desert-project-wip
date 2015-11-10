@@ -28,6 +28,8 @@ public class BehindBackState : State
     private float leftTriggerThreshold = 0.01f;
     [SerializeField]
     private float firstPersonThreshold = 0.1f;
+    [SerializeField]
+    private string toggleNotebookButton = "Back";
 
     private CharacterMovement character;
     #endregion
@@ -39,6 +41,7 @@ public class BehindBackState : State
     public static event InputActionHandler OnBehindBackExit;
 
     public static event InputInteractionHandler Interact;
+    public static event InputInteractionHandler ToggleNotebook;
 
     #endregion
 
@@ -65,6 +68,12 @@ public class BehindBackState : State
         if (Input.GetButtonDown(leftHandButton)) {
             if (LeftHand != null)
                 LeftHand();
+        }
+
+        /* Notebook Code */
+        if (Input.GetButtonDown(toggleNotebookButton)) {
+            if (ToggleNotebook != null) ToggleNotebook();
+            stateMachine.ChangeToState(StateNames.NotebookState);
         }
 
         /*

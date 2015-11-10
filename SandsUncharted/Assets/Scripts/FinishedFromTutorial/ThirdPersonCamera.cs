@@ -450,7 +450,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
     #endregion
 
-    #region
+    #region Interaction
 
     void OnInteractionEnter()
     {
@@ -477,6 +477,31 @@ public class ThirdPersonCamera : MonoBehaviour
     }
 
     #endregion
+
+    #region Notebook
+
+    void OnNotebookEnter()
+    {
+        OnCameraLateUpdate += Notebook;
+    }
+
+    void Notebook()
+    {
+        barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, 0f, targetingTime);
+
+        // Move camera to firstPersonCamPos
+        targetPosition = mapTransform.position + mapTransform.up * 1f;
+        // Look at the map
+        lookAt = mapTransform.position;
+    }
+
+    void OnNotebookExit()
+    {
+        OnCameraLateUpdate -= Notebook;
+    }
+
+    #endregion
+
 
 
     #region Methods
@@ -583,6 +608,9 @@ public class ThirdPersonCamera : MonoBehaviour
 
         InteractionState.OnEnter += OnInteractionEnter;
         InteractionState.OnExit += OnInteractionExit;
+
+        NotebookState.OnNotebookEnter += OnNotebookEnter;
+        NotebookState.OnNotebookExit += OnNotebookExit;
     }
 
     void OnDisable()
@@ -604,6 +632,9 @@ public class ThirdPersonCamera : MonoBehaviour
 
         InteractionState.OnEnter -= OnInteractionEnter;
         InteractionState.OnExit -= OnInteractionExit;
+
+        NotebookState.OnNotebookEnter -= OnNotebookEnter;
+        NotebookState.OnNotebookExit -= OnNotebookExit;
     }
 
     #endregion

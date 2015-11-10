@@ -44,9 +44,6 @@ public class GameManager : MonoBehaviour
     #endregion
 
     #region variables (private)
-    [SerializeField]
-    private string alternativeFirstState;
-
     private Dictionary<string, State> allStates;
     private StateMachine stateMachine;
 
@@ -73,13 +70,14 @@ public class GameManager : MonoBehaviour
     
     void Start()
     {
-		StateMachine inGameStateMachine = transform.GetComponentInChildren<InGameStateMachine>();
+        StateMachine inGameStateMachine = transform.GetComponentInChildren<InGameStateMachine>();
 		State behindBackState = GetComponentInChildren<BehindBackState>();
 		State firstPersonState = GetComponentInChildren<FirstPersonState>();
 		State targetState = GetComponentInChildren<TargetState>();
 		State drawState = GetComponentInChildren<MapState>();
         State pauseState = GetComponentInChildren<PauseState>();
         State interactionState = GetComponentInChildren<InteractionState>();
+        State notebookState = GetComponentInChildren<NotebookState>();
     
 		//layer 1
 		inGameStateMachine.setParentStateMachine(stateMachine);
@@ -94,12 +92,14 @@ public class GameManager : MonoBehaviour
 		targetState.setParentStateMachine(inGameStateMachine);
         drawState.setParentStateMachine(inGameStateMachine);
         interactionState.setParentStateMachine(inGameStateMachine);
+        notebookState.setParentStateMachine(inGameStateMachine);
 		
 		inGameStateMachine.AddState(StateNames.BehindBackState, behindBackState);
 		inGameStateMachine.AddState(StateNames.FirstPersonState, firstPersonState);
 		inGameStateMachine.AddState(StateNames.TargetState, targetState);
         inGameStateMachine.AddState(StateNames.MapState, drawState);
         inGameStateMachine.AddState(StateNames.InteractionState, interactionState);
+        inGameStateMachine.AddState(StateNames.NotebookState, notebookState);
 		
 		//add them all to all states DEPRECATED
 		allStates.Add(StateNames.InGameStateMachine, inGameStateMachine);
@@ -108,6 +108,7 @@ public class GameManager : MonoBehaviour
 		allStates.Add(StateNames.TargetState, targetState);
         allStates.Add(StateNames.MapState, drawState);
         allStates.Add(StateNames.InteractionState, interactionState);
+        allStates.Add(StateNames.NotebookState, notebookState);
 		
 		stateMachine.EnterState();
     }
