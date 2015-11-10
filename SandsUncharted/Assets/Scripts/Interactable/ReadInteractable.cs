@@ -32,6 +32,7 @@ public class ReadInteractable : Interactable
     bool ReadAndClose()
     {
         if (dialoguePanel != null) {
+            Debug.Log("Read and Close called in ReadInteractable");
             dialoguePanel.SetActive(false);
             manager.SetCanInteract(true);
             return true;

@@ -29,8 +29,13 @@ public class InteractionState : State
         /* Interacting? */
         if (Input.GetButtonDown(InteractButton)) {
             if (InteractAndExit != null) {
+                Debug.Log("Interact And Exit Called");
                 if (InteractAndExit()) { //Closing Interaction?
+                    Debug.Log("Read and Close was true");
                     stateMachine.ChangeToState(StateNames.BehindBackState);
+                }
+                else {
+                    Debug.Log("Read and Close was false");
                 }
             }
         }
