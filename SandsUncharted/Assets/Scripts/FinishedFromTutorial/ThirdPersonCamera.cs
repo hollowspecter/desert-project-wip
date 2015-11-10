@@ -100,6 +100,8 @@ public class ThirdPersonCamera : MonoBehaviour
 	private float compensationOffset = 0.2f;
     [SerializeField]
     private Transform mapTransform;
+    [SerializeField]
+    private LayerMask raycastingLayers;
 	
 	// Smoothing and damping
     private Vector3 velocityCamSmooth = Vector3.zero;	
@@ -489,7 +491,7 @@ public class ThirdPersonCamera : MonoBehaviour
 	{
 		// Compensate for walls between camera
 		RaycastHit wallHit = new RaycastHit();		
-		if (Physics.Linecast(fromObject, toTarget, out wallHit)) 
+		if (Physics.Linecast(fromObject, toTarget, out wallHit, raycastingLayers)) 
 		{
 			Debug.DrawRay(wallHit.point, wallHit.normal, Color.red);
 			toTarget = wallHit.point;
@@ -506,8 +508,8 @@ public class ThirdPersonCamera : MonoBehaviour
 			RaycastHit cCWHit = new RaycastHit();
 			
 			// Cast lines in both directions around near clipping plane bounds
-			while (Physics.Linecast(viewFrustum[i], viewFrustum[(i + 1) % (viewFrustum.Length / 2)], out cWHit) ||
-			       Physics.Linecast(viewFrustum[(i + 1) % (viewFrustum.Length / 2)], viewFrustum[i], out cCWHit))
+			while (Physics.Linecast(viewFrustum[i], viewFrustum[(i + 1) % (viewFrustum.Length / 2)], out cWHit, raycastingLayers) ||
+			       Physics.Linecast(viewFrustum[(i + 1) % (viewFrustum.Length / 2)], viewFrustum[i], out cCWHit, raycastingLayers))
 			{
 				Vector3 normal = wallHit.normal;
 				if (wallHit.normal == Vector3.zero)
