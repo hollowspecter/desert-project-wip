@@ -5,23 +5,11 @@ using System.IO;
 
 public class DrawingScript : MonoBehaviour 
 {
-
-    [SerializeField]
-    private int texSize = 512;
-    [SerializeField]
-    private Texture2D brush;
-    [SerializeField]
-    private GameObject brushCircle;
-    [SerializeField]
-    private string textureSlot = "_FrontDrawTex";
-    [SerializeField]
-    float reticleAcceleration = 2.8f;
-    [SerializeField]
-    float reticleScale = 12f;
-    [SerializeField]
-    float border = 0.12f;
+	public Texture2D brush;
+	public GameObject brushCircle;
 
     Texture2D texture;
+    int texSize = 512;
 
     Color clearColor;
     Camera cam;
@@ -31,10 +19,8 @@ public class DrawingScript : MonoBehaviour
 	Vector2 pixelUV;
 
     Vector3 axisVector;
+    float reticleAcceleration = 2.8f;
 	Vector3 speed = new Vector3();
-
-    float turnAxis;
-    float turnSpeed = 200f;
 
 	float paintinterval = 1f; // how many pixels between two drawpositions
 
@@ -52,13 +38,13 @@ public class DrawingScript : MonoBehaviour
 	float minScale = 0.25f;
 	float maxScale = 1f;
 
-
 	float minPX = 16f;
 	float maxPX = 64f;
 
 	MeshRenderer mesh;
 	float meshWidth;
 	float meshHeight;
+	float border = 0.05f;
 
 	Transform maxCorner;
 	Transform minCorner;
@@ -75,21 +61,13 @@ public class DrawingScript : MonoBehaviour
 
     //public GameObject uiPanel;
 
-    /*DrawingScript(int textureSize = 512, string textureName = "_FrontDrawTex")
-    {
-        texSize = textureSize;
-        textureName = textureSlot;
-    }*/
-
     void Awake() 
 	{
-        maxCorner = transform.Find("posCorner");
-        minCorner = transform.Find("negCorner");
-        if (maxCorner == null)
-            Debug.LogError("no maxcorner");
+        maxCorner = transform.parent.FindChild("rightEdge");
+        minCorner = transform.parent.FindChild("topEdge");
 
         cam = GameObject.Find("Main Camera").GetComponent<Camera>();
-        float ratioWH = 1f;
+        float ratioWH = 2f;
 		texture = new Texture2D((int)(texSize * ratioWH), texSize, TextureFormat.ARGB32, false);
 		clearColor  = new Color(0f,0f,0f,0f);
 		FloodTexture (clearColor, texture);
@@ -98,7 +76,7 @@ public class DrawingScript : MonoBehaviour
 		{
 			Debug.LogError("no mesh");
 		}
-		mesh.material.SetTexture(textureSlot, texture);
+		mesh.material.SetTexture("_DrawTex", texture);
 
 		meshWidth = mesh.bounds.size.x;
 		meshHeight = mesh.bounds.size.z;
@@ -106,7 +84,7 @@ public class DrawingScript : MonoBehaviour
 		brushPx = brush.GetPixels ();
 		oldUV = pixelUV = new Vector2 ();
 		first = true;
-		brushCircle.transform.localScale = new Vector3(scaleFactor * reticleScale, scaleFactor * reticleScale, scaleFactor * reticleScale);
+		brushCircle.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
 		BrushRescale (scaleFactor, brush);
 
         backups = new Color[maxBackups][];
@@ -117,7 +95,7 @@ public class DrawingScript : MonoBehaviour
         }
 
         NewBackup();
-    }
+	}
 
 	void Update() 
 	{
@@ -134,25 +112,19 @@ public class DrawingScript : MonoBehaviour
 
         MakeMoveVector(leftX, leftY);
 
-        TurnMap();
-
         /****move Reticle based on acceleration and right stick vector****/
         speed += reticleAcceleration * axisVector * Time.deltaTime; //make velocityvector
         brushCircle.transform.position += speed * Time.deltaTime; //make movementvector
-        //brushCircle.transform.rotation = transform.parent.rotation; //negate the maps rotation to keep the pencil straight (not functional as the brush doesnt actually rotate)
         speed *= 0.75f;//friction
-        
+
+        //brushCircle.transform.position += (reticleSpeed * reticleSpeed) * axisVector * Time.deltaTime; //squared speed to get a better controllable curve
 
         if (mesh == null) 
 		{
 			Debug.LogError("no mesh in update");
 		}
 		//clamp brushposition to mapborder
-        float minX = Mathf.Min(minCorner.localPosition.x, maxCorner.localPosition.x);
-        float maxX = Mathf.Max(minCorner.localPosition.x, maxCorner.localPosition.x);
-        float minZ = Mathf.Min(minCorner.localPosition.z, maxCorner.localPosition.z);
-        float maxZ = Mathf.Max(minCorner.localPosition.z, maxCorner.localPosition.z);
-		brushCircle.transform.localPosition = new Vector3 (Mathf.Clamp (brushCircle.transform.localPosition.x, minX + border, maxX - border), brushCircle.transform.localPosition.y, Mathf.Clamp(brushCircle.transform.localPosition.z, minZ + border, maxZ - border));
+		brushCircle.transform.localPosition = new Vector3 (Mathf.Clamp (brushCircle.transform.localPosition.x, minCorner.localPosition.x + border, maxCorner.localPosition.x - border), brushCircle.transform.localPosition.y, Mathf.Clamp(brushCircle.transform.localPosition.z, minCorner.localPosition.z + border, maxCorner.localPosition.z - border));
 
         //rescale based on speed slow = big / fast = small
         scaleFactor = Mathf.Clamp(scaleFactor + (((1f - axisVector.magnitude * axisVector.magnitude) * 2f) - 1f) /* * Random.Range(-0.2f, 1f)*/ * Time.deltaTime, setScale * 0.75f, setScale * 1.25f);
@@ -308,7 +280,7 @@ public class DrawingScript : MonoBehaviour
     //make the moveVector for the brush movement
     void MakeMoveVector(float h, float v)
     {
-        axisVector = h * transform.parent.right + v * transform.parent.forward;
+        axisVector = h * transform.right + v * transform.forward;
         axisVector = axisVector.sqrMagnitude >= 0.03 ? axisVector : new Vector3();
     }
 
@@ -328,7 +300,7 @@ public class DrawingScript : MonoBehaviour
                 setScale = scaleFactor;
             }
 
-            brushCircle.transform.localScale = new Vector3(scaleFactor * reticleScale, scaleFactor * reticleScale, scaleFactor * reticleScale);
+            brushCircle.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
 
         }
     }
@@ -414,7 +386,7 @@ public class DrawingScript : MonoBehaviour
 
     void CopyArray(Color[] source, Color[] target)
     {
-        for(int i = 0; i < target.Length; ++i)
+        for(int i = 0; i < source.Length; ++i)
         {
             target[i] = source[i];
         }
@@ -495,25 +467,11 @@ public class DrawingScript : MonoBehaviour
         Debug.Log("num: " + numBackups);
     }
 
-    //Turn the map left or right 
-    void TurnMap()
-    {
-        float angle = -turnAxis * turnSpeed * Time.deltaTime;
-        transform.Rotate(Vector3.up * angle);
-    }
-
-
-    public void SetReticleAcc(float acc)
-    {
-        reticleAcceleration = acc;
-    }
-
     #region Input Managing Methods
 
     void OnEnable()
     {
         MapState.MoveCursor += ReceiveLeftStickInput;
-        MapState.TurnMap += ReceiveTriggerInput;
         MapState.Draw += OnDraw;
         MapState.Erase += OnErase;
         MapState.OnDrawExit += OnDrawExit;
@@ -526,7 +484,6 @@ public class DrawingScript : MonoBehaviour
     void OnDisable()
     {
         MapState.MoveCursor -= ReceiveLeftStickInput;
-        MapState.TurnMap -= ReceiveTriggerInput;
         MapState.Draw -= OnDraw;
         MapState.Erase -= OnErase;
         MapState.OnDrawExit -= OnDrawExit;
@@ -583,13 +540,6 @@ public class DrawingScript : MonoBehaviour
         leftX = x;
         leftY = y;
     }
-
-    void ReceiveTriggerInput(float axis, float nothing)
-    {
-        //Debug.Log("turninput" + axis);
-        turnAxis = axis;
-    }
-
 
     #endregion
 }
