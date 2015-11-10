@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class InteractionManager : MonoBehaviour
 {
     [SerializeField]
-    private GameObject buttonPromptPanel;
+    private ButtonPrompt buttonPrompt;
     
     private List<Interactable> interactables; //List containing all the Interactables that we can currently interact with
     private Interactable currInteractable; //The currently selected Interactable
@@ -29,13 +29,11 @@ public class InteractionManager : MonoBehaviour
 
         if(currInteractable != null && currInteractable.CheckInteractionAngle() && canInteract)
         {
-            buttonPromptPanel.SetActive(true);
-            Text text = buttonPromptPanel.GetComponentInChildren<Text>();
-            text.text = currInteractable.GetInteractionString();
+            buttonPrompt.Activate(currInteractable.GetInteractionString());
         }
         else
         {
-            buttonPromptPanel.SetActive(false);
+            buttonPrompt.Deactivate();
         }
 	}
 

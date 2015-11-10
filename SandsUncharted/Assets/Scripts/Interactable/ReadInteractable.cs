@@ -26,6 +26,7 @@ public class ReadInteractable : Interactable
         if (dialoguePanel != null) {
             dialoguePanel.SetActive(true);
             dialoguePanel.GetComponentInChildren<Text>().text = dialogue;
+            InteractionState.InteractA += ReadAndClose;
         }
     }
 
@@ -35,23 +36,10 @@ public class ReadInteractable : Interactable
             Debug.Log("Read and Close called in ReadInteractable");
             dialoguePanel.SetActive(false);
             manager.SetCanInteract(true);
+            InteractionState.InteractA -= ReadAndClose;
             return true;
         }
         else
             return false;
     }
-
-    #region State Input Handling
-
-    void OnEnable()
-    {
-        InteractionState.InteractAndExit += ReadAndClose;
-    }
-
-    void OnDisable()
-    {
-        InteractionState.InteractAndExit -= ReadAndClose;
-    }
-
-    #endregion
 }
