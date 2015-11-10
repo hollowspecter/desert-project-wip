@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System;
 
@@ -7,6 +8,7 @@ public class ReadInteractable : Interactable
 
     protected Vector3 LookAtPosition; //The position the Camera should look at when the Object is interacted upon
 
+    [SerializeField]
     private string dialogue = "";
 
     [SerializeField]
@@ -21,8 +23,10 @@ public class ReadInteractable : Interactable
     {
         Debug.Log("Move the camera to the beat!");
         manager.SetCanInteract(false);
-        if(dialoguePanel != null)
+        if (dialoguePanel != null) {
             dialoguePanel.SetActive(true);
+            dialoguePanel.GetComponentInChildren<Text>().text = dialogue;
+        }
     }
 
     bool ReadAndClose()
