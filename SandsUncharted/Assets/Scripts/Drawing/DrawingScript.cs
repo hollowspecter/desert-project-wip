@@ -216,7 +216,6 @@ public class DrawingScript : MonoBehaviour
         {
             oldUV = pixelUV;
             pixelUV = reticleHit.textureCoord;
-
             pixelUV.x *= texture.width;
             pixelUV.y *= texture.height;
             return true;

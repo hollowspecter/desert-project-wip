@@ -3,7 +3,11 @@ using System.Collections;
 
 public class noteBookDrawingScript : DrawingScript
 {
-    
+    [SerializeField]
+    private bool isLeftPage = false;
+
+    private Animator _anim;
+
     protected override void OnOverrideEnable()
     {
         DrawState.MoveCursor += ReceiveLeftStickInput;
@@ -11,8 +15,6 @@ public class noteBookDrawingScript : DrawingScript
         DrawState.Erase += OnErase;
         DrawState.OnDrawExit += OnDrawExit;
         DrawState.Clear += OnClear;
-        DrawState.Undo += Undo;
-        DrawState.Redo += Redo;
         DrawState.LiftedPen += OnLiftedPen;
     }
 
@@ -23,8 +25,28 @@ public class noteBookDrawingScript : DrawingScript
         DrawState.Erase -= OnErase;
         DrawState.OnDrawExit -= OnDrawExit;
         DrawState.Clear -= OnClear;
-        DrawState.Undo -= Undo;
-        DrawState.Redo -= Redo;
         DrawState.LiftedPen -= OnLiftedPen;
+    }
+
+    void OnEnable()
+    {
+        OnOverrideEnable();
+        transform.parent.GetComponent<Animator>().SetBool("IsLeftPage", isLeftPage);
+    }
+
+    void OnDisable()
+    {
+        OnOverrideDisable();
+        isLeftPage = transform.parent.GetComponent<Animator>().GetBool("IsLeftPage");
+    }
+
+    public void SetIsLeftPage(bool b)
+    {
+        isLeftPage = b;
+    }
+
+    public bool GetIsLeftPage()
+    {
+        return isLeftPage;
     }
 }
