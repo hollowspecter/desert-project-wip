@@ -9,7 +9,8 @@ public abstract class Interactable : MonoBehaviour, IInteractable
 
     protected InteractionManager manager; //The Interaction manager on the player
 
-    private const float maxInteractionAngle = 120f; //The maximum angle at which the Object can be interacted with, centered around the forward axis of the object
+    [SerializeField]
+    protected float maxInteractionAngle = 120f; //The maximum angle at which the Object can be interacted with, centered around the forward axis of the object
 
     void Awake()
     {

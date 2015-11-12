@@ -5,9 +5,6 @@ using System;
 
 public class ReadInteractable : Interactable
 {
-
-    protected Vector3 LookAtPosition; //The position the Camera should look at when the Object is interacted upon
-
     [SerializeField]
     private string dialogue = "";
 
@@ -22,7 +19,7 @@ public class ReadInteractable : Interactable
     public override void Interact()
     {
         Debug.Log("Move the camera to the beat!");
-        manager.SetCanInteract(false);
+        //manager.SetCanInteract(false);
         if (dialoguePanel != null) {
             dialoguePanel.SetActive(true);
             dialoguePanel.GetComponentInChildren<Text>().text = dialogue;
@@ -35,7 +32,7 @@ public class ReadInteractable : Interactable
         if (dialoguePanel != null) {
             Debug.Log("Read and Close called in ReadInteractable");
             dialoguePanel.SetActive(false);
-            manager.SetCanInteract(true);
+            //manager.SetCanInteract(true);
             InteractionState.InteractA -= ReadAndClose;
             return true;
         }

@@ -61,6 +61,9 @@ public class InteractionState : State
 
     public static InputActionHandler OnEnter;
     public static InputActionHandler OnExit;
+    public static InputActionHandler OnLiftedPen;
+
+    public static InputActionHandler buttonADown;
 
     public static InputActionHandler CloseNotebook;
 
@@ -75,10 +78,14 @@ public class InteractionState : State
          * to close the Interaction by returning true
          */
 
-        if (Input.GetButtonDown(buttonA))
+        if (Input.GetButtonDown(buttonA)) {
             if (InteractA != null)
                 if (InteractA())  //Closing Interaction?
                     Exit();
+        }
+        else if (Input.GetButton(buttonA))
+            if (buttonADown != null)
+                buttonADown();
         if (Input.GetButtonDown(buttonB))
             if (InteractB != null)
                 if (InteractB())  //Closing Interaction?
@@ -120,6 +127,11 @@ public class InteractionState : State
             y = Input.GetAxis(rightY);
             RightStick(x, y);
         } 
+
+        //For drawing riddles
+        if (Input.GetButtonUp(buttonA))
+            if (OnLiftedPen != null)
+                OnLiftedPen();
 
         /* Notebook Code */
         // if the back button is pressed..

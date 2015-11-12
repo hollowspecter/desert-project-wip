@@ -370,7 +370,7 @@ public class DrawingScript : MonoBehaviour
         }
     }
 
-    void ClearTexture()
+    protected void ClearTexture()
     {
        // Debug.Log("clear texture");
         FloodTexture(clearColor, texture);
