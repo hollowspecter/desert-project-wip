@@ -7,20 +7,29 @@ public class Notebook : MonoBehaviour
     //[HideInInspector]
     public GameObject pagePrefab;
 
+    private Animator _anim; // currently turning pages animator
+
     List<GameObject> pages;
+    List<bool> pageIsLefts;
 
     GameObject currPage;
 
     GameObject turningPage;
-    bool turningNext = false;
-    float turningSpeed = 120f;
 
-	// Use this for initialization
-	void Start ()
+    int turning = 0;
+    float turningSpeed = 120f;
+    
+    void Awake()
+    {
+    }
+
+    // Use this for initialization
+    void Start ()
     {
         if(pagePrefab != null)
         {
             pages = new List<GameObject>();
+            pageIsLefts = new List<bool>();
             NewPage();
         }
         else
@@ -32,32 +41,57 @@ public class Notebook : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        if(turningNext)
+        //if turndirection is not 0 we want to turn the page
+        if(turning != 0)
         {
-            if(turningPage.transform.localRotation.eulerAngles.z < 180f)
+            AnimatorStateInfo stateInfo = _anim.GetCurrentAnimatorStateInfo(0);
+            AnimatorTransitionInfo transitionInfo = _anim.GetAnimatorTransitionInfo(0);
+            if ((transitionInfo.IsName("Base Layer.PageFlipNext -> Base Layer.IdleLeft") || transitionInfo.IsName("Base Layer.PageFlipLast -> Base Layer.IdleRight")))
             {
-                Debug.Log(turningPage.transform.localRotation.eulerAngles.z);
-                TurnPage(true);
-            }
-            else
-            {
-                turningNext = false;
+                if(turning > 0)
+                {
+                    Debug.Log("stop turning left");
+                    GameObject g = GetBeforePage(turningPage);
+                    GameObject h = GetNextPage(turningPage);
+                    if (h != null)
+                        h.GetComponent<Animator>().SetBool("IsLeftPage", pageIsLefts[pages.IndexOf(h)]);
+                    DeactivatePage(g);                     
+                }
+                if(turning < 0)
+                {
+                    Debug.Log("stop turning right");
+                    GameObject g = GetNextPage(turningPage);
+                    GameObject h = GetBeforePage(turningPage);
+                    if (h != null)
+                        h.GetComponent<Animator>().SetBool("IsLeftPage", pageIsLefts[pages.IndexOf(h)]);
+                    DeactivatePage(g);
+                }
+
+                //TurnPage();
+                turning = 0;
+                turningPage = null;
+                _anim = null;
                 ActivatePageDraw(currPage);
             }
         }
-
-        if (Input.GetButtonDown("RB"))
-        {
-            ChangePage(true);
-        }
-
 	}
+
+    void ChangePageForward()
+    {
+        ChangePage(true);
+    }
+
+    void ChangePageBackwards()
+    {
+        ChangePage(false);
+    }
 
 
     //Adds a page to the end of the book and makes it current
     void AddPage(GameObject g)
     {
         pages.Add(g);
+        pageIsLefts.Add(false);
         currPage = g;
     }
 
@@ -65,6 +99,7 @@ public class Notebook : MonoBehaviour
     void RemovePage(GameObject g)
     {
         currPage = GetNextPage(g);
+        pageIsLefts.RemoveAt(pages.IndexOf(g));
         pages.Remove(g);
     }
 
@@ -74,11 +109,11 @@ public class Notebook : MonoBehaviour
         int currIndex = pages.IndexOf(g);
         int index = (int) Mathf.Max(currIndex - 1, 0f);
         GameObject tmp = pages[index];
-        if(tmp != null)
+        if(tmp != null && index != currIndex)
             return tmp;
         else
         {
-            Debug.LogError("no page found");
+            Debug.LogError("no page before this one");
             return null;
         }
     }
@@ -89,18 +124,28 @@ public class Notebook : MonoBehaviour
         int currIndex = pages.IndexOf(g);
         int index = (int)Mathf.Min(currIndex + 1, pages.Count - 1);
         GameObject tmp = pages[index];
-        if (tmp != null)
+        if (tmp != null && currIndex != index)
             return tmp;
         else
         {
-            Debug.LogError("no page found");
+            Debug.LogError("no page after this one");
             return null;
         }
     }
 
     void ActivatePage(GameObject g)
     {
-        g.SetActive(true);
+        if (g != null)
+        {
+            g.SetActive(true);
+            g.GetComponent<Animator>().SetBool("IsLeftPage", pageIsLefts[pages.IndexOf(g)]);
+        }
+    }
+
+    void DeactivatePage(GameObject g)
+    {
+        if(g != null)
+            g.SetActive(false);
     }
 
     void DeactivatePageDraw(GameObject g)
@@ -117,57 +162,58 @@ public class Notebook : MonoBehaviour
     //Turn the Page in either direction, forward means going to the next page
     void ChangePage(bool forward)
     {
-        int currIndex = pages.IndexOf(currPage);
-        if(forward)
+        if (turningPage == null)
         {
-            Debug.Log("we are at page:" + currIndex + " of:" + (pages.Count - 1) + " wanting next page");
-            //if we are on the last page, make a new page
-            if(currIndex >= pages.Count - 1)
+            int currIndex = pages.IndexOf(currPage);
+            //Do we want to go to the next or the last page
+            if (forward)
             {
-                turningPage = pages[currIndex];
-                DeactivatePageDraw(turningPage);
-                NewPage();
-                DeactivatePageDraw(currPage);
-            }
-            else
-            {
-                turningPage = pages[currIndex];
-                DeactivatePageDraw(turningPage);
-                currPage = GetNextPage(currPage);
-                DeactivatePageDraw(currPage);
+                Debug.Log("we are at page:" + currIndex + " of:" + (pages.Count - 1) + " wanting next page");
+                //if we are on the last page, make a new page
+                if (currIndex >= pages.Count - 1)
+                {
+                    turningPage = pages[currIndex];
+                    DeactivatePageDraw(turningPage);
+                    NewPage();
+                    DeactivatePageDraw(currPage);
+                    turning = 1;
+                }
+                else
+                {
+                    turningPage = pages[currIndex];
+                    DeactivatePageDraw(turningPage);
+                    currPage = GetNextPage(currPage);
+                    ActivatePage(currPage);
+                    DeactivatePageDraw(currPage);
+                    turning = 1;
+                }
+                _anim = turningPage.GetComponent<Animator>();
+                pageIsLefts[pages.IndexOf(turningPage)] = true;
+                _anim.SetBool("IsLeftPage", true);
+                _anim.SetTrigger("NextPage");
+
             }
 
-            turningNext = true;
+            if (!forward)
+            {
+                Debug.Log("we are at page:" + currIndex + " of:" + (pages.Count - 1) + " wanting last page");
+                //if we are not on the first page go to the page before this one
+                if(currIndex > 0f)
+                {
+                    turningPage = pages[currIndex - 1]; 	   //set the turning page to the page before this one
+                    DeactivatePageDraw(turningPage);	       //deactivate the drawing on the turningPage
+                    DeactivatePageDraw(currPage);	           //deactivate the drawing on the currentPage
+					currPage = turningPage;					   //set the currPage to the turning Page
+                    ActivatePage(GetBeforePage(turningPage));  //activate the Page before the current Page
+                    turning = -1;
+                    _anim = turningPage.GetComponent<Animator>();
+                    pageIsLefts[pages.IndexOf(turningPage)] = false;
+					_anim.SetBool("IsLeftPage", false);
+                    _anim.SetTrigger("LastPage");
+                }
+                
+            }
         }
-
-        if (!forward)
-        {
-            Debug.Log("we are at page:" + currIndex + " of:" + (pages.Count - 1) + " wanting last page");
-            //if we are on the last page, make a new page
-            if (currIndex <= 0)
-            {
-                turningPage = pages[currIndex];
-                DeactivatePageDraw(turningPage);
-                NewPage();
-                DeactivatePageDraw(currPage);
-            }
-            else
-            {
-                turningPage = pages[currIndex];
-                DeactivatePageDraw(turningPage);
-                currPage = GetNextPage(currPage);
-                DeactivatePageDraw(currPage);
-            }
-
-            turningNext = true; 
-        }
-    }
-
-    void TurnPage(bool next)
-    {
-        float direction = next ? 1f : -1f;
-        float angle = direction * turningSpeed * Time.deltaTime;
-        turningPage.transform.Rotate(Vector3.forward * angle, Space.Self);
     }
 
     void NewPage()
@@ -179,4 +225,20 @@ public class Notebook : MonoBehaviour
         g.transform.localScale = new Vector3(0.6f, 0.6f, 0.6f);
         AddPage(g);
     }
+
+    #region Input Handling Methods
+
+    void OnEnable()
+    {
+        NotebookState.FlipFoward += ChangePageForward;
+        NotebookState.FlipBackward += ChangePageBackwards;
+    }
+
+    void OnDisable()
+    {
+        NotebookState.FlipFoward -= ChangePageForward;
+        NotebookState.FlipBackward -= ChangePageBackwards;
+    }
+
+    #endregion
 }

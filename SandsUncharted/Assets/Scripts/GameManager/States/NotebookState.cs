@@ -23,6 +23,10 @@ public class NotebookState : State
     [SerializeField]
     private string putBack = "Back";
     [SerializeField]
+    private string flipForwardButton = "RB";
+    [SerializeField]
+    private string flipBackwardButton = "LB";
+    [SerializeField]
     private float rightStickThreshold = 0.1f;
     #endregion
 
@@ -36,6 +40,10 @@ public class NotebookState : State
     public static event InputActionHandler Clear;
     public static event InputActionHandler LiftedPen;
 
+    public static event InputActionHandler FlipFoward;
+    public static event InputActionHandler FlipBackward;
+
+
     public static event InputInteractionHandler PutNotebookBack;
 
     public static event InputActionHandler OnNotebookEnter;
@@ -46,7 +54,7 @@ public class NotebookState : State
 
     public override void UpdateActive(double deltaTime)
     {
-        /* Input Handling */
+        /* Drawing */
         float moveX = Input.GetAxis(moveCursorX);
         float moveY = Input.GetAxis(moveCursorY);
         if (MoveCursor != null)
@@ -69,6 +77,14 @@ public class NotebookState : State
         }
         if (Input.GetButtonUp(drawButton) || Input.GetButtonUp(eraseButton))
             LiftedPen();
+
+        /* Flipping Pages */
+        if (Input.GetButtonDown(flipForwardButton)) {
+            if (FlipFoward != null) FlipFoward();
+        }
+        if (Input.GetButtonDown(flipBackwardButton)) {
+            if (FlipBackward != null) FlipBackward();
+        }
 
         /* State Changing */
 

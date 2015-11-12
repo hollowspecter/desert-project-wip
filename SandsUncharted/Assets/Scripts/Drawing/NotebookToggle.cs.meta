@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: 2a848f6dad823c14c80d71d32088569b
-timeCreated: 1446663935
+guid: 4141cb5ab2115c0428b6e8fa311485a3
+timeCreated: 1447318958
 licenseType: Free
 MonoImporter:
   serializedVersion: 2
-  defaultReferences:
-  - brush: {instanceID: 0}
-  - brushCircle: {instanceID: 0}
-  - uiPanel: {instanceID: 0}
+  defaultReferences: []
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
