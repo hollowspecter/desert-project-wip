@@ -6,6 +6,8 @@ public class Notebook : MonoBehaviour
 {
     //[HideInInspector]
     public GameObject pagePrefab;
+    [SerializeField]
+    private string pageName = "newPage";
 
     private Animator _anim; // currently turning pages animator
 
@@ -150,13 +152,15 @@ public class Notebook : MonoBehaviour
 
     void DeactivatePageDraw(GameObject g)
     {
-        GameObject page = g.transform.Find("page").gameObject;
+        GameObject page = g.transform.Find(pageName).gameObject;
         page.GetComponent<DrawingScript>().enabled = false;
+        page.transform.Find("brushCursor").gameObject.SetActive(false);
     }
     void ActivatePageDraw(GameObject g)
     {
-        GameObject page = g.transform.Find("page").gameObject;
+        GameObject page = g.transform.Find(pageName).gameObject;
         page.GetComponent<DrawingScript>().enabled = true;
+        page.transform.Find("brushCursor").gameObject.SetActive(true);
     }
 
     //Turn the Page in either direction, forward means going to the next page
@@ -230,14 +234,29 @@ public class Notebook : MonoBehaviour
 
     void OnEnable()
     {
+        
         NotebookState.FlipFoward += ChangePageForward;
         NotebookState.FlipBackward += ChangePageBackwards;
+
+        if (currPage != null)
+        {
+            ActivatePage(currPage);
+            if (pageIsLefts[pages.IndexOf(currPage)])
+            {
+                ActivatePage(GetNextPage(currPage));
+            }
+            else
+            {
+                ActivatePage(GetBeforePage(currPage));
+            }
+        }
     }
 
     void OnDisable()
     {
         NotebookState.FlipFoward -= ChangePageForward;
         NotebookState.FlipBackward -= ChangePageBackwards;
+
     }
 
     #endregion

@@ -9,37 +9,36 @@
 	}
 	SubShader 
 		{
-		Tags { "RenderType"="Opaque" }
-		LOD 200
-		Cull Off
-		CGPROGRAM
-		// Physically based Standard lighting model, and enable shadows on all light types
-		#pragma surface surf Standard fullforwardshadows
+			//First Renderpass culls the back faces and only renders front
+			Tags { "RenderType"="Opaque" }
+			LOD 200
+			Cull Back
+			CGPROGRAM
+			// Physically based Standard lighting model, and enable shadows on all light types
+			#pragma surface surf Standard fullforwardshadows
 
-		// Use shader model 3.0 target, to get nicer looking lighting
-		#pragma target 3.0
+			// Use shader model 3.0 target, to get nicer looking lighting
+			#pragma target 3.0
 
 		
-		sampler2D _MainTex;
-		sampler2D _FrontDrawTex;
-		sampler2D _BackDrawTex;
+			sampler2D _MainTex;
+			sampler2D _FrontDrawTex;
+			sampler2D _BackDrawTex;
 
-		struct Input 
-		{
-			float2 uv_MainTex;
-			float2 uv_FrontDrawTex;
-			float2 uv_BackDrawTex;
-			float3 worldNormal;
-			float3 viewDir;
-		};
+			struct Input 
+			{
+				float2 uv_MainTex;
+				float2 uv_FrontDrawTex;
+				float2 uv_BackDrawTex;
+				float3 worldNormal;
+				float3 viewDir;
+			};
 
-		half _Glossiness;
-		half _Metallic;
-		fixed4 _Color;
+			half _Glossiness;
+			half _Metallic;
+			fixed4 _Color;
 
-		void surf (Input IN, inout SurfaceOutputStandard o) 
-		{
-			if (dot(IN.worldNormal, IN.viewDir) > 0)
+			void surf(Input IN, inout SurfaceOutputStandard o)
 			{
 				// Albedo comes from a texture tinted by color
 				float4 mainC = tex2D(_MainTex, IN.uv_MainTex);
@@ -52,7 +51,40 @@
 				o.Smoothness = _Glossiness * drawC.a * 0.5f;
 				o.Alpha = c.a;
 			}
-			else
+			ENDCG
+
+
+			//Second Renderpass culls the front faces and only renders back
+			Tags{ "RenderType" = "Opaque" }
+			LOD 200
+			Cull Front
+			CGPROGRAM
+			// Physically based Standard lighting model, and enable shadows on all light types
+			#pragma surface surf Standard fullforwardshadows
+
+			// Use shader model 3.0 target, to get nicer looking lighting
+			#pragma target 3.0
+
+
+			sampler2D _MainTex;
+			sampler2D _FrontDrawTex;
+			sampler2D _BackDrawTex;
+
+			struct Input
+			{
+				float2 uv_MainTex;
+				float2 uv_FrontDrawTex;
+				float2 uv_BackDrawTex;
+				float3 worldNormal;
+				float3 viewDir;
+			};
+
+			half _Glossiness;
+			half _Metallic;
+			fixed4 _Color;
+
+			//Draw the BackfaceTexture onto the backface
+			void surf(Input IN, inout SurfaceOutputStandard o)
 			{
 				// Albedo comes from a texture tinted by color
 				float4 mainC = tex2D(_MainTex, IN.uv_MainTex);
@@ -65,7 +97,6 @@
 				o.Smoothness = _Glossiness * drawC.a * 0.5f;
 				o.Alpha = c.a;
 			}
-		}
 		ENDCG
 	} 
 	FallBack "Diffuse"
