@@ -24,6 +24,8 @@ public class TargetState : State
     private string walkX = "Horizontal";
     [SerializeField]
     private string walkY = "Vertical";
+    [SerializeField]
+    private string skipHourButton = "RB";
     #endregion
 
     #region Properties (public)
@@ -32,6 +34,7 @@ public class TargetState : State
     public static event InputAxisHandler Walk;
 
     public static event InputActionHandler LeftHand;
+    public static event InputActionHandler SkipHour;
     public static event InputActionHandler OnTargetEnter;
     public static event InputActionHandler OnTargetExit;
 
@@ -57,6 +60,11 @@ public class TargetState : State
         if (Input.GetButtonDown(leftHandButton)) {
             if (LeftHand != null)
                 LeftHand();
+        }
+
+        if (Input.GetButtonDown(skipHourButton)) {
+            if (SkipHour != null)
+                SkipHour();
         }
 
         /* State Changes */

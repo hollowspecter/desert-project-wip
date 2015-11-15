@@ -150,6 +150,9 @@ public class ThirdPersonCamera : MonoBehaviour
     private float firstPersonLeftX = 0f;
     private float firstPersonLeftY = 0f;
 
+    // handling overriding targetposition in interaction state
+    private Vector3 overrideTargetPosition;
+
 	#endregion
 	
 	#region Properties (public)	
@@ -177,6 +180,8 @@ public class ThirdPersonCamera : MonoBehaviour
 			return this.camState;
 		}
 	}
+
+    public Vector3 OverrideTargetPosition { set { overrideTargetPosition = value; } }
 	
 	public enum CamStates
 	{
@@ -259,14 +264,6 @@ public class ThirdPersonCamera : MonoBehaviour
 	}
 	
 	/// <summary>
-	/// Update is called once per frame.
-	/// </summary>
-	void Update ()
-	{
-		
-	}
-	
-	/// <summary>
 	/// Debugging information should be put here.
 	/// </summary>
 	void OnDrawGizmos ()
@@ -291,10 +288,11 @@ public class ThirdPersonCamera : MonoBehaviour
         //set the lookat weight - amount to use look at IK vs using
         //the heads animation
         follow.setLookVars(headLookAt, lookWeight);
-
-		CompensateForWalls(characterOffset, ref targetPosition);		
+		
+		if (overrideTargetPosition == Vector3.zero)
+			CompensateForWalls(characterOffset, ref targetPosition);		
 		SmoothPosition(cameraXform.position, targetPosition);
-        transform.LookAt(lookAt);	
+        transform.LookAt(lookAt);
 	}
 	
 	#endregion
@@ -461,10 +459,15 @@ public class ThirdPersonCamera : MonoBehaviour
     {
         barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, 0f, targetingTime);
 
-        targetPosition = characterOffset +
+        if (overrideTargetPosition == Vector3.zero) {
+            targetPosition = characterOffset +
             followXform.up * interactDistanceUp -
             followXform.forward * interactDistanceAway -
             followXform.right * interactDistanceLeft;
+        }
+        else {
+            targetPosition = overrideTargetPosition;
+        }
 
         Vector3 interactablePosition = interactionMgr.GetInteractable().transform.position;
 
@@ -584,6 +587,11 @@ public class ThirdPersonCamera : MonoBehaviour
         xAxisRot = 0;
         lookWeight = 0f;
     }
+
+    public void ResetOverrideTargetPosition()
+    {
+        overrideTargetPosition = Vector3.zero;
+    }
 	
 	#endregion Methods
 
@@ -638,4 +646,5 @@ public class ThirdPersonCamera : MonoBehaviour
     }
 
     #endregion
+
 }

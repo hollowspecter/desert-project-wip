@@ -112,15 +112,16 @@ public class AutoIntensity : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Q)) skySpeed *= .5f;
         if (Input.GetKeyDown(KeyCode.E)) skySpeed *= 2f;
 
-        // Rotate
-        if (percentage > 0) {
-            isNight = false;
-            transform.Rotate(dayRotateSpeed * Time.deltaTime * skySpeed);
-        }
-        else {
-            isNight = true;
-            transform.Rotate(nightRotateSpeed * Time.deltaTime * skySpeed);
-        }
+        // SetNight
+        isNight = percentage <= 0;
+        //if (percentage > 0) {
+        //    isNight = false;
+        //    transform.Rotate(dayRotateSpeed * Time.deltaTime * skySpeed);
+        //}
+        //else {
+        //    isNight = true;
+        //    transform.Rotate(nightRotateSpeed * Time.deltaTime * skySpeed);
+        //}
     }
 
     ///<summary>

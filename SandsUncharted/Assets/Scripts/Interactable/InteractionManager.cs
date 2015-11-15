@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Assertions;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
@@ -10,9 +11,11 @@ public class InteractionManager : MonoBehaviour
     
     private List<Interactable> interactables; //List containing all the Interactables that we can currently interact with
     private Interactable currInteractable; //The currently selected Interactable
+    private Interactable interactingWith; //the interactable you are or have interacted with
     private Transform _camT; // a reference to the main camera
     private bool canInteract = true;
     private Transform _transform;
+    
 
 	// Use this for initialization
 	void Start ()
@@ -44,7 +47,8 @@ public class InteractionManager : MonoBehaviour
 
     public void RemoveInteractable(Interactable i)
     {
-        interactables.Remove(i);
+        if (interactables.Contains(i))
+            interactables.Remove(i);
     }
 
     //Change the interactiontarget to the next or last interactable on the list
@@ -94,6 +98,9 @@ public class InteractionManager : MonoBehaviour
     {
         canInteract = b;
     }
+    
+    public void CanInteract(){canInteract = true;}
+    public void CannotInteract(){canInteract = false;}
 
     public bool GetCanInteract()
     {
@@ -102,7 +109,7 @@ public class InteractionManager : MonoBehaviour
 
     public Interactable GetInteractable()
     {
-        return currInteractable;
+        return interactingWith;
     }
 
     void OnDrawGizmos()
@@ -121,6 +128,7 @@ public class InteractionManager : MonoBehaviour
         if (currInteractable != null) {
             TurnTo();
             currInteractable.Interact();
+            interactingWith = currInteractable;
             return true;
         }
         else
@@ -142,12 +150,16 @@ public class InteractionManager : MonoBehaviour
     {
         TargetState.Interact += Interact;
         BehindBackState.Interact += Interact;
+        InteractionState.OnEnter += CannotInteract;
+        InteractionState.OnExit += CanInteract;
     }
 
     void OnDisable()
     {
         TargetState.Interact -= Interact;
         BehindBackState.Interact -= Interact;
+        InteractionState.OnEnter -= CannotInteract;
+        InteractionState.OnExit -= CanInteract;
     }
 
     #endregion

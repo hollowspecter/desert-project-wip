@@ -3,13 +3,16 @@ using System.Collections;
 
 public abstract class Interactable : MonoBehaviour, IInteractable
 {
+    protected bool isInteractable = true;
+
     protected string interactionString = "Interact"; //The string to be displayed next to the button prompt
 
     private SphereCollider coll; //The sphere trigger of this object
 
     protected InteractionManager manager; //The Interaction manager on the player
 
-    private const float maxInteractionAngle = 120f; //The maximum angle at which the Object can be interacted with, centered around the forward axis of the object
+    [SerializeField]
+    protected float maxInteractionAngle = 120f; //The maximum angle at which the Object can be interacted with, centered around the forward axis of the object
 
     void Awake()
     {
@@ -38,7 +41,8 @@ public abstract class Interactable : MonoBehaviour, IInteractable
     {
         if(c.CompareTag("Player") && CheckInteractionAngle())
         {
-            manager.AddInteractable(this);
+            if (isInteractable)
+                manager.AddInteractable(this);
         }
     }
 
@@ -48,6 +52,12 @@ public abstract class Interactable : MonoBehaviour, IInteractable
         {
             manager.RemoveInteractable(this);
         }
+    }
+
+    public void Deactivate()
+    {
+        manager.RemoveInteractable(this);
+        isInteractable = false;
     }
 
     //Check if the Angle to the player is within the Interaction angle

@@ -13,6 +13,8 @@ public class InteractionState : State
 {
     #region variables (private)
     [SerializeField]
+    private float inputDelay = 1f;
+    [SerializeField]
     private string buttonA = "A";
     [SerializeField]
     private string buttonB = "B";
@@ -42,6 +44,8 @@ public class InteractionState : State
     private string rightY = "RightStickY";
     [SerializeField]
     private float rightStickThreshold = -0.1f;
+
+    private float timer = 0f;
     #endregion
 
     #region Properties (public)
@@ -61,6 +65,9 @@ public class InteractionState : State
 
     public static InputActionHandler OnEnter;
     public static InputActionHandler OnExit;
+    public static InputActionHandler OnLiftedPen;
+
+    public static InputActionHandler buttonADown;
 
     public static InputActionHandler CloseNotebook;
 
@@ -71,14 +78,24 @@ public class InteractionState : State
 
     public override void UpdateActive(double deltaTime)
     {
+        //delay the input
+        if (timer < inputDelay) {
+            timer += (float)deltaTime;
+            return;
+        }
+
         /* Every button Action could be used
          * to close the Interaction by returning true
          */
 
-        if (Input.GetButtonDown(buttonA))
+        if (Input.GetButtonDown(buttonA)) {
             if (InteractA != null)
                 if (InteractA())  //Closing Interaction?
                     Exit();
+        }
+        else if (Input.GetButton(buttonA))
+            if (buttonADown != null)
+                buttonADown();
         if (Input.GetButtonDown(buttonB))
             if (InteractB != null)
                 if (InteractB())  //Closing Interaction?
@@ -120,6 +137,11 @@ public class InteractionState : State
             y = Input.GetAxis(rightY);
             RightStick(x, y);
         } 
+
+        //For drawing riddles
+        if (Input.GetButtonUp(buttonA))
+            if (OnLiftedPen != null)
+                OnLiftedPen();
 
         /* Notebook Code */
         // if the back button is pressed..
@@ -166,6 +188,7 @@ public class InteractionState : State
     public override void ExitState()
     {
         OnExit();
+        timer = 0f;
         Debug.Log("Exited Interaction State");
     }
     #endregion

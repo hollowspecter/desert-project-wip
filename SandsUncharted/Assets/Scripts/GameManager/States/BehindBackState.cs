@@ -23,6 +23,8 @@ public class BehindBackState : State
     [SerializeField]
     private string drawModeButton = "Y";
     [SerializeField]
+    private string skipHourButton = "RB";
+    [SerializeField]
     private string targetTriggerAxis = "Target";
     [SerializeField]
     private float leftTriggerThreshold = 0.01f;
@@ -37,6 +39,7 @@ public class BehindBackState : State
     #region Properties (public)
     public static event InputAxisHandler Walk;
     public static event InputActionHandler LeftHand;
+    public static event InputActionHandler SkipHour;
     public static event InputActionHandler OnBehindBackEnter;
     public static event InputActionHandler OnBehindBackExit;
 
@@ -68,6 +71,11 @@ public class BehindBackState : State
         if (Input.GetButtonDown(leftHandButton)) {
             if (LeftHand != null)
                 LeftHand();
+        }
+
+        if (Input.GetButtonDown(skipHourButton)) {
+            if (SkipHour != null)
+                SkipHour();
         }
 
         /* Notebook Code */
