@@ -17,6 +17,7 @@ public class DoorDrawingScript : DrawingScript
 
     public void Deactivate()
     {
+        ReceiveLeftStickInput(0f, 0f);
         InteractionState.LeftStick -= ReceiveLeftStickInput;
         InteractionState.buttonADown -= OnDraw;
         InteractionState.InteractX -= ClearInteraction;

@@ -3,6 +3,8 @@ using System.Collections;
 
 public abstract class Interactable : MonoBehaviour, IInteractable
 {
+    protected bool isInteractable = true;
+
     protected string interactionString = "Interact"; //The string to be displayed next to the button prompt
 
     private SphereCollider coll; //The sphere trigger of this object
@@ -39,7 +41,8 @@ public abstract class Interactable : MonoBehaviour, IInteractable
     {
         if(c.CompareTag("Player") && CheckInteractionAngle())
         {
-            manager.AddInteractable(this);
+            if (isInteractable)
+                manager.AddInteractable(this);
         }
     }
 
@@ -49,6 +52,12 @@ public abstract class Interactable : MonoBehaviour, IInteractable
         {
             manager.RemoveInteractable(this);
         }
+    }
+
+    public void Deactivate()
+    {
+        manager.RemoveInteractable(this);
+        isInteractable = false;
     }
 
     //Check if the Angle to the player is within the Interaction angle

@@ -30,10 +30,6 @@ public class InteractionManager : MonoBehaviour
     {
         ChooseCurrInteractable();
 
-        //Assert.IsNotNull<Interactable>(currInteractable);
-        //Assert.IsTrue(canInteract);
-        //Assert.IsTrue(currInteractable.CheckInteractionAngle());
-
         if(currInteractable != null && currInteractable.CheckInteractionAngle() && canInteract)
         {
             buttonPrompt.Activate(currInteractable.GetInteractionString());
@@ -51,7 +47,8 @@ public class InteractionManager : MonoBehaviour
 
     public void RemoveInteractable(Interactable i)
     {
-        interactables.Remove(i);
+        if (interactables.Contains(i))
+            interactables.Remove(i);
     }
 
     //Change the interactiontarget to the next or last interactable on the list

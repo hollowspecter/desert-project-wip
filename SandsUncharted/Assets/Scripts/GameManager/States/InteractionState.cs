@@ -13,6 +13,8 @@ public class InteractionState : State
 {
     #region variables (private)
     [SerializeField]
+    private float inputDelay = 1f;
+    [SerializeField]
     private string buttonA = "A";
     [SerializeField]
     private string buttonB = "B";
@@ -42,6 +44,8 @@ public class InteractionState : State
     private string rightY = "RightStickY";
     [SerializeField]
     private float rightStickThreshold = -0.1f;
+
+    private float timer = 0f;
     #endregion
 
     #region Properties (public)
@@ -74,6 +78,12 @@ public class InteractionState : State
 
     public override void UpdateActive(double deltaTime)
     {
+        //delay the input
+        if (timer < inputDelay) {
+            timer += (float)deltaTime;
+            return;
+        }
+
         /* Every button Action could be used
          * to close the Interaction by returning true
          */
@@ -178,6 +188,7 @@ public class InteractionState : State
     public override void ExitState()
     {
         OnExit();
+        timer = 0f;
         Debug.Log("Exited Interaction State");
     }
     #endregion
