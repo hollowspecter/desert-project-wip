@@ -20,8 +20,18 @@ public class DrawingScript : MonoBehaviour
     protected float reticleScale = 12f;
     [SerializeField]
     protected float border = 0.12f;
-
     Texture2D texture;
+
+    enum DrawTools
+    {
+        Line,
+        Stamp,
+        Erase,
+        Spline
+    }
+
+    DrawTools currentTool;
+    bool isToolbarActive;
 
     Color clearColor;
     Camera cam;
@@ -34,7 +44,7 @@ public class DrawingScript : MonoBehaviour
 	Vector3 speed = new Vector3();
 
     float turnAxis;
-    float turnSpeed = 200f;
+    float turnSpeed = 75f;
 
 	float paintinterval = 1f; // how many pixels between two drawpositions
 
@@ -103,6 +113,8 @@ public class DrawingScript : MonoBehaviour
 		meshWidth = mesh.bounds.size.x;
 		meshHeight = mesh.bounds.size.z;
 
+        currentTool = DrawTools.Line;
+
 		brushPx = brush.GetPixels ();
 		oldUV = pixelUV = new Vector2 ();
 		first = true;
@@ -121,17 +133,6 @@ public class DrawingScript : MonoBehaviour
 
 	void Update() 
 	{
-        //uiPanel.SetActive(gameObject.active);
-
-        RaycastHit mouseHit;
-        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-        if(Physics.Raycast (ray, out mouseHit))
-        {
-            //brushCircle.transform.position = mouseHit.point + transform.up * 0.01f;
-        }
-
-        //Debug.DrawLine(ray.origin, mouseHit.point, Color.red);
-
         MakeMoveVector(leftX, leftY);
 
         TurnMap();
@@ -159,7 +160,7 @@ public class DrawingScript : MonoBehaviour
     }
 
 
-    void Draw()
+    void FreeDraw()
     {  
         if (!first) 
 		{
@@ -507,6 +508,32 @@ public class DrawingScript : MonoBehaviour
         reticleAcceleration = acc;
     }
 
+
+    void ChooseToolfromRadial(float x, float y)
+    {
+        //top slot chosen
+        if(y > 0.5 && Mathf.Abs(x) < 0.3)
+        {
+            currentTool = DrawTools.Line;
+        }
+        //right slot chosen
+        else if (x > 0.5 && Mathf.Abs(y) < 0.3)
+        {
+            currentTool = DrawTools.Erase;
+        }
+        //bottom slot chosen
+        else if (x > 0.5 && Mathf.Abs(y) < 0.3)
+        {
+            //clear? spline?
+        }
+        //left slot chosen
+        else if (x > 0.5 && Mathf.Abs(y) < 0.3)
+        {
+            //currentTool = DrawTools.Stamp;
+        }
+    }
+
+
     #region Input Managing Methods
 
     protected virtual void OnOverrideEnable()
@@ -547,20 +574,37 @@ public class DrawingScript : MonoBehaviour
 
     protected void OnDraw()
     {
-        if (DrawRaycast())
-            Draw();
+        switch (currentTool)
+        {
+            case DrawTools.Line:
+                if (DrawRaycast())
+                    FreeDraw();
+                break;
+            case DrawTools.Erase:
+                if (DrawRaycast())
+                    Erase();
+                break;
+
+        }
     }
 
     protected void OnErase()
     {
-        if(DrawRaycast())
-            Erase();
+        if (currentTool == DrawTools.Line)
+            currentTool = DrawTools.Erase;
+        else
+            currentTool = DrawTools.Line;
+     //   if(DrawRaycast())
+       //     Erase();
     }
 
     protected void OnClear()
     {
+        //CLEAR BUTTON USED FOR RADIAL MENU
         //Debug.Log("clear");
-        ClearTexture();
+        //ClearTexture();
+
+
     }
 
     protected void OnDrawExit()
@@ -589,8 +633,15 @@ public class DrawingScript : MonoBehaviour
 
     protected void ReceiveLeftStickInput(float x, float y)
     {
-        leftX = x;
-        leftY = y;
+        if(!isToolbarActive)
+        {
+            leftX = x;
+            leftY = y;
+        }
+        else
+        {
+
+        }
     }
 
     void ReceiveTriggerInput(float axis, float nothing)
@@ -598,7 +649,5 @@ public class DrawingScript : MonoBehaviour
         //Debug.Log("turninput" + axis);
         turnAxis = axis;
     }
-
-
     #endregion
 }
