@@ -19,4 +19,5 @@ public class StateNames
     public static string TargetState = "Target";
     public static string InteractionState = "Interaction";
     public static string NotebookState = "Notebook";
+    public static string InventoryState = "Inventory";
 }

@@ -8,14 +8,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
-/// The different states the game can be in.
-/// I.e. Intro, Pause, MainMenu, Game, MiniGame, Quit...
-/// The first State will be the first state to be entered
-/// by the Game Manager
-/// </summary>
-public enum GameState { Intro, InGame, Quit, NUMOFSTATES };
-
-/// <summary>
 /// The Game Manager
 /// SINGLETON - Only one instance is allowed
 /// 
@@ -51,8 +43,6 @@ public class GameManager : MonoBehaviour
 
     #region Properties (public)
 
-    public GameState currentState { get; private set; } // current state the game is in
-
     #endregion
 
     #region Unity event functions
@@ -78,6 +68,7 @@ public class GameManager : MonoBehaviour
         State pauseState = GetComponentInChildren<PauseState>();
         State interactionState = GetComponentInChildren<InteractionState>();
         State notebookState = GetComponentInChildren<NotebookState>();
+        State inventoryState = GetComponentInChildren<InventoryState>();
     
 		//layer 1
 		inGameStateMachine.setParentStateMachine(stateMachine);
@@ -93,6 +84,7 @@ public class GameManager : MonoBehaviour
         drawState.setParentStateMachine(inGameStateMachine);
         interactionState.setParentStateMachine(inGameStateMachine);
         notebookState.setParentStateMachine(inGameStateMachine);
+        inventoryState.setParentStateMachine(inGameStateMachine);
 		
 		inGameStateMachine.AddState(StateNames.BehindBackState, behindBackState);
 		inGameStateMachine.AddState(StateNames.FirstPersonState, firstPersonState);
@@ -100,6 +92,7 @@ public class GameManager : MonoBehaviour
         inGameStateMachine.AddState(StateNames.MapState, drawState);
         inGameStateMachine.AddState(StateNames.InteractionState, interactionState);
         inGameStateMachine.AddState(StateNames.NotebookState, notebookState);
+        inGameStateMachine.AddState(StateNames.InventoryState, inventoryState);
 		
 		//add them all to all states DEPRECATED
 		allStates.Add(StateNames.InGameStateMachine, inGameStateMachine);
@@ -109,6 +102,7 @@ public class GameManager : MonoBehaviour
         allStates.Add(StateNames.MapState, drawState);
         allStates.Add(StateNames.InteractionState, interactionState);
         allStates.Add(StateNames.NotebookState, notebookState);
+        allStates.Add(StateNames.InventoryState, inventoryState);
 		
 		stateMachine.EnterState();
     }

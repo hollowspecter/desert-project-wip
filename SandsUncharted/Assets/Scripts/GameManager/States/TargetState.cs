@@ -26,6 +26,8 @@ public class TargetState : State
     private string walkY = "Vertical";
     [SerializeField]
     private string skipHourButton = "RB";
+    [SerializeField]
+    private string menuButton = "LB";
     #endregion
 
     #region Properties (public)
@@ -70,6 +72,11 @@ public class TargetState : State
         /* State Changes */
         if (leftTrigger < leftTriggerThreshold) {
             stateMachine.ChangeToState(StateNames.BehindBackState);
+        }
+
+        if (Input.GetButtonDown(menuButton)) {
+            Walk(0f, 0f);
+            stateMachine.ChangeToState(StateNames.InventoryState);
         }
     }
 

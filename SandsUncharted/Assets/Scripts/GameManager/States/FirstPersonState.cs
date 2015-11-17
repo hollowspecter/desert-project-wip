@@ -28,6 +28,8 @@ public class FirstPersonState : State
     private string rightStickXAxis = "RightStickX";
     [SerializeField]
     private float rightStickThreshold = -0.1f;
+    [SerializeField]
+    private string menuButton = "LB";
     #endregion
 
     #region Properties (public)
@@ -66,6 +68,10 @@ public class FirstPersonState : State
             stateMachine.ChangeToState(StateNames.TargetState);
         }
 
+        if (Input.GetButtonDown(menuButton)) {
+            stateMachine.ChangeToState(StateNames.InventoryState);
+        }
+
         /* Notebook Code */
         // if the back button is pressed..
         if (Input.GetButtonDown(toggleNotebookButton)) {
@@ -85,6 +91,8 @@ public class FirstPersonState : State
                 }
             }
         }
+
+        
     }
 
     protected override void Initialise()

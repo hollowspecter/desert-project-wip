@@ -25,6 +25,8 @@ public class BehindBackState : State
     [SerializeField]
     private string skipHourButton = "RB";
     [SerializeField]
+    private string menuButton = "LB";
+    [SerializeField]
     private string targetTriggerAxis = "Target";
     [SerializeField]
     private float leftTriggerThreshold = 0.01f;
@@ -101,6 +103,11 @@ public class BehindBackState : State
         if (rightY > firstPersonThreshold && !character.isMoving()) {
             //Debug.Log("right Y: " + rightY + "; threshold: " + firstPersonThreshold);
             stateMachine.ChangeToState(StateNames.FirstPersonState);
+        }
+
+        if (Input.GetButtonDown(menuButton)) {
+            Walk(0f, 0f);
+            stateMachine.ChangeToState(StateNames.InventoryState);
         }
     }
 
