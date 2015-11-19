@@ -11,6 +11,9 @@ public class CatmullRomSpline : MonoBehaviour
     private GameObject renderTarget;
 
     [SerializeField]
+    private GameObject vertexPrefab;
+
+    [SerializeField]
     private List<Transform> controlPoints;
 
     private Vector3 startControlPoint, endControlPoint;
@@ -36,11 +39,8 @@ public class CatmullRomSpline : MonoBehaviour
 	void Update ()
     {
         CalcStartEndControlPoint();
-        if(Input.GetKeyDown(KeyCode.A))
-        {
-            CalcMeshVertices();
-            GenerateMesh();
-        }
+        CalcMeshVertices();
+        GenerateMesh();
 	}
 
     void OnDrawGizmos()
@@ -90,12 +90,8 @@ public class CatmullRomSpline : MonoBehaviour
     Vector3 CalculateTangent(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
     {
         //catmull'(u) = 0.5 *((-p0 + p2) + 2 * (2*p0 - 5*p1 + 4*p2 - p3) * u + 3 * (-p0 + 3*p1 - 3*p2 + p3) * u * u)
-        Vector3 a = 0.5f * (p2 - p0);
-        Vector3 b = 0.5f * (2f * (2f * p0 - 5f * p1 + 4f * p2 - p3));
-        Vector3 c = 0.5f * (3 * (-p0 + 3 * p1 + p3));
-        
-        Vector3 tangent = a + (b * t) + (c * t * t);
-        return tangent;
+        Vector3 tangent = 0.5f * ((-p0 + p2) + 2 * (2 * p0 - 5 * p1 + 4 * p2 - p3) * t + 3 * (-p0 + 3 * p1 - 3 * p2 + p3) * t * t);
+        return tangent.normalized;
     }
 
     void DrawSplinePart(int pos)
@@ -134,7 +130,11 @@ public class CatmullRomSpline : MonoBehaviour
     //Get all controlpoints relevant to the spline where the index "pos" is the second point
     Vector3[] GetPartControlPoints(int pos)
     {
-        Vector3[] points = { ClampListPosition(pos - 1), ClampListPosition(pos), ClampListPosition(pos + 1), ClampListPosition(pos + 2)};
+        Vector3[] points = new Vector3[4];
+        points[0] = ClampListPosition(pos - 1);
+        points[1] = ClampListPosition(pos);
+        points[2] = ClampListPosition(pos + 1);
+        points[3] = ClampListPosition(pos + 2);
         return points;
     }
 
@@ -170,12 +170,37 @@ public class CatmullRomSpline : MonoBehaviour
     }
 
     /******MESHVERTEX CALCULATION METHODS********/
+    void CalcMeshVertexPart(int pos)
+    {
+        float step = 0.0625f;
+        float thickness = 0.03125f;
+
+        Vector3[] p = GetPartControlPoints(pos);
+
+        //t runs from 0 to 1
+        //0 is at p1 1 is at p2
+        for (float t = 0; t <= 1; t += step)
+        {
+            //Find the coordinates between the control points with a Catmull-Rom spline
+            Vector3 point = CalculatePosition(t, p[0], p[1], p[2], p[3]);
+            Vector3 tangent = CalculateTangent(t, p[0], p[1], p[2], p[3]);
+            tangent *= thickness;
+            tangent = new Vector3(-tangent.y, tangent.x, tangent.z);
+            Vector3 v1 = point + tangent;
+            vertices.Add(v1);
+            //GameObject.Instantiate(vertexPrefab, v1, Quaternion.identity);
+            Vector3 v2 = point - tangent;
+            vertices.Add(v2);
+            //GameObject.Instantiate(vertexPrefab, v2, Quaternion.identity);
+
+            if (t > 1.0f) t = 1.0f;
+        }
+    }
+
 
     void CalcMeshVertices()
     {
-        float step = 0.125f;
-        float thickness = 0.5f;
-
+        vertices.Clear();
         for (int i = 0; i < controlPoints.Count; i++)
         {
 
@@ -183,66 +208,44 @@ public class CatmullRomSpline : MonoBehaviour
             {
                 continue;
             }
-
-            Debug.Log("test");
-            Vector3[] p = GetPartControlPoints(i);
-            for (float t = 0; t <= 1.0f; t += step)
-            {
-                Vector3 point = CalculatePosition(i, p[0], p[1], p[2], p[3]);
-                Vector3 tangent = CalculateTangent(i, p[0], p[1], p[2], p[3]);
-                float len = tangent.magnitude;
-                tangent *= thickness;
-                tangent = new Vector3(-tangent.z, tangent.y, tangent.x);
-                Vector3 v1 = new Vector3();
-                v1 = point + tangent;
-                vertices.Add(v1);
-                Vector3 v2 = new Vector3();
-                v2 = point - tangent;
-                vertices.Add(v2);
-
-                if (t > 1.0f) t = 1.0f;
-            }
+            CalcMeshVertexPart(i);
+            
         }
     }
 
     void GenerateMesh()
     {
-        float width = 100f;
-        float height = 100f;
-        Mesh m = new Mesh();
-        m.name = "ScriptedMesh";
-        m.vertices = new Vector3[] {
-         new Vector3(-width, -height, 0.01f),
-         new Vector3(width, -height, 0.01f),
-         new Vector3(width, height, 0.01f),
-         new Vector3(-width, height, 0.01f)
-        };
-        m.uv = new Vector2[] {
-         new Vector2 (0, 0),
-         new Vector2 (0, 1),
-         new Vector2(1, 1),
-         new Vector2 (1, 0)
-        };
-        m.triangles = new int[] { 0, 1, 2, 0, 2, 3 };
-        m.RecalculateNormals();
-
-        renderTarget.GetComponent<MeshFilter>().mesh = m;
-        /*
         if(vertices.Count >= 4)
         {
-            Mesh mesh = new Mesh();
-            mesh.name = "Procedural_Spline_Mesh";
-            mesh.vertices = vertices.ToArray();
-            mesh.triangles = new int[3 * (vertices.Count - 2)];
-            for (int i = 0; i < vertices.Count - 2; i++)
+            Mesh m = new Mesh();
+            m.name = "Procedural_Spline_Mesh";
+            m.vertices = vertices.ToArray();
+            int triCount = vertices.Count - 2;
+            //Debug.Log("VertexCount: " + vertices.Count);
+            int[] indices = new int[triCount * 3];
+           // Debug.Log("indicesCount: " + indices.Length);
+            for (int i = 0; i < (triCount); i += 2)
             {
-                mesh.triangles[3 * i + 0] = i;
-                mesh.triangles[3 * i + 1] = i + 1;
-                mesh.triangles[3 * i + 2] = i + 2;
+                indices[3*i + 5] = i;
+                indices[3*i + 4] = i + 1;
+                indices[3*i + 3] = i + 2;
+
+                indices[3*i + 2] = i + 3;
+                indices[3*i + 1] = i + 2;
+                indices[3*i + 0] = i + 1;
+                //Debug.Log("index " + (3*i + 0) + "value" + i);
+
             }
-            mesh.RecalculateNormals();
-            renderTarget.GetComponent<MeshFilter>().mesh = mesh;
-        }*/
+            m.triangles = indices;
+            m.RecalculateNormals();
+            clearMesh();
+            renderTarget.GetComponent<MeshFilter>().mesh = m;
+        }
+    }
+
+    void clearMesh()
+    {
+        renderTarget.GetComponent<MeshFilter>().mesh = null;
     }
 
     /******MESHVERTEX CALCULATION METHODS********/
