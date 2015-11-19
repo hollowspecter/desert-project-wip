@@ -12,13 +12,9 @@ public class MapGenerator : MonoBehaviour
     [SerializeField]
     private int depth;
     [SerializeField]
-    private int smoothingWallThreshold = 6;
-    [SerializeField]
-    private int smoothingIterations = 3;
-    [SerializeField]
-    private int isolevel = 0;
+    private float isolevel = 0;
 
-    private int[, ,] map;
+    private float[, ,] densityMap;
     #endregion
 
     void Start()
@@ -28,16 +24,12 @@ public class MapGenerator : MonoBehaviour
 
     void GenerateMap()
     {
-        map = new int[width, height, depth];
-        map.Initialize();
+        densityMap = new float[width, height, depth];
+        densityMap.Initialize();
         RandomFillMap();
 
-        for (int i = 0; i < smoothingIterations; ++i) {
-            SmoothMap();
-        }
-
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
-        meshGen.GenerateMesh(map, 1f, isolevel);
+        meshGen.GenerateMesh(densityMap, 1f, isolevel);
     }
 
     void RandomFillMap()
@@ -47,59 +39,13 @@ public class MapGenerator : MonoBehaviour
                 for (int z = 0; z < depth; ++z) {
                     // Set map to 1 or 0 depending the PerlinNoise
                     float xfloat = (float)x / width;
+                    float ýfloat = (float)y / height;
                     float zfloat = (float)z / depth;
-                    int h = Mathf.RoundToInt(Mathf.PerlinNoise(xfloat, zfloat) * height); // One Noise Layer
-                    if (y < h)
-                        map[x, y, z] = 1;
+                    densityMap[x, y, z] = ýfloat;
+                    densityMap[x, y, z] += Noise.GetOctaveNoise(xfloat, ýfloat, zfloat, 2);
                 }
             }
         }
-    }
-
-    void SmoothMap()
-    {
-        // Loop through all the voxels
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                for (int z = 0; z < depth; z++) {
-
-                    // Check number of neighbors and change chunks status accordingly
-                    int neighborWallTiles = GetSurroundingChunkCount(x, y, z);
-
-                    if (neighborWallTiles > smoothingWallThreshold)
-                        map[x, y, z] = 1;
-                    else if (neighborWallTiles < smoothingWallThreshold)
-                        map[x, y, z] = 0;
-                }
-            }
-        }
-    }
-
-    int GetSurroundingChunkCount(int gridX, int gridY, int gridZ)
-    {
-        int wallCount = 0;
-
-        for (int neighborX = gridX - 1; neighborX <= gridX + 1; ++neighborX) {
-            for (int neighborY = gridY - 1; neighborY <= gridY + 1; ++neighborY) {
-                for (int neighborZ = gridZ - 1; neighborZ <= gridZ + 1; ++neighborZ) {
-
-                    // do not look out of bounds
-                    if (!IsInBounds(neighborX, neighborY, neighborZ)) {
-                        wallCount++; // encourage growth of walls on the border
-                        continue;
-                    }
-
-                    // do not consider the initial file
-                    if (neighborX == gridX && neighborY == gridY && neighborZ == gridZ)
-                        continue;
-
-                    // is neighbor a wall?
-                    wallCount += map[neighborX, neighborY, neighborZ];
-                }
-            }
-        }
-
-        return wallCount;
     }
 
     bool IsInBounds(int x, int y, int z)

@@ -8,11 +8,11 @@ public class MeshGenerator : MonoBehaviour
     List<Vector3> vertices;
     List<int> triangles;
 
-    public void GenerateMesh(int[, ,] map, float size, int isolevel)
+    public void GenerateMesh(float[, ,] densityMap, float size, float isolevel)
     {
-        int nodeCountX = map.GetLength(0);
-        int nodeCountY = map.GetLength(1);
-        int nodeCountZ = map.GetLength(2);
+        int nodeCountX = densityMap.GetLength(0);
+        int nodeCountY = densityMap.GetLength(1);
+        int nodeCountZ = densityMap.GetLength(2);
         float mapWidth = nodeCountX * size;
         float mapHeight = nodeCountY * size;
         float mapDepth = nodeCountZ * size;
@@ -25,7 +25,7 @@ public class MeshGenerator : MonoBehaviour
                     Vector3 pos = new Vector3(-mapWidth / 2f + x * size + size / 2f,
                         -mapHeight / 2f + y * size + size / 2f,
                         -mapDepth / 2f + z * size + size / 2f);
-                    nodes[x, y, z] = new Node(pos, map[x, y, z]);
+                    nodes[x, y, z] = new Node(pos, densityMap[x, y, z]);
                 }
             }
         }
@@ -47,7 +47,7 @@ public class MeshGenerator : MonoBehaviour
                         nodes[x+1,y+1,z+1],
                         nodes[x+1,y+1,z]
                         };
-                    voxels[x, y, z] = new Voxel(voxelNodes);
+                    voxels[x, y, z] = new Voxel(voxelNodes, size);
                 }
             }
         }
@@ -65,9 +65,10 @@ public class MeshGenerator : MonoBehaviour
                 vertices.Add(t.p[0]);
                 vertices.Add(t.p[1]);
                 vertices.Add(t.p[2]);
-                triangles.Add(vertexCount++); // 0
-                triangles.Add(vertexCount++); // 1
-                triangles.Add(vertexCount++); // 2
+                triangles.Add(vertexCount + 2); // 0
+                triangles.Add(vertexCount + 1); // 1
+                triangles.Add(vertexCount + 0); // 2
+                vertexCount += 3;
             }
         }
 
@@ -82,34 +83,34 @@ public class MeshGenerator : MonoBehaviour
         Debug.Log("Vertex Count " + mesh.vertexCount);
     }
 
-    void OnDrawGizmos()
-    {
-        if (voxels == null)
-            return;
+    //void OnDrawGizmos()
+    //{
+    //    if (voxels == null)
+    //        return;
 
-        if (vertices == null)
-            return;
+    //    if (vertices == null)
+    //        return;
 
-        foreach (Vector3 v in vertices) {
-            Gizmos.DrawCube(v, Vector3.one * .3f);
-        }
+    //    foreach (Vector3 v in vertices) {
+    //        Gizmos.DrawCube(v, Vector3.one * .3f);
+    //    }
 
-        // Draw Voxels
-        //for (int x = 0; x < voxels.GetLength(0); ++x) {
-        //    for (int y = 0; y < voxels.GetLength(1); ++y) {
-        //        for (int z = 0; z < voxels.GetLength(2); ++z) {
+    //    //// Draw Voxels
+    //    //for (int x = 0; x < voxels.GetLength(0); ++x) {
+    //    //    for (int y = 0; y < voxels.GetLength(1); ++y) {
+    //    //        for (int z = 0; z < voxels.GetLength(2); ++z) {
 
-        //            // For every corner of a voxel
-        //            for (int i = 0; i < 8; ++i) {
-        //                Voxel v = voxels[x, y, z];
-        //                if (v.values[i] > 0)
-        //                    Gizmos.DrawCube(v.p[i], Vector3.one * .4f);
-        //            }
+    //    //            // For every corner of a voxel
+    //    //            for (int i = 0; i < 8; ++i) {
+    //    //                Voxel v = voxels[x, y, z];
+    //    //                if (v.values[i] > .5f)
+    //    //                    Gizmos.DrawCube(v.p[i], Vector3.one * .4f);
+    //    //            }
 
-        //        }
-        //    }
-        //}
-    }
+    //    //        }
+    //    //    }
+    //    //}
+    //}
 
     #region structs and SubClasses
 
@@ -125,16 +126,16 @@ public class MeshGenerator : MonoBehaviour
     public class Voxel
     {
         public Vector3[] p;
-        public int[] values;
+        public float[] values;
 
-        public Voxel(Node[] n)
+        public Voxel(Node[] n, float size)
         {
             if (n.Length != 8) {
                 Debug.LogError("Tried to create a voxel with NOT 8 corners. Bummer.");
             }
 
             p = new Vector3[8];
-            values = new int[8];
+            values = new float[8];
 
             for (int i = 0; i < 8; ++i) {
                 p[i] = n[i].position;
@@ -146,9 +147,9 @@ public class MeshGenerator : MonoBehaviour
     public struct Node
     {
         public Vector3 position;
-        public int value;
+        public float value;
 
-        public Node(Vector3 pos, int value)
+        public Node(Vector3 pos, float value)
         {
             position = pos;
             this.value = value;
@@ -159,7 +160,7 @@ public class MeshGenerator : MonoBehaviour
 
     #region Marching Cubes Algorithm
 
-    TRIANGLE[] Polygonise(Voxel cube, int isolevel)
+    TRIANGLE[] Polygonise(Voxel cube, float isolevel)
     {
         int cubeindex = 0;
         Vector3[] vertlist = new Vector3[12];
@@ -187,37 +188,37 @@ public class MeshGenerator : MonoBehaviour
         if ((edgeTable[cubeindex] & 1)==1)
             vertlist[0] =
                VertexInterp(isolevel, cube.p[0], cube.p[1], cube.values[0], cube.values[1]);
-        if ((edgeTable[cubeindex] & 2) == 1)                             
+        if ((edgeTable[cubeindex] & 2) == 2)                             
             vertlist[1] =                                                
                VertexInterp(isolevel, cube.p[1], cube.p[2], cube.values[1], cube.values[2]);
-        if ((edgeTable[cubeindex] & 4) == 1)                              
+        if ((edgeTable[cubeindex] & 4) == 4)                              
             vertlist[2] =                                                 
                VertexInterp(isolevel, cube.p[2], cube.p[3], cube.values[2], cube.values[3]);
-        if ((edgeTable[cubeindex] & 8) == 1)                               
+        if ((edgeTable[cubeindex] & 8) == 8)                               
             vertlist[3] =                                                  
                VertexInterp(isolevel, cube.p[3], cube.p[0], cube.values[3], cube.values[0]);
-        if ((edgeTable[cubeindex] & 16) == 1)                   
+        if ((edgeTable[cubeindex] & 16) == 16)                   
             vertlist[4] =                                       
                VertexInterp(isolevel, cube.p[4], cube.p[5], cube.values[4], cube.values[5]);
-        if ((edgeTable[cubeindex] & 32) == 1)                     
+        if ((edgeTable[cubeindex] & 32) == 32)                     
             vertlist[5] =                                         
                VertexInterp(isolevel, cube.p[5], cube.p[6], cube.values[5], cube.values[6]);
-        if ((edgeTable[cubeindex] & 64) == 1)                    
+        if ((edgeTable[cubeindex] & 64) == 64)                    
             vertlist[6] =                                        
                VertexInterp(isolevel, cube.p[6], cube.p[7], cube.values[6], cube.values[7]);
-        if ((edgeTable[cubeindex] & 128) == 1)                     
+        if ((edgeTable[cubeindex] & 128) == 128)                     
             vertlist[7] =                                          
                VertexInterp(isolevel, cube.p[7], cube.p[4], cube.values[7], cube.values[4]);
-        if ((edgeTable[cubeindex] & 256) == 1)                   
+        if ((edgeTable[cubeindex] & 256) == 256)                   
             vertlist[8] =                                        
                VertexInterp(isolevel, cube.p[0], cube.p[4], cube.values[0], cube.values[4]);
-        if ((edgeTable[cubeindex] & 512) == 1)                   
+        if ((edgeTable[cubeindex] & 512) == 512)                   
             vertlist[9] =                                        
                VertexInterp(isolevel, cube.p[1], cube.p[5], cube.values[1], cube.values[5]);
-        if ((edgeTable[cubeindex] & 1024) == 1)                
+        if ((edgeTable[cubeindex] & 1024) == 1024)                
             vertlist[10] =                                     
                VertexInterp(isolevel, cube.p[2], cube.p[6], cube.values[2], cube.values[6]);
-        if ((edgeTable[cubeindex] & 2048) == 1)                  
+        if ((edgeTable[cubeindex] & 2048) == 2048)                  
             vertlist[11] =                                       
                VertexInterp(isolevel, cube.p[3], cube.p[7], cube.values[3], cube.values[7]);
 
@@ -237,12 +238,12 @@ public class MeshGenerator : MonoBehaviour
    Linearly interpolate the position where an isosurface cuts
    an edge between two vertices, each with their own scalar value
     */
-    Vector3 VertexInterp(int isolevel,Vector3 p1,Vector3 p2,int value1,int value2)
+    Vector3 VertexInterp(float isolevel,Vector3 p1,Vector3 p2,float value1,float value2)
     {
        float mu;
        Vector3 p;
     
-       if (Mathf.Abs(isolevel-value1) < 0.00001)
+       if (Mathf.Abs(isolevel - value1) < 0.00001)
           return(p1);
        if (Mathf.Abs(isolevel - value2) < 0.00001)
           return(p2);
@@ -252,7 +253,7 @@ public class MeshGenerator : MonoBehaviour
        p.x = p1.x + mu * (p2.x - p1.x);
        p.y = p1.y + mu * (p2.y - p1.y);
        p.z = p1.z + mu * (p2.z - p1.z);
-    
+
        return(p);
     }
 
