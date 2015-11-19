@@ -10,12 +10,15 @@ public class CatmullRomSpline : MonoBehaviour
     [SerializeField]
     private List<Transform> controlPoints;
 
+    private Vector3 startControlPoint, endControlPoint;
+
     private bool isLooping = false;
 
 	// Use this for initialization
 	void Start()
     {
         controlPoints = new List<Transform>();
+        CalcStartEndControlPoint();
 	}
 	
 	// Update is called once per frame
@@ -26,7 +29,8 @@ public class CatmullRomSpline : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        Gizmos.color = Color.red;
+        CalcStartEndControlPoint();
+        Gizmos.color = Color.blue;
 
         for (int i = 0; i < controlPoints.Count; ++i)
         {
@@ -39,13 +43,19 @@ public class CatmullRomSpline : MonoBehaviour
             //Cant draw between the endpoints
             //Neither do we need to draw from the second to the last endpoint
             //...if we are not making a looping line
-            if ((i == 0 || i == controlPoints.Count - 2 || i == controlPoints.Count - 1) && !isLooping)
+            if ((i == controlPoints.Count - 1) && !isLooping)
             {
                 continue;
             }
 
             DisplayCatmullRomSpline(i);
+
         }
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(startControlPoint, 0.3f);
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(endControlPoint, 0.3f);
     }
 
     //Calculate the Spline points of the Catmull-Rom-Spline
@@ -61,13 +71,22 @@ public class CatmullRomSpline : MonoBehaviour
         return pos;
     }
 
+    Vector3 CalculateDerivative(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
+    {
+
+
+        Vector3 tangent = Vector3.zero;
+        return tangent;
+    }
+
     void DisplayCatmullRomSpline(int pos)
     {
+        Vector3 p0, p1, p2, p3;
         //use Clampfunction to allow looping the spline
-        Vector3 p0 = controlPoints[ClampListPosition(pos - 1)].position;
-        Vector3 p1 = controlPoints[ClampListPosition(pos)].position;
-        Vector3 p2 = controlPoints[ClampListPosition(pos + 1)].position;
-        Vector3 p3 = controlPoints[ClampListPosition(pos + 2)].position;
+        p0 = ClampListPosition(pos - 1);
+        p1 = ClampListPosition(pos);
+        p2 = ClampListPosition(pos + 1);
+        p3 = ClampListPosition(pos + 2);
 
         Vector3 lastPos = Vector3.zero;
 
@@ -93,18 +112,35 @@ public class CatmullRomSpline : MonoBehaviour
         Gizmos.DrawLine(lastPos, p2);
     }
 
-    int ClampListPosition(int pos)
+    Vector3 ClampListPosition(int pos)
     {
+        Vector3 tmp;
         if(pos < 0)
         {
-            pos = controlPoints.Count - 1;
+            if (isLooping)
+                tmp = controlPoints[controlPoints.Count - 1].position;
+            else
+                tmp = startControlPoint;
         }
         else
         {
-            pos = pos % controlPoints.Count;
+            if (!isLooping && pos == controlPoints.Count)
+                tmp = endControlPoint;
+            else
+                tmp = controlPoints[pos % controlPoints.Count].position;
         }
 
-        return pos;
+        return tmp;
+    }
+
+    void CalcStartEndControlPoint()
+    {
+        if (!isLooping && controlPoints.Count > 3)
+        {
+            int n = controlPoints.Count - 1;
+            startControlPoint = controlPoints[0].position + (controlPoints[0].position - controlPoints[1].position);
+            endControlPoint = controlPoints[n].position + (controlPoints[n].position - controlPoints[n - 1].position);
+        }
     }
 
     void AddControlPoint(Transform t)
