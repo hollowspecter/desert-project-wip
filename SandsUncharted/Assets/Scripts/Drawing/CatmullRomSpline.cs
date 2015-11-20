@@ -14,7 +14,7 @@ public class CatmullRomSpline : MonoBehaviour
     private GameObject vertexPrefab;
 
     [SerializeField]
-    private List<Transform> controlPoints;
+    private List<Vector3> controlPoints;
 
     private Vector3 startControlPoint, endControlPoint;
 
@@ -25,12 +25,12 @@ public class CatmullRomSpline : MonoBehaviour
 	// Use this for initialization
 	void Start()
     {
-        controlPoints = new List<Transform>();
+        controlPoints = new List<Vector3>();
         vertices = new List<Vector3>();
         Transform positions = transform.Find("positions");
         for(int i = 0; i < positions.childCount; i++)
         {
-            controlPoints.Add(positions.GetChild(i));
+            controlPoints.Add(positions.GetChild(i).position);
         }
         CalcStartEndControlPoint();
 	}
@@ -41,10 +41,11 @@ public class CatmullRomSpline : MonoBehaviour
         CalcStartEndControlPoint();
         CalcMeshVertices();
         GenerateMesh();
-	}
+    }
 
     void OnDrawGizmos()
     {
+        /*
         CalcStartEndControlPoint();
         Gizmos.color = Color.blue;
 
@@ -72,6 +73,7 @@ public class CatmullRomSpline : MonoBehaviour
         Gizmos.DrawWireSphere(startControlPoint, 0.3f);
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(endControlPoint, 0.3f);
+        */
     }
 
     //Calculate the Spline points of the Catmull-Rom-Spline
@@ -144,7 +146,7 @@ public class CatmullRomSpline : MonoBehaviour
         if(pos < 0)
         {
             if (isLooping)
-                tmp = controlPoints[controlPoints.Count - 1].position;
+                tmp = controlPoints[controlPoints.Count - 1];
             else
                 tmp = startControlPoint;
         }
@@ -153,7 +155,7 @@ public class CatmullRomSpline : MonoBehaviour
             if (!isLooping && pos == controlPoints.Count)
                 tmp = endControlPoint;
             else
-                tmp = controlPoints[pos % controlPoints.Count].position;
+                tmp = controlPoints[pos % controlPoints.Count];
         }
 
         return tmp;
@@ -164,8 +166,8 @@ public class CatmullRomSpline : MonoBehaviour
         if (!isLooping && controlPoints.Count > 3)
         {
             int n = controlPoints.Count - 1;
-            startControlPoint = controlPoints[0].position + (controlPoints[0].position - controlPoints[1].position);
-            endControlPoint = controlPoints[n].position + (controlPoints[n].position - controlPoints[n - 1].position);
+            startControlPoint = controlPoints[0] + (controlPoints[0] - controlPoints[1]);
+            endControlPoint = controlPoints[n] + (controlPoints[n] - controlPoints[n - 1]);
         }
     }
 
@@ -250,18 +252,33 @@ public class CatmullRomSpline : MonoBehaviour
 
     /******MESHVERTEX CALCULATION METHODS********/
 
-    void AddControlPoint(Transform t)
+    public void AddControlPoint(Vector3 t)
     {
         controlPoints.Add(t);
     }
 
-    void AddControlPointAt(Transform t, int index)
+    public void AddControlPointAt(Vector3 t, int index)
     {
         controlPoints.Insert(index, t);
     }
 
-    void RemoveControlPoint(Transform t)
+    public void RemoveControlPoint(Vector3 t)
     {
         controlPoints.Remove(t);
+    }
+
+    public void RemoveControlPointAt(int index)
+    {
+        controlPoints.RemoveAt(index);
+    }
+
+    public Vector3 GetControlPointAt(int i)
+    {
+        return controlPoints[i];
+    }
+
+    public int GetControlPointCount()
+    {
+        return controlPoints.Count;
     }
 }

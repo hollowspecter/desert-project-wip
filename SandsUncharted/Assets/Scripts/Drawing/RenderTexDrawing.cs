@@ -9,12 +9,18 @@ public class RenderTexDrawing : MonoBehaviour
     private Transform positionParent;
     [SerializeField]
     private Transform cursor;
+    [SerializeField]
+    private Camera _renderCam;
+    [SerializeField]
+    private Texture crossimage;
 
+    CatmullRomSpline spline;
 
     Vector3 speed;
     // Use this for initialization
     void Start ()
     {
+        spline = GetComponent<CatmullRomSpline>();
 	}
 	
 	// Update is called once per frame
@@ -27,15 +33,33 @@ public class RenderTexDrawing : MonoBehaviour
         axisVector = axisVector.sqrMagnitude >= 0.03 ? axisVector : new Vector3();
 
         /****move Reticle based on acceleration and right stick vector****/
-        speed += 15f * axisVector * Time.deltaTime; //make velocityvector
+        speed += 50f * axisVector * Time.deltaTime; //make velocityvector
         cursor.transform.position += speed * Time.deltaTime; //make movementvector
         //brushCircle.transform.rotation = transform.parent.rotation; //negate the maps rotation to keep the pencil straight (not functional as the brush doesnt actually rotate)
         speed *= 0.75f;//friction
 
         if (Input.GetButtonDown("A"))
         {
-            GameObject g = (GameObject) GameObject.Instantiate(prefab, cursor.position, cursor.rotation);
-            g.transform.SetParent(positionParent);
+            spline.AddControlPoint(new Vector3(cursor.position.x, cursor.position.y, positionParent.position.z));
         }
+
+        else if (Input.GetButtonDown("B"))
+        {
+            spline.RemoveControlPointAt(spline.GetControlPointCount() - 1);
+        }
+
+        DrawPoints();
 	}
+
+    void DrawPoints()
+    {
+        int count = spline.GetControlPointCount();
+        if (count > 0)
+        {
+            for (int i = 0; i < count; ++i)
+            {
+                
+            }
+        }
+    }
 }
