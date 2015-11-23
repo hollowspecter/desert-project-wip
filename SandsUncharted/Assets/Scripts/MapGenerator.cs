@@ -9,10 +9,13 @@ public class MapGenerator : MonoBehaviour
     private int chunkSize = 16;
     [SerializeField]
     private float voxelSize = 1f;
+    [Range(1,16)]
     [SerializeField]
     private int width = 1;
+    [Range(1, 16)]
     [SerializeField]
     private int height = 1;
+    [Range(1, 16)]
     [SerializeField]
     private int depth = 1;
     [SerializeField]
@@ -28,74 +31,117 @@ public class MapGenerator : MonoBehaviour
 
     void GenerateMap()
     {
+        // Generate Chunk Array
         chunkMap = new Chunk[width, height, depth];
+        for (int x = 0; x < width; ++x) {
+            for (int y = 0; y < height; ++y) {
+                for (int z = 0; z < depth; ++z) {
+                    Chunk chunk = new Chunk(x, y, z, chunkSize);
+                    chunkMap[x, y, z] = chunk;
+                }
+            }
+        }
 
         RandomFillMap();
 
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
-        meshGen.GenerateMesh(densityMap, voxelSize, isolevel);
+        meshGen.GenerateMesh(chunkMap, voxelSize, isolevel);
     }
 
     void RandomFillMap()
     {
-        for (int x = 0; x < width; ++x) {
-            for (int y = 0; y < height; ++y) {
-                for (int z = 0; z < depth; ++z) {
+        int totalWidth = width * chunkSize;// -(width - 1);
+        int totalHeight = height * chunkSize;// -(height - 1);
+        int totalDepth = depth * chunkSize;// -(depth - 1);
+
+        for (int x = 0; x < totalWidth; ++x) {
+            for (int y = 0; y < totalHeight; ++y) {
+                for (int z = 0; z < totalDepth; ++z) {
                     // Set map to 1 or 0 depending the PerlinNoise
-                    float xfloat = (float)x / width;
                     float yfloat = (float)y / height;
-                    float zfloat = (float)z / depth;
-                    densityMap[x, y, z] = yfloat;
-                    densityMap[x, y, z] += Noise.GetOctaveNoise(x, yfloat, z, 2);
+
+                    // Get corresponding chunk
+                    int chunkX = x / chunkSize;
+                    int chunkY = y / chunkSize;
+                    int chunkZ = z / chunkSize;
+
+                    // Check if it is an overlapping value
+                    float overlapValue;
+                    bool overlap = false;
+                    if (x % chunkSize == 0 && x > 0) {
+                        overlapValue = chunkMap[chunkX - 1, chunkY, chunkZ].getDensityValue(chunkSize - 1, y % chunkSize, z % chunkSize);
+                        chunkMap[chunkX, chunkY, chunkZ].setDensityMap(x % chunkSize, y % chunkSize, z % chunkSize, overlapValue);
+                        overlap = true;
+                    }
+                    if (y % chunkSize == 0 && y > 0) {
+                        overlapValue = chunkMap[chunkX, chunkY-1, chunkZ].getDensityValue(x % chunkSize, chunkSize - 1, z % chunkSize);
+                        chunkMap[chunkX, chunkY, chunkZ].setDensityMap(x % chunkSize, y % chunkSize, z % chunkSize, overlapValue);
+                        overlap = true;
+                    }
+                    if (z % chunkSize == 0 && z > 0) {
+                        overlapValue = chunkMap[chunkX, chunkY, chunkZ - 1].getDensityValue(x % chunkSize, y % chunkSize, chunkSize - 1);
+                        chunkMap[chunkX, chunkY, chunkZ].setDensityMap(x % chunkSize, y % chunkSize, z % chunkSize, overlapValue);
+                        overlap = true;
+                    }
+                    if (overlap)
+                        continue;
+
+                    // Apply value
+                    float value = yfloat;
+                    value += Noise.GetOctaveNoise(x, yfloat, z, 5) * 2;
+                    chunkMap[chunkX, chunkY, chunkZ].setDensityMap(x % chunkSize, y % chunkSize, z % chunkSize, value);
                 }
             }
         }
     }
 
-    bool IsInBounds(int x, int y, int z)
-    {
-        return x >= 0 && x < width && y >= 0 && y < height && z >= 0 && z < depth;
-    }
+    //bool IsInBounds(int x, int y, int z)
+    //{
+    //    return x >= 0 && x < width && y >= 0 && y < height && z >= 0 && z < depth;
+    //}
 
-    public class Chunk
-    {
-        private int xPos, yPos, zPos;
-        private int size;
-        private float[, ,] densityMap;
 
-        public Vector3 Position { get { return new Vector3(xPos, yPos, zPos); } }
-        public int Size { get { return size; } }
-
-        /* Construcors */
-
-        public Chunk(int size)
-        {
-            xPos = 0;
-            yPos = 0;
-            zPos = 0;
-            densityMap = new float[size, size, size];
-            densityMap.Initialize();
-            this.size = size;
-        }
-
-        public Chunk(int xPos, int yPos, int zPos, int size) : this(size)
-        {
-            this.xPos = xPos;
-            this.yPos = yPos;
-            this.zPos = zPos;
-        }
-
-        /* Getters and Setters */
-        public void setDensityMap(int x, int y, int z, float value)
-        {
-            densityMap[x, y, z] = value;
-        }
-
-        public float getDensityValue(int x, int y, int z)
-        {
-            return densityMap[x, y, z];
-        }
-
-    }
+    
 }
 
+public class Chunk
+{
+    private int xPos, yPos, zPos;
+    private int size;
+    private float[, ,] densityMap;
+
+    public Vector3 Position { get { return new Vector3(xPos, yPos, zPos); } }
+    public Vector3 ChunkmapPosition { get { return new Vector3(xPos * size, yPos * size, zPos * size); } }
+    public int Size { get { return size; } }
+
+    /* Construcors */
+
+    public Chunk(int size)
+    {
+        xPos = 0;
+        yPos = 0;
+        zPos = 0;
+        densityMap = new float[size, size, size];
+        densityMap.Initialize();
+        this.size = size;
+    }
+
+    public Chunk(int xPos, int yPos, int zPos, int size)
+        : this(size)
+    {
+        this.xPos = xPos;
+        this.yPos = yPos;
+        this.zPos = zPos;
+    }
+
+    /* Getters and Setters */
+    public void setDensityMap(int x, int y, int z, float value)
+    {
+        densityMap[x, y, z] = value;
+    }
+
+    public float getDensityValue(int x, int y, int z)
+    {
+        return densityMap[x, y, z];
+    }
+}

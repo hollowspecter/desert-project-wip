@@ -4,38 +4,41 @@ using System.Collections.Generic;
 
 public class MeshGenerator : MonoBehaviour
 {
-    public Voxel[,,] voxels;
-    List<Vector3> vertices;
-    List<int> triangles;
+    [SerializeField]
+    private GameObject chunkPrefab;
 
-    public void GenerateMesh(float[, ,] densityMap, float size, float isolevel)
+    private Voxel[,,] voxels;
+    private List<Vector3> vertices;
+    private List<int> triangles;
+
+    public void GenerateMesh(Chunk[, ,] chunkMap, float size, float isolevel)
     {
-        int nodeCountX = densityMap.GetLength(0);
-        int nodeCountY = densityMap.GetLength(1);
-        int nodeCountZ = densityMap.GetLength(2);
-        float mapWidth = nodeCountX * size;
-        float mapHeight = nodeCountY * size;
-        float mapDepth = nodeCountZ * size;
+        foreach (Chunk chunk in chunkMap) {
+            int nodeCount = chunk.Size;
+            float mapSize = nodeCount * size;
 
-        // Create Grid of Nodes
-        Node[, ,] nodes = new Node[nodeCountX, nodeCountY, nodeCountZ];
-        for (int x = 0; x < nodeCountX; ++x) {
-            for (int y = 0; y < nodeCountY; ++y) {
-                for (int z = 0; z < nodeCountZ; ++z) {
-                    Vector3 pos = new Vector3(-mapWidth / 2f + x * size + size / 2f,
-                        -mapHeight / 2f + y * size + size / 2f,
-                        -mapDepth / 2f + z * size + size / 2f);
-                    nodes[x, y, z] = new Node(pos, densityMap[x, y, z]);
+            // Create Grid of Nodes
+            Node[, ,] nodes = new Node[nodeCount, nodeCount, nodeCount];
+            for (int x = 0; x < nodeCount; ++x) {
+                for (int y = 0; y < nodeCount; ++y) {
+                    for (int z = 0; z < nodeCount; ++z) {
+
+                        Vector3 pos = new Vector3(-mapSize / 2f + x * size + size / 2f,
+                            -mapSize / 2f + y * size + size / 2f,
+                            -mapSize / 2f + z * size + size / 2f);
+
+                        float value = chunk.getDensityValue(x, y, z);
+                        nodes[x, y, z] = new Node(pos, value);
+                    }
                 }
             }
-        }
 
-        // Create Cube Grid // WORKS
-        voxels = new Voxel[nodeCountX - 1, nodeCountY - 1, nodeCountZ - 1];
-        for (int x = 0; x < voxels.GetLength(0); ++x) {
-            for (int y = 0; y < voxels.GetLength(1); ++y) {
-                for (int z = 0; z < voxels.GetLength(2); ++z) {
-                    Node[] voxelNodes = new Node[8]{
+            // Create Cube Grid // WORKS
+            voxels = new Voxel[nodeCount - 1, nodeCount - 1, nodeCount - 1];
+            for (int x = 0; x < voxels.GetLength(0); ++x) {
+                for (int y = 0; y < voxels.GetLength(1); ++y) {
+                    for (int z = 0; z < voxels.GetLength(2); ++z) {
+                        Node[] voxelNodes = new Node[8]{
                         // Reihenfolge wie bei Paul Bourke
                         nodes[x,y,z],
                         nodes[x,y,z+1],
@@ -47,40 +50,47 @@ public class MeshGenerator : MonoBehaviour
                         nodes[x+1,y+1,z+1],
                         nodes[x+1,y+1,z]
                         };
-                    voxels[x, y, z] = new Voxel(voxelNodes, size);
+                        voxels[x, y, z] = new Voxel(voxelNodes, size);
+                    }
                 }
             }
-        }
 
-        // Create Vertices and Triangles
-        vertices = new List<Vector3>();
-        triangles = new List<int>();
-        int vertexCount = 0;
+            // Create Vertices and Triangles
+            vertices = new List<Vector3>();
+            triangles = new List<int>();
+            int vertexCount = 0;
 
-        foreach (Voxel voxel in voxels) {
-            TRIANGLE[] tris = Polygonise(voxel, isolevel);
-            if (tris == null)
-                continue;
-            foreach (TRIANGLE t in tris) {
-                vertices.Add(t.p[0]);
-                vertices.Add(t.p[1]);
-                vertices.Add(t.p[2]);
-                triangles.Add(vertexCount + 2); // 0
-                triangles.Add(vertexCount + 1); // 1
-                triangles.Add(vertexCount + 0); // 2
-                vertexCount += 3;
+            foreach (Voxel voxel in voxels) {
+                TRIANGLE[] tris = Polygonise(voxel, isolevel);
+                if (tris == null)
+                    continue;
+                foreach (TRIANGLE t in tris) {
+                    vertices.Add(t.p[0]);
+                    vertices.Add(t.p[1]);
+                    vertices.Add(t.p[2]);
+                    triangles.Add(vertexCount + 2); // 0
+                    triangles.Add(vertexCount + 1); // 1
+                    triangles.Add(vertexCount + 0); // 2
+                    vertexCount += 3;
+                }
             }
+
+            // Create chunk prefab
+            GameObject chunkGO = Instantiate(chunkPrefab);
+
+            // Apply vertices and triangles
+            Mesh mesh = new Mesh();
+            mesh.name = "TerrainMesh_"+chunk.Position.ToString();
+            chunkGO.GetComponent<MeshFilter>().mesh = mesh;
+            mesh.vertices = vertices.ToArray();
+            mesh.triangles = triangles.ToArray();
+            mesh.RecalculateNormals();
+
+            // Reposition chunk
+            chunkGO.transform.position = chunk.Position * mapSize - chunk.Position*size;
+
+            Debug.Log("VertexCount: " + vertices.Count);
         }
-
-        // Apply vertices and triangles
-        Mesh mesh = new Mesh();
-        mesh.name = "TerrainMesh";
-        GetComponent<MeshFilter>().mesh = mesh;
-        mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
-        mesh.RecalculateNormals();
-
-        Debug.Log("Vertex Count " + mesh.vertexCount);
     }
 
     #region structs and SubClasses

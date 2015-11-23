@@ -72,6 +72,8 @@ public class NoiseGen
         else
             return Noise.GetNoise(x * XScale, y * YScale, z * ZScale);
     }
+
+
 }
 
 // Simplex noise in 3D
@@ -243,6 +245,11 @@ public static class Noise
         }
 
         return value / divisor;
+    }
+
+    public static float GetOctaveNoise(Vector3 p, int pOctaves)
+    {
+        return GetOctaveNoise(p.x, p.y, p.z, pOctaves);
     }
 
     public static int PerlinNoise(int x, int y, int z, float scale, float height, float power)
