@@ -6,15 +6,19 @@ public class MapGenerator : MonoBehaviour
 {
     #region private
     [SerializeField]
-    private int width;
+    private int chunkSize = 16;
     [SerializeField]
-    private int height;
+    private float voxelSize = 1f;
     [SerializeField]
-    private int depth;
+    private int width = 1;
+    [SerializeField]
+    private int height = 1;
+    [SerializeField]
+    private int depth = 1;
     [SerializeField]
     private float isolevel = 0;
 
-    private float[, ,] densityMap;
+    private Chunk[,,] chunkMap;
     #endregion
 
     void Start()
@@ -24,12 +28,12 @@ public class MapGenerator : MonoBehaviour
 
     void GenerateMap()
     {
-        densityMap = new float[width, height, depth];
-        densityMap.Initialize();
+        chunkMap = new Chunk[width, height, depth];
+
         RandomFillMap();
 
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
-        meshGen.GenerateMesh(densityMap, 1f, isolevel);
+        meshGen.GenerateMesh(densityMap, voxelSize, isolevel);
     }
 
     void RandomFillMap()
@@ -39,10 +43,10 @@ public class MapGenerator : MonoBehaviour
                 for (int z = 0; z < depth; ++z) {
                     // Set map to 1 or 0 depending the PerlinNoise
                     float xfloat = (float)x / width;
-                    float ýfloat = (float)y / height;
+                    float yfloat = (float)y / height;
                     float zfloat = (float)z / depth;
-                    densityMap[x, y, z] = ýfloat;
-                    densityMap[x, y, z] += Noise.GetOctaveNoise(xfloat, ýfloat, zfloat, 2);
+                    densityMap[x, y, z] = yfloat;
+                    densityMap[x, y, z] += Noise.GetOctaveNoise(x, yfloat, z, 2);
                 }
             }
         }
@@ -53,23 +57,45 @@ public class MapGenerator : MonoBehaviour
         return x >= 0 && x < width && y >= 0 && y < height && z >= 0 && z < depth;
     }
 
-    //void OnDrawGizmos()
-    //{
-    //    Gizmos.color = Color.white;
+    public class Chunk
+    {
+        private int xPos, yPos, zPos;
+        private int size;
+        private float[, ,] densityMap;
 
-    //    // Draw all the map nodes
-    //    if (map != null) {
-    //        for (int x = 0; x < width; ++x) {
-    //            for (int y = 0; y < height; ++y) {
-    //                for (int z = 0; z < depth; ++z) {
-    //                    if (map[x, y, z] == 1) {
-    //                        Vector3 pos = new Vector3(-width / 2 + x + .5f, -height / 2 + y + .5f, -depth / 2 + z + .5f);
-    //                        Gizmos.DrawCube(pos, Vector3.one);
-    //                    }
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
+        public Vector3 Position { get { return new Vector3(xPos, yPos, zPos); } }
+        public int Size { get { return size; } }
+
+        /* Construcors */
+
+        public Chunk(int size)
+        {
+            xPos = 0;
+            yPos = 0;
+            zPos = 0;
+            densityMap = new float[size, size, size];
+            densityMap.Initialize();
+            this.size = size;
+        }
+
+        public Chunk(int xPos, int yPos, int zPos, int size) : this(size)
+        {
+            this.xPos = xPos;
+            this.yPos = yPos;
+            this.zPos = zPos;
+        }
+
+        /* Getters and Setters */
+        public void setDensityMap(int x, int y, int z, float value)
+        {
+            densityMap[x, y, z] = value;
+        }
+
+        public float getDensityValue(int x, int y, int z)
+        {
+            return densityMap[x, y, z];
+        }
+
+    }
 }
 

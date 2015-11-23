@@ -57,8 +57,8 @@ public class MeshGenerator : MonoBehaviour
         triangles = new List<int>();
         int vertexCount = 0;
 
-        foreach (Voxel v in voxels) {
-            TRIANGLE[] tris = Polygonise(v, isolevel);
+        foreach (Voxel voxel in voxels) {
+            TRIANGLE[] tris = Polygonise(voxel, isolevel);
             if (tris == null)
                 continue;
             foreach (TRIANGLE t in tris) {
@@ -82,35 +82,6 @@ public class MeshGenerator : MonoBehaviour
 
         Debug.Log("Vertex Count " + mesh.vertexCount);
     }
-
-    //void OnDrawGizmos()
-    //{
-    //    if (voxels == null)
-    //        return;
-
-    //    if (vertices == null)
-    //        return;
-
-    //    foreach (Vector3 v in vertices) {
-    //        Gizmos.DrawCube(v, Vector3.one * .3f);
-    //    }
-
-    //    //// Draw Voxels
-    //    //for (int x = 0; x < voxels.GetLength(0); ++x) {
-    //    //    for (int y = 0; y < voxels.GetLength(1); ++y) {
-    //    //        for (int z = 0; z < voxels.GetLength(2); ++z) {
-
-    //    //            // For every corner of a voxel
-    //    //            for (int i = 0; i < 8; ++i) {
-    //    //                Voxel v = voxels[x, y, z];
-    //    //                if (v.values[i] > .5f)
-    //    //                    Gizmos.DrawCube(v.p[i], Vector3.one * .4f);
-    //    //            }
-
-    //    //        }
-    //    //    }
-    //    //}
-    //}
 
     #region structs and SubClasses
 
