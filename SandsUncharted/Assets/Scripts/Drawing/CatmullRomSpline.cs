@@ -8,31 +8,21 @@ public class CatmullRomSpline : MonoBehaviour
     /*http://www.habrador.com/tutorials/catmull-rom-splines/ */
 
     [SerializeField]
-    private GameObject renderTarget;
-
+    private GameObject _renderTarget; //The object that displays the splinemesh
     [SerializeField]
-    private GameObject vertexPrefab;
+    private List<Vector3> controlPoints; 
 
-    [SerializeField]
-    private List<Vector3> controlPoints;
-
-    private Vector3 startControlPoint, endControlPoint;
-
-    private bool isLooping = false;
-
-    private List<Vector3> vertices;
+    private Vector3 startControlPoint, endControlPoint; //The first and last controlpoints of the spline, which are mirrored through the first and last actually drawn controlpoint 
+    private bool isLooping = false; //if the spline is a full circle (NO USE YET)
+    private List<Vector3> vertices; //The procedurally generated vertices of the splinemesh
+    private ControlPointHandler _pointHandler;
 
 	// Use this for initialization
 	void Start()
     {
         controlPoints = new List<Vector3>();
         vertices = new List<Vector3>();
-        Transform positions = transform.Find("positions");
-        for(int i = 0; i < positions.childCount; i++)
-        {
-            controlPoints.Add(positions.GetChild(i).position);
-        }
-        CalcStartEndControlPoint();
+        _pointHandler = GetComponent<ControlPointHandler>();
 	}
 	
 	// Update is called once per frame
@@ -41,19 +31,20 @@ public class CatmullRomSpline : MonoBehaviour
         CalcStartEndControlPoint();
         CalcMeshVertices();
         GenerateMesh();
+        _pointHandler.ShowPoints(controlPoints.ToArray());
     }
 
     void OnDrawGizmos()
     {
-        /*
+        
         CalcStartEndControlPoint();
         Gizmos.color = Color.blue;
 
         for (int i = 0; i < controlPoints.Count; ++i)
         {
-            Gizmos.DrawWireSphere(controlPoints[i].position, 0.3f);
+            Gizmos.DrawWireSphere(controlPoints[i], 0.3f);
         }
-        
+        /*
         //Draw the Catmull-Rom lines between the points
         for (int i = 0; i < controlPoints.Count; i++)
         {
@@ -203,20 +194,24 @@ public class CatmullRomSpline : MonoBehaviour
     void CalcMeshVertices()
     {
         vertices.Clear();
-        for (int i = 0; i < controlPoints.Count; i++)
+        if (controlPoints.Count > 1)
         {
-
-            if ((i == controlPoints.Count - 1) && !isLooping)
+            for (int i = 0; i < controlPoints.Count; i++)
             {
-                continue;
+
+                if ((i == controlPoints.Count - 1) && !isLooping)
+                {
+                    continue;
+                }
+                CalcMeshVertexPart(i);
+
             }
-            CalcMeshVertexPart(i);
-            
         }
     }
 
     void GenerateMesh()
     {
+        clearMesh();
         if(vertices.Count >= 4)
         {
             Mesh m = new Mesh();
@@ -240,14 +235,13 @@ public class CatmullRomSpline : MonoBehaviour
             }
             m.triangles = indices;
             m.RecalculateNormals();
-            clearMesh();
-            renderTarget.GetComponent<MeshFilter>().mesh = m;
+            _renderTarget.GetComponent<MeshFilter>().mesh = m;
         }
     }
 
     void clearMesh()
     {
-        renderTarget.GetComponent<MeshFilter>().mesh = null;
+        _renderTarget.GetComponent<MeshFilter>().mesh = null;
     }
 
     /******MESHVERTEX CALCULATION METHODS********/
