@@ -15,14 +15,14 @@ public class CatmullRomSpline : MonoBehaviour
     private Vector3 startControlPoint, endControlPoint; //The first and last controlpoints of the spline, which are mirrored through the first and last actually drawn controlpoint 
     private bool isLooping = false; //if the spline is a full circle (NO USE YET)
     private List<Vector3> vertices; //The procedurally generated vertices of the splinemesh
-    private ControlPointHandler _pointHandler;
+    private ControlPointRenderer _pointHandler;
 
 	// Use this for initialization
 	void Start()
     {
         controlPoints = new List<Vector3>();
         vertices = new List<Vector3>();
-        _pointHandler = GetComponent<ControlPointHandler>();
+        _pointHandler = GetComponent<ControlPointRenderer>();
 	}
 	
 	// Update is called once per frame
@@ -36,14 +36,17 @@ public class CatmullRomSpline : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        
-        CalcStartEndControlPoint();
         Gizmos.color = Color.blue;
 
         for (int i = 0; i < controlPoints.Count; ++i)
         {
             Gizmos.DrawWireSphere(controlPoints[i], 0.3f);
-        }
+		}
+		
+		Gizmos.color = Color.green;
+		Gizmos.DrawWireSphere(startControlPoint, 0.3f);
+		Gizmos.color = Color.red;
+		Gizmos.DrawWireSphere(endControlPoint, 0.3f);
         /*
         //Draw the Catmull-Rom lines between the points
         for (int i = 0; i < controlPoints.Count; i++)
@@ -59,11 +62,6 @@ public class CatmullRomSpline : MonoBehaviour
             DrawSplinePart(i);
 
         }
-
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(startControlPoint, 0.3f);
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(endControlPoint, 0.3f);
         */
     }
 
@@ -154,7 +152,7 @@ public class CatmullRomSpline : MonoBehaviour
 
     void CalcStartEndControlPoint()
     {
-        if (!isLooping && controlPoints.Count > 3)
+        if (!isLooping && controlPoints.Count > 1)
         {
             int n = controlPoints.Count - 1;
             startControlPoint = controlPoints[0] + (controlPoints[0] - controlPoints[1]);

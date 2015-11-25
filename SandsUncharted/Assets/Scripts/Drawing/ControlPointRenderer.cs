@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class ControlPointHandler : MonoBehaviour
+public class ControlPointRenderer : MonoBehaviour
 {
     [SerializeField]
     private GameObject prefab;
@@ -31,9 +31,13 @@ public class ControlPointHandler : MonoBehaviour
         {
             for (int i = 0; i < positions.Length; ++i)
             {
+				controlObjects[i].gameObject.SetActive(true);
                 controlObjects[i].position = positions[i];
             }
-
+			for (int i = positions.Length; i < objectCount; ++i)
+			{
+				controlObjects[i].gameObject.SetActive(false);
+			}
         }
         else
         {
