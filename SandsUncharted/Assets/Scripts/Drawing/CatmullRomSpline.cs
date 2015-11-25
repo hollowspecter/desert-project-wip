@@ -9,8 +9,12 @@ public class CatmullRomSpline : MonoBehaviour
 
     [SerializeField]
     private GameObject _renderTarget; //The object that displays the splinemesh
-    [SerializeField]
-    private List<Vector3> controlPoints; 
+
+    private ControlPointGroup controlPoints;
+	public ControlPointGroup ControlPoints
+	{
+		get{ return controlPoints;}
+	}
 
     private Vector3 startControlPoint, endControlPoint; //The first and last controlpoints of the spline, which are mirrored through the first and last actually drawn controlpoint 
     private bool isLooping = false; //if the spline is a full circle (NO USE YET)
@@ -20,7 +24,7 @@ public class CatmullRomSpline : MonoBehaviour
 	// Use this for initialization
 	void Start()
     {
-        controlPoints = new List<Vector3>();
+        controlPoints = new ControlPointGroup();
         vertices = new List<Vector3>();
         _pointHandler = GetComponent<ControlPointRenderer>();
 	}
@@ -31,13 +35,23 @@ public class CatmullRomSpline : MonoBehaviour
         CalcStartEndControlPoint();
         CalcMeshVertices();
         GenerateMesh();
-        _pointHandler.ShowPoints(controlPoints.ToArray());
+        _pointHandler.ShowPoints(controlPoints.ToArray(), controlPoints.SelectedIndex);
     }
 
-    void OnDrawGizmos()
-    {
-        Gizmos.color = Color.blue;
+	public void UpdateInput()
+	{
 
+	}
+
+    void OnDrawGizmos()
+    {/*
+        Gizmos.color = Color.cyan;
+		if (controlPoints.SelectedIndex >= 0) 
+		{
+			Gizmos.DrawWireSphere(controlPoints[controlPoints.SelectedIndex], 0.4f);
+		}
+		/*
+		Gizmos.color = Color.blue;
         for (int i = 0; i < controlPoints.Count; ++i)
         {
             Gizmos.DrawWireSphere(controlPoints[i], 0.3f);
@@ -160,7 +174,7 @@ public class CatmullRomSpline : MonoBehaviour
         }
     }
 
-    /******MESHVERTEX CALCULATION METHODS********/
+	#region meshcalculation methods
     void CalcMeshVertexPart(int pos)
     {
         float step = 0.0625f;
@@ -241,28 +255,18 @@ public class CatmullRomSpline : MonoBehaviour
     {
         _renderTarget.GetComponent<MeshFilter>().mesh = null;
     }
+	#endregion
 
-    /******MESHVERTEX CALCULATION METHODS********/
+	#region ControlPoint Getter
+	public void AddControlPoint(Vector3 pos)
+	{
+		controlPoints.Add(pos);
+	}
 
-    public void AddControlPoint(Vector3 t)
-    {
-        controlPoints.Add(t);
-    }
-
-    public void AddControlPointAt(Vector3 t, int index)
-    {
-        controlPoints.Insert(index, t);
-    }
-
-    public void RemoveControlPoint(Vector3 t)
-    {
-        controlPoints.Remove(t);
-    }
-
-    public void RemoveControlPointAt(int index)
-    {
-        controlPoints.RemoveAt(index);
-    }
+	public void RemoveControlPointAt(int index)
+	{
+		controlPoints.Remove (controlPoints[index]);
+	}
 
     public Vector3 GetControlPointAt(int i)
     {
@@ -273,4 +277,5 @@ public class CatmullRomSpline : MonoBehaviour
     {
         return controlPoints.Count;
     }
+	#endregion
 }

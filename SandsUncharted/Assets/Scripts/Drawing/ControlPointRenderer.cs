@@ -8,6 +8,10 @@ public class ControlPointRenderer : MonoBehaviour
     private GameObject prefab;
     [SerializeField]
     private Transform parentTransform;
+	[SerializeField]
+	private Sprite pointImage;
+	[SerializeField]
+	private Sprite selectImage;
 
     [SerializeField]
     private int objectCount = 64;
@@ -25,7 +29,7 @@ public class ControlPointRenderer : MonoBehaviour
         }
 	}
 
-    public void ShowPoints(Vector3[] positions)
+    public void ShowPoints(Vector3[] positions, int selectedIndex)
     {
         if(positions.Length <= controlObjects.Length)
         {
@@ -33,6 +37,10 @@ public class ControlPointRenderer : MonoBehaviour
             {
 				controlObjects[i].gameObject.SetActive(true);
                 controlObjects[i].position = positions[i];
+				if(i == selectedIndex)
+					controlObjects[i].GetComponent<SpriteRenderer>().sprite = selectImage;
+				else
+					controlObjects[i].GetComponent<SpriteRenderer>().sprite = pointImage;
             }
 			for (int i = positions.Length; i < objectCount; ++i)
 			{
