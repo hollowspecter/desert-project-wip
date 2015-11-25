@@ -2,10 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class ControlPointGroup : MonoBehaviour
+public class ControlPointGroup
 {
     private List<Vector3> controlPoints;
 
+	private int currIndex = -1;
 	// Use this for initialization
 	void Start ()
     {
@@ -15,7 +16,7 @@ public class ControlPointGroup : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-	
+		
 	}
 
     public void AddControlPoint(Vector3 p)
@@ -32,6 +33,16 @@ public class ControlPointGroup : MonoBehaviour
     {
         return controlPoints[index];
     }
+
+	public int GetCurrIndex()
+	{
+		return currIndex;
+	}
+
+	public void SetCurrIndex(int i)
+	{
+		currIndex = i;
+	}
 
     public int GetCount()
     {
@@ -54,4 +65,9 @@ public class ControlPointGroup : MonoBehaviour
 
         return result;
     }
+
+	public void MoveControlPoint(int pointIndex, Vector3 deltaPosition)
+	{
+		controlPoints [pointIndex] += deltaPosition;
+	}
 }
