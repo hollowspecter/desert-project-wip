@@ -55,11 +55,11 @@ public class CatmullRomSpline
 		}
 		
 		Gizmos.color = Color.blue;
-        for (int i = 0; i < controlPoints.Count; ++i)
+        /*for (int i = 0; i < controlPoints.Count; ++i)
         {
             Gizmos.DrawWireSphere(controlPoints[i], 0.3f);
 		}
-		
+		*/
 		Gizmos.color = Color.green;
 		Gizmos.DrawWireSphere(startControlPoint, 0.3f);
 		Gizmos.color = Color.red;
