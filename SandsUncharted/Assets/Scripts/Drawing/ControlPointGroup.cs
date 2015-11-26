@@ -124,11 +124,27 @@ public class ControlPointGroup
 	//TODO find out which points are relevant for the check or loop through all points?
 	public bool IsCloseToLineBetween (Vector3 lineStart, Vector3 lineEnd, Vector3 point)
 	{
-		float error = 0.2f;
+		float error = 0.15f;
         float distance = Vector3.Distance(lineStart, point) + Vector3.Distance(lineEnd, point) - Vector3.Distance(lineStart, lineEnd);
         //Debug.Log(distance);
 		return (distance <= error);
 	}
+
+    public bool IsCloseToSpline(Vector3 point)
+    {
+        if (controlPoints.Count > 1)
+        {
+            for (int i = 0; i < controlPoints.Count - 1; ++i)
+            {
+                if (IsCloseToLineBetween(controlPoints[i], controlPoints[i + 1], point))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
 	public void MoveControlPoint(int pointIndex, Vector3 deltaPosition)
 	{

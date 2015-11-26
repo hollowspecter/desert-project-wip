@@ -3,11 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-public class CatmullRomSpline : MonoBehaviour
+public class CatmullRomSpline
 {
+#region Membervariables
     /*http://www.habrador.com/tutorials/catmull-rom-splines/ */
 
-    [SerializeField]
     private GameObject _renderTarget; //The object that displays the splinemesh
 
     private ControlPointGroup controlPoints;
@@ -19,38 +19,41 @@ public class CatmullRomSpline : MonoBehaviour
     private Vector3 startControlPoint, endControlPoint; //The first and last controlpoints of the spline, which are mirrored through the first and last actually drawn controlpoint 
     private bool isLooping = false; //if the spline is a full circle (NO USE YET)
     private List<Vector3> vertices; //The procedurally generated vertices of the splinemesh
-    private ControlPointRenderer _pointHandler;
+    private ControlPointRenderer _pointRenderer;
+    #endregion
+
+#region Constructor, Init, Update and Gizmo
+    public CatmullRomSpline(GameObject rendertarget, ControlPointRenderer pointRenderer)
+    {
+        _renderTarget = rendertarget;
+        _pointRenderer = pointRenderer;
+        Init();
+    }
 
 	// Use this for initialization
-	void Start()
+	void Init()
     {
         controlPoints = new ControlPointGroup();
         vertices = new List<Vector3>();
-        _pointHandler = GetComponent<ControlPointRenderer>();
 	}
 	
-	// Update is called once per frame
-	void Update ()
+	// Update needs to be called every frame by the Drawing Script
+	public void Update()
     {
         CalcStartEndControlPoint();
         CalcMeshVertices();
         GenerateMesh();
-        _pointHandler.ShowPoints(controlPoints.ToArray(), controlPoints.SelectedIndex);
+        _pointRenderer.ShowPoints(controlPoints.ToArray(), controlPoints.SelectedIndex);
     }
 
-	public void UpdateInput()
-	{
-
-	}
-
-    void OnDrawGizmos()
-    {/*
+    public void DrawGizmos()
+    {
         Gizmos.color = Color.cyan;
 		if (controlPoints.SelectedIndex >= 0) 
 		{
 			Gizmos.DrawWireSphere(controlPoints[controlPoints.SelectedIndex], 0.4f);
 		}
-		/*
+		
 		Gizmos.color = Color.blue;
         for (int i = 0; i < controlPoints.Count; ++i)
         {
@@ -61,7 +64,7 @@ public class CatmullRomSpline : MonoBehaviour
 		Gizmos.DrawWireSphere(startControlPoint, 0.3f);
 		Gizmos.color = Color.red;
 		Gizmos.DrawWireSphere(endControlPoint, 0.3f);
-        /*
+        
         //Draw the Catmull-Rom lines between the points
         for (int i = 0; i < controlPoints.Count; i++)
         {
@@ -76,28 +79,6 @@ public class CatmullRomSpline : MonoBehaviour
             DrawSplinePart(i);
 
         }
-        */
-    }
-
-    //Calculate the Spline points of the Catmull-Rom-Spline
-    Vector3 CalculatePosition(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
-    {
-        //catmull(t) = 0.5f * ((2f*p1) + (p2 -p0) * t + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t *t + (-p0 + 3f * p1 - 3f * p2 + p3) * t * t * t;
-        Vector3 a = 0.5f * (2f * p1);
-        Vector3 b = 0.5f * (p2 - p0);
-        Vector3 c = 0.5f * (2f * p0 - 5f * p1 + 4f * p2 - p3);
-        Vector3 d = 0.5f * (-p0 + 3f * p1 - 3f * p2 + p3);
-
-        Vector3 pos = a + (b * t) + (c * t * t) + (d * t * t * t);
-
-        return pos;
-    }
-
-    Vector3 CalculateTangent(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
-    {
-        //catmull'(u) = 0.5 *((-p0 + p2) + 2 * (2*p0 - 5*p1 + 4*p2 - p3) * u + 3 * (-p0 + 3*p1 - 3*p2 + p3) * u * u)
-        Vector3 tangent = 0.5f * ((-p0 + p2) + 2 * (2 * p0 - 5 * p1 + 4 * p2 - p3) * t + 3 * (-p0 + 3 * p1 - 3 * p2 + p3) * t * t);
-        return tangent.normalized;
     }
 
     void DrawSplinePart(int pos)
@@ -132,7 +113,32 @@ public class CatmullRomSpline : MonoBehaviour
         //Also draw the last line since it is always less than 1, so we will always miss it
         Gizmos.DrawLine(lastPos, p2);
     }
+    #endregion
 
+    #region Catmull-Rom Position and Tangent
+    //Calculate the Spline points of the Catmull-Rom-Spline
+    Vector3 CalculatePosition(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
+    {
+        //catmull(t) = 0.5f * ((2f*p1) + (p2 -p0) * t + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t *t + (-p0 + 3f * p1 - 3f * p2 + p3) * t * t * t;
+        Vector3 a = 0.5f * (2f * p1);
+        Vector3 b = 0.5f * (p2 - p0);
+        Vector3 c = 0.5f * (2f * p0 - 5f * p1 + 4f * p2 - p3);
+        Vector3 d = 0.5f * (-p0 + 3f * p1 - 3f * p2 + p3);
+
+        Vector3 pos = a + (b * t) + (c * t * t) + (d * t * t * t);
+
+        return pos;
+    }
+
+    Vector3 CalculateTangent(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
+    {
+        //catmull'(u) = 0.5 *((-p0 + p2) + 2 * (2*p0 - 5*p1 + 4*p2 - p3) * u + 3 * (-p0 + 3*p1 - 3*p2 + p3) * u * u)
+        Vector3 tangent = 0.5f * ((-p0 + p2) + 2 * (2 * p0 - 5 * p1 + 4 * p2 - p3) * t + 3 * (-p0 + 3 * p1 - 3 * p2 + p3) * t * t);
+        return tangent.normalized;
+    }
+    #endregion
+
+#region HelperFunctions
     //Get all controlpoints relevant to the spline where the index "pos" is the second point
     Vector3[] GetPartControlPoints(int pos)
     {
@@ -174,8 +180,10 @@ public class CatmullRomSpline : MonoBehaviour
             endControlPoint = controlPoints[n] + (controlPoints[n] - controlPoints[n - 1]);
         }
     }
+    #endregion
 
-	#region meshcalculation methods
+
+#region Mesh-Calculation methods
     void CalcMeshVertexPart(int pos)
     {
         float step = 0.0625f;
@@ -258,7 +266,7 @@ public class CatmullRomSpline : MonoBehaviour
     }
 	#endregion
 
-	#region ControlPoint Getter
+#region ControlPoint Getter
 	public void AddControlPoint(Vector3 pos)
 	{
 		controlPoints.Add(pos);
