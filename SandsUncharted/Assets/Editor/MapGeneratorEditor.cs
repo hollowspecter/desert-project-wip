@@ -9,6 +9,6 @@ public class MapGeneratorEditor : Editor
     {
         base.OnInspectorGUI();
 
-        MapGenerator mapgenScript = (MapGenerator)target;
+        //MapGenerator mapgenScript = (MapGenerator)target;
     }
 }

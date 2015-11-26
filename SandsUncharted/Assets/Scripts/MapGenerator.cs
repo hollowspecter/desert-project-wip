@@ -27,6 +27,7 @@ public class MapGenerator : MonoBehaviour
     #region Properties
 
     public NoiseLayer noise;
+    public NoiseLayer[] noises;
 
     #endregion
 
@@ -94,7 +95,7 @@ public class MapGenerator : MonoBehaviour
 
                     // Calculate and apply value
                     float value = yfloat;
-                    value += noise.getValue(new Vector3(x, y, z));
+                    value += noise.getValue(new Vector3(x, yfloat, z));
 
                     chunkMap[chunkX, chunkY, chunkZ].setDensityMap(x % chunkSize, y % chunkSize, z % chunkSize, value);
                 }
@@ -104,30 +105,6 @@ public class MapGenerator : MonoBehaviour
 
     
 }
-
-[System.Serializable]
-public class NoiseLayer
-{
-    public string LayerName = "Default";
-    public float frequency = 1f;
-    public float amplitude = 1f;
-    [Range(1, 8)]
-    public int octaves = 1;
-    [Range(1f, 4f)]
-    public float lacunarity = 2f;
-    [Range(0f, 1f)]
-    public float persistence = 0.5f;
-    [Range(1, 3)]
-    public int dimension = 3;
-    public NoiseMethodType type = NoiseMethodType.Perlin;
-
-    public float getValue(Vector3 point)
-    {
-        NoiseMethod method = Noise.methods[(int)type][dimension - 1];
-		return Noise.Sum(method, point, frequency, octaves, lacunarity, persistence) * amplitude;
-    }
-}
-
 
 /// <summary>
 /// One Chunk contains the density of a cube of one
