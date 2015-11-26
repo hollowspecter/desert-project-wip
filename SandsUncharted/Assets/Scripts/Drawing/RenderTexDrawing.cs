@@ -37,6 +37,7 @@ public class RenderTexDrawing : MonoBehaviour
         cursor.position += speed * Time.deltaTime; //make movementvector
         //brushCircle.transform.rotation = transform.parent.rotation; //negate the maps rotation to keep the pencil straight (not functional as the brush doesnt actually rotate)
         
+        Vector3 closestPoint = ctrl.GetClosestPoint(cursor.position);
 
 		if (Input.GetButton ("A") && (ctrl.SelectedIndex >= 0) && Vector3.Distance(cursor.position, ctrl[ctrl.SelectedIndex]) < selectionDistance ) 
 		{
@@ -45,7 +46,6 @@ public class RenderTexDrawing : MonoBehaviour
 
         else if (Input.GetButtonDown("A"))
         {	
-			Vector3 closestPoint = ctrl.GetClosestPoint(cursor.position);
 			if(Vector3.Distance(closestPoint, cursor.position) < selectionDistance)
 			{
 				if(ctrl.SelectedIndex != ctrl.IndexOf(closestPoint))
@@ -55,13 +55,18 @@ public class RenderTexDrawing : MonoBehaviour
 			}
 			else
 			{
-				ctrl.Add(new Vector3(cursor.position.x, cursor.position.y, cursor.position.z + 0.1f));
+                Vector3 pos = new Vector3(cursor.position.x, cursor.position.y, cursor.position.z + 0.1f);
+                int index = ctrl.FindInsertIndex(pos);
+                ctrl.Insert(pos, index);
 			}
         }
 
         else if (Input.GetButtonDown("B"))
         {
-            ctrl.Remove(ctrl[ctrl.Count - 1]);
+            if (Vector3.Distance(closestPoint, cursor.position) < selectionDistance)
+            {
+                ctrl.Remove(closestPoint);
+            }
         }
 
 		speed *= 0.75f;//friction
