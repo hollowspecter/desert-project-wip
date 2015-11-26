@@ -26,7 +26,6 @@ public class MapGenerator : MonoBehaviour
 
     #region Properties
 
-    public NoiseLayer noise;
     public NoiseLayer[] noises;
 
     #endregion
@@ -93,17 +92,28 @@ public class MapGenerator : MonoBehaviour
                     if (overlap)
                         continue;
 
-                    // Calculate and apply value
+                    /*
+                     * Calculate density value from noise layers
+                     */
+
                     float value = yfloat;
-                    value += noise.getValue(new Vector3(x, yfloat, z));
+                    for (int i = 0; i < noises.Length; ++i) {
+                        NoiseLayer.NoiseOperators op = noises[i].Operation;
+                        switch (op) {
+                            case NoiseLayer.NoiseOperators.Add:
+                                value += noises[i].getValue(new Vector3(x, yfloat, z));
+                                break;
+                            case NoiseLayer.NoiseOperators.Subtract:
+                                value -= noises[i].getValue(new Vector3(x, yfloat, z));
+                                break;
+                        }
+                    }
 
                     chunkMap[chunkX, chunkY, chunkZ].setDensityMap(x % chunkSize, y % chunkSize, z % chunkSize, value);
                 }
             }
-        }
+        } // end last for loop
     }
-
-    
 }
 
 /// <summary>

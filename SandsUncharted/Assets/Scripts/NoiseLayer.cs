@@ -11,7 +11,7 @@ public class NoiseLayer
         Subtract
     }
 
-    /* Attributes */
+    #region private Attributes
 
     [SerializeField]
     private string LayerName = "Default";
@@ -48,6 +48,20 @@ public class NoiseLayer
 
     [SerializeField]
     private NoiseMethodType type = NoiseMethodType.Perlin;
+
+    [SerializeField]
+    private NoiseOperators operation = NoiseOperators.Add;
+
+    [SerializeField]
+    private bool active = true;
+
+    #endregion
+
+    #region public Properties
+
+    public NoiseOperators Operation { get { return operation; } }
+
+    #endregion
 
     /* Methods */
 

@@ -15,14 +15,18 @@ public class NoiseLayerDrawer : PropertyDrawer
 
         // LayerName
         contentPosition.height = 16f;
-        contentPosition.width *= 0.75f;
+        contentPosition.width *= 0.5f;
         EditorGUIUtility.labelWidth = 36f;
         EditorGUI.PropertyField(contentPosition, property.FindPropertyRelative("LayerName"), GUIContent.none);
 
         // Type
         contentPosition.x += contentPosition.width;
-        contentPosition.width /= 3f;
+        contentPosition.width /= 2f;
         EditorGUI.PropertyField(contentPosition, property.FindPropertyRelative("type"), GUIContent.none);
+
+        // Type
+        contentPosition.x += contentPosition.width;
+        EditorGUI.PropertyField(contentPosition, property.FindPropertyRelative("operation"), GUIContent.none);
 
         // Next Line
         contentPosition.y += 18f;
@@ -76,12 +80,23 @@ public class NoiseLayerDrawer : PropertyDrawer
         content = new GUIContent("Per", "Tooltip");
         EditorGUI.PropertyField(contentPosition, property.FindPropertyRelative("persistence"), content);
 
+        // Next Line
+        contentPosition.y += 18f;
+        contentPosition = EditorGUI.IndentedRect(position);
+
+        // Active
+        contentPosition.height = 16f;
+        contentPosition.y += 18f*4;
+        EditorGUIUtility.labelWidth = 60f;
+        content = new GUIContent("Active", "Is this noise active");
+        EditorGUI.PropertyField(contentPosition, property.FindPropertyRelative("active"), content);
+
         EditorGUI.EndProperty();
     }
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-        int lineCount = 4;
+        int lineCount = 5;
         return 16f + 18f*(lineCount - 1);
     }
 }
