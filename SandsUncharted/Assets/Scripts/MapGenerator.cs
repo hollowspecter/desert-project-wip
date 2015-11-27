@@ -24,6 +24,8 @@ public class MapGenerator : MonoBehaviour
 
     private Chunk[,,] chunkMap;
     private TextureCreator textureCreator;
+    private string progressBarTitle = "Density Map is being calculated";
+    private string progressBarInfo = "Please sit back and have a sip of tea.";
     #endregion
 
     #region Properties
@@ -52,9 +54,17 @@ public class MapGenerator : MonoBehaviour
 
     void RandomFillMap()
     {
+        // Initialize a Progress Bar
+        float progress = 0f;
+        EditorUtility.DisplayProgressBar(progressBarTitle, progressBarInfo, progress);
+
+        // Calculate the total of the map
         int totalWidth = width * chunkSize;// -(width - 1);
         int totalHeight = height * chunkSize;// -(height - 1);
         int totalDepth = depth * chunkSize;// -(depth - 1);
+
+        // Calculate the step
+        float step = 1f / totalWidth;
 
         for (int x = 0; x < totalWidth; ++x) {
             for (int y = 0; y < totalHeight; ++y) {
@@ -91,7 +101,7 @@ public class MapGenerator : MonoBehaviour
                     /*
                      * Calculate density value from noise layers
                      */
-
+                    
                     float value = yfloat;
                     value += GetValueFromNoises(new Vector3(x, yfloat, z));
 
@@ -99,7 +109,14 @@ public class MapGenerator : MonoBehaviour
                     chunkMap[chunkX, chunkY, chunkZ].setDensityMap(x % chunkSize, y % chunkSize, z % chunkSize, value);
                 }
             }
+
+            // Update the Progress Bar
+            progress += step;
+            EditorUtility.DisplayProgressBar(progressBarTitle, progressBarInfo, progress);
+
         } // end last for loop
+
+        EditorUtility.ClearProgressBar();
     } // end random fill
 
     public float GetValueFromNoises(Vector3 point)
@@ -133,33 +150,14 @@ public class MapGenerator : MonoBehaviour
             time = time.Replace(" ", "_");
             time = time.Replace(":", "-");
             var targetPath = FileUtil.GetProjectRelativePath(EditorUtility.SaveFilePanel("Saves the old Terrain", Application.dataPath, "terrain_" + time, "prefab"));
-            PrefabUtility.CreatePrefab(targetPath, chunks);
+            if (targetPath.Length > 0)
+                PrefabUtility.CreatePrefab(targetPath, chunks);
             DestroyImmediate(chunks);
         }
         else {
             Debug.Log("Did not found a gameobject with \"Terrain\" tag.");
         }
     }
-
-    //public void VisualizeAll()
-    //{
-    //    CheckTextureCreator();
-    //    textureCreator.FillTexture(this, false, 0);
-    //}
-
-    //public void Visualize(int index)
-    //{
-    //    CheckTextureCreator();
-    //    if (index >= 0 || index < noises.Length)
-    //        textureCreator.FillTexture(this, true, index);
-    //}
-
-    //private void CheckTextureCreator()
-    //{
-    //    if (textureCreator == null)
-    //        textureCreator = GetComponent<TextureCreator>();
-    //    else
-    //        Debug.LogError("There is no TextureCreator script attached to this GO", this);
     //}
 }
 

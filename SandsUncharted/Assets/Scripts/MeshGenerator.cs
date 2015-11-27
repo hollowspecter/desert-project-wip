@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -10,12 +11,21 @@ public class MeshGenerator : MonoBehaviour
     private Voxel[,,] voxels;
     private List<Vector3> vertices;
     private List<int> triangles;
+    private string progressBarName = "Meshes are being calculated...";
+    private string progressBarInfo = "This may take a while, please be patient.";
 
     public void GenerateMesh(Chunk[, ,] chunkMap, float size, float isolevel)
     {
+        // Create the parent GameObject Chunks
         GameObject chunksGO = new GameObject("Chunks");
         Transform chunksT = chunksGO.transform;
         chunksGO.tag = Tags.TERRAIN_TAG;
+
+        // Initialise the Progress Bar
+        float progress = 0f;
+        EditorUtility.DisplayProgressBar(progressBarName, progressBarInfo, progress);
+        float step = chunkMap.GetLength(0) + chunkMap.GetLength(1) + chunkMap.GetLength(2);
+        step = 1f / step;
 
         foreach (Chunk chunk in chunkMap) {
             int nodeCount = chunk.Size;
@@ -97,8 +107,13 @@ public class MeshGenerator : MonoBehaviour
             chunkGO.transform.parent = chunksT;
             chunkGO.name = "chunk_" + chunk.Position.ToString();
 
-            Debug.Log("VertexCount: " + vertices.Count);
+            // Update Progress Bar
+            progress += step;
+            EditorUtility.DisplayProgressBar(progressBarName, progressBarInfo, progress);
         }
+
+        // End the Progress Bar
+        EditorUtility.ClearProgressBar();
     }
 
     #region structs and SubClasses
