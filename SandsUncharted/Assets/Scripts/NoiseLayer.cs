@@ -13,8 +13,10 @@ public class NoiseLayer
 
     #region private Attributes
 
+#pragma warning disable 0414
     [SerializeField]
     private string LayerName = "Default";
+#pragma warning restore 0414
 
     [Tooltip("Frequency")]
     [SerializeField]
@@ -60,6 +62,7 @@ public class NoiseLayer
     #region public Properties
 
     public NoiseOperators Operation { get { return operation; } }
+    public bool Active{ get { return active; } }
 
     #endregion
 

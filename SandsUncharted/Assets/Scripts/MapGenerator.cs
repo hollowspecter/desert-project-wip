@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEditor;
 using System.Collections;
 using System;
 
@@ -22,6 +23,7 @@ public class MapGenerator : MonoBehaviour
     private float isolevel = 0;
 
     private Chunk[,,] chunkMap;
+    private TextureCreator textureCreator;
     #endregion
 
     #region Properties
@@ -30,12 +32,7 @@ public class MapGenerator : MonoBehaviour
 
     #endregion
 
-    void Start()
-    {
-        GenerateMap();
-    }
-
-    void GenerateMap()
+    public void GenerateMap()
     {
         // Generate Chunk Array
         chunkMap = new Chunk[width, height, depth];
@@ -47,7 +44,6 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
-
         RandomFillMap();
 
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
@@ -97,23 +93,74 @@ public class MapGenerator : MonoBehaviour
                      */
 
                     float value = yfloat;
-                    for (int i = 0; i < noises.Length; ++i) {
-                        NoiseLayer.NoiseOperators op = noises[i].Operation;
-                        switch (op) {
-                            case NoiseLayer.NoiseOperators.Add:
-                                value += noises[i].getValue(new Vector3(x, yfloat, z));
-                                break;
-                            case NoiseLayer.NoiseOperators.Subtract:
-                                value -= noises[i].getValue(new Vector3(x, yfloat, z));
-                                break;
-                        }
-                    }
+                    value += GetValueFromNoises(new Vector3(x, yfloat, z));
 
+                    // Apply the density value
                     chunkMap[chunkX, chunkY, chunkZ].setDensityMap(x % chunkSize, y % chunkSize, z % chunkSize, value);
                 }
             }
         } // end last for loop
+    } // end random fill
+
+    public float GetValueFromNoises(Vector3 point)
+    {
+        float value = 0;
+        for (int i = 0; i < noises.Length; ++i) {
+            // Check if active
+            if (!noises[i].Active)
+                continue;
+
+            // Check the operation and act accordingly
+            NoiseLayer.NoiseOperators op = noises[i].Operation;
+            switch (op) {
+                case NoiseLayer.NoiseOperators.Add:
+                    value += noises[i].getValue(point);
+                    break;
+                case NoiseLayer.NoiseOperators.Subtract:
+                    value -= noises[i].getValue(point);
+                    break;
+            }
+        }
+        return value;
     }
+
+    public void SaveAndDeleteTerrain()
+    {
+        GameObject chunks = GameObject.FindGameObjectWithTag(Tags.TERRAIN_TAG);
+        if (chunks != null) {
+            string time = System.DateTime.Now.ToString();
+            time = time.Replace("/", "_");
+            time = time.Replace(" ", "_");
+            time = time.Replace(":", "-");
+            var targetPath = FileUtil.GetProjectRelativePath(EditorUtility.SaveFilePanel("Saves the old Terrain", Application.dataPath, "terrain_" + time, "prefab"));
+            PrefabUtility.CreatePrefab(targetPath, chunks);
+            DestroyImmediate(chunks);
+        }
+        else {
+            Debug.Log("Did not found a gameobject with \"Terrain\" tag.");
+        }
+    }
+
+    //public void VisualizeAll()
+    //{
+    //    CheckTextureCreator();
+    //    textureCreator.FillTexture(this, false, 0);
+    //}
+
+    //public void Visualize(int index)
+    //{
+    //    CheckTextureCreator();
+    //    if (index >= 0 || index < noises.Length)
+    //        textureCreator.FillTexture(this, true, index);
+    //}
+
+    //private void CheckTextureCreator()
+    //{
+    //    if (textureCreator == null)
+    //        textureCreator = GetComponent<TextureCreator>();
+    //    else
+    //        Debug.LogError("There is no TextureCreator script attached to this GO", this);
+    //}
 }
 
 /// <summary>

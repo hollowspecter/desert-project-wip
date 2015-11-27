@@ -13,6 +13,10 @@ public class MeshGenerator : MonoBehaviour
 
     public void GenerateMesh(Chunk[, ,] chunkMap, float size, float isolevel)
     {
+        GameObject chunksGO = new GameObject("Chunks");
+        Transform chunksT = chunksGO.transform;
+        chunksGO.tag = Tags.TERRAIN_TAG;
+
         foreach (Chunk chunk in chunkMap) {
             int nodeCount = chunk.Size;
             float mapSize = nodeCount * size;
@@ -88,6 +92,10 @@ public class MeshGenerator : MonoBehaviour
 
             // Reposition chunk
             chunkGO.transform.position = chunk.Position * mapSize - chunk.Position*size;
+
+            // Parent chunk to the chunks GO
+            chunkGO.transform.parent = chunksT;
+            chunkGO.name = "chunk_" + chunk.Position.ToString();
 
             Debug.Log("VertexCount: " + vertices.Count);
         }

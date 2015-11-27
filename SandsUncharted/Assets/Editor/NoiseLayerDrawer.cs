@@ -10,7 +10,6 @@ public class NoiseLayerDrawer : PropertyDrawer
     {
         label = EditorGUI.BeginProperty(position, label, property);
         Rect contentPosition = EditorGUI.PrefixLabel(position, label, EditorStyles.boldLabel);
-
         EditorGUI.indentLevel = 0;
 
         // LayerName
@@ -94,6 +93,7 @@ public class NoiseLayerDrawer : PropertyDrawer
         EditorGUI.EndProperty();
     }
 
+    // Determines the height of this property. Fixed height!
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
         int lineCount = 5;
