@@ -14,7 +14,7 @@ public class MeshGenerator : MonoBehaviour
     private string progressBarName = "Meshes are being calculated...";
     private string progressBarInfo = "This may take a while, please be patient.";
 
-    public void GenerateMesh(Chunk[, ,] chunkMap, float size, float isolevel)
+    public void GenerateMesh(ChunkMap chunkMap, float size, float isolevel)
     {
         // Create the parent GameObject Chunks
         GameObject chunksGO = new GameObject("Chunks");
@@ -37,12 +37,18 @@ public class MeshGenerator : MonoBehaviour
                 for (int y = 0; y < nodeCount; ++y) {
                     for (int z = 0; z < nodeCount; ++z) {
 
+                        // Calculate Position of this node
                         Vector3 pos = new Vector3(-mapSize / 2f + x * size + size / 2f,
                             -mapSize / 2f + y * size + size / 2f,
                             -mapSize / 2f + z * size + size / 2f);
 
-                        float value = chunk.getDensityValue(x, y, z);
-                        nodes[x, y, z] = new Node(pos, value);
+                        // Calculate the Normal for this Node using Central Difference on the volumetric data
+                        Vector3 normal = new Vector3();
+                        
+
+                        // Fetch the density value and store into the node
+                        float value = chunk[x, y, z];
+                        nodes[x, y, z] = new Node(pos, normal, value);
                     }
                 }
             }
@@ -129,7 +135,7 @@ public class MeshGenerator : MonoBehaviour
 
     public class Voxel
     {
-        public Vector3[] p;
+        public Vector3[] nodes;
         public float[] values;
 
         public Voxel(Node[] n, float size)
@@ -138,11 +144,11 @@ public class MeshGenerator : MonoBehaviour
                 Debug.LogError("Tried to create a voxel with NOT 8 corners. Bummer.");
             }
 
-            p = new Vector3[8];
+            nodes = new Vector3[8];
             values = new float[8];
 
             for (int i = 0; i < 8; ++i) {
-                p[i] = n[i].position;
+                nodes[i] = n[i].position;
                 values[i] = n[i].value;
             }
         }
@@ -151,11 +157,13 @@ public class MeshGenerator : MonoBehaviour
     public struct Node
     {
         public Vector3 position;
+        public Vector3 normal;
         public float value;
 
-        public Node(Vector3 pos, float value)
+        public Node(Vector3 pos, Vector3 norm, float value)
         {
             position = pos;
+            normal = norm;
             this.value = value;
         }
     }
@@ -191,40 +199,40 @@ public class MeshGenerator : MonoBehaviour
         /* Find the vertices where the surface intersects the cube */
         if ((edgeTable[cubeindex] & 1)==1)
             vertlist[0] =
-               VertexInterp(isolevel, cube.p[0], cube.p[1], cube.values[0], cube.values[1]);
+               VertexInterp(isolevel, cube.nodes[0], cube.nodes[1], cube.values[0], cube.values[1]);
         if ((edgeTable[cubeindex] & 2) == 2)                             
             vertlist[1] =                                                
-               VertexInterp(isolevel, cube.p[1], cube.p[2], cube.values[1], cube.values[2]);
+               VertexInterp(isolevel, cube.nodes[1], cube.nodes[2], cube.values[1], cube.values[2]);
         if ((edgeTable[cubeindex] & 4) == 4)                              
             vertlist[2] =                                                 
-               VertexInterp(isolevel, cube.p[2], cube.p[3], cube.values[2], cube.values[3]);
+               VertexInterp(isolevel, cube.nodes[2], cube.nodes[3], cube.values[2], cube.values[3]);
         if ((edgeTable[cubeindex] & 8) == 8)                               
             vertlist[3] =                                                  
-               VertexInterp(isolevel, cube.p[3], cube.p[0], cube.values[3], cube.values[0]);
+               VertexInterp(isolevel, cube.nodes[3], cube.nodes[0], cube.values[3], cube.values[0]);
         if ((edgeTable[cubeindex] & 16) == 16)                   
             vertlist[4] =                                       
-               VertexInterp(isolevel, cube.p[4], cube.p[5], cube.values[4], cube.values[5]);
+               VertexInterp(isolevel, cube.nodes[4], cube.nodes[5], cube.values[4], cube.values[5]);
         if ((edgeTable[cubeindex] & 32) == 32)                     
             vertlist[5] =                                         
-               VertexInterp(isolevel, cube.p[5], cube.p[6], cube.values[5], cube.values[6]);
+               VertexInterp(isolevel, cube.nodes[5], cube.nodes[6], cube.values[5], cube.values[6]);
         if ((edgeTable[cubeindex] & 64) == 64)                    
             vertlist[6] =                                        
-               VertexInterp(isolevel, cube.p[6], cube.p[7], cube.values[6], cube.values[7]);
+               VertexInterp(isolevel, cube.nodes[6], cube.nodes[7], cube.values[6], cube.values[7]);
         if ((edgeTable[cubeindex] & 128) == 128)                     
             vertlist[7] =                                          
-               VertexInterp(isolevel, cube.p[7], cube.p[4], cube.values[7], cube.values[4]);
+               VertexInterp(isolevel, cube.nodes[7], cube.nodes[4], cube.values[7], cube.values[4]);
         if ((edgeTable[cubeindex] & 256) == 256)                   
             vertlist[8] =                                        
-               VertexInterp(isolevel, cube.p[0], cube.p[4], cube.values[0], cube.values[4]);
+               VertexInterp(isolevel, cube.nodes[0], cube.nodes[4], cube.values[0], cube.values[4]);
         if ((edgeTable[cubeindex] & 512) == 512)                   
             vertlist[9] =                                        
-               VertexInterp(isolevel, cube.p[1], cube.p[5], cube.values[1], cube.values[5]);
+               VertexInterp(isolevel, cube.nodes[1], cube.nodes[5], cube.values[1], cube.values[5]);
         if ((edgeTable[cubeindex] & 1024) == 1024)                
             vertlist[10] =                                     
-               VertexInterp(isolevel, cube.p[2], cube.p[6], cube.values[2], cube.values[6]);
+               VertexInterp(isolevel, cube.nodes[2], cube.nodes[6], cube.values[2], cube.values[6]);
         if ((edgeTable[cubeindex] & 2048) == 2048)                  
             vertlist[11] =                                       
-               VertexInterp(isolevel, cube.p[3], cube.p[7], cube.values[3], cube.values[7]);
+               VertexInterp(isolevel, cube.nodes[3], cube.nodes[7], cube.values[3], cube.values[7]);
 
         /* Create the triangles */
         for (int i = 0; triangleConnectionTable[cubeindex,i] != -1; i += 3) {

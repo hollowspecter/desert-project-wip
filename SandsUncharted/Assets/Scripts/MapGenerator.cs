@@ -22,7 +22,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeField]
     private float isolevel = 0;
 
-    private Chunk[,,] chunkMap;
+    private ChunkMap chunkMap;
     private TextureCreator textureCreator;
     private string progressBarTitle = "Density Map is being calculated";
     private string progressBarInfo = "Please sit back and have a sip of tea.";
@@ -36,16 +36,7 @@ public class MapGenerator : MonoBehaviour
 
     public void GenerateMap()
     {
-        // Generate Chunk Array
-        chunkMap = new Chunk[width, height, depth];
-        for (int x = 0; x < width; ++x) {
-            for (int y = 0; y < height; ++y) {
-                for (int z = 0; z < depth; ++z) {
-                    Chunk chunk = new Chunk(x, y, z, chunkSize);
-                    chunkMap[x, y, z] = chunk;
-                }
-            }
-        }
+        chunkMap = new ChunkMap(width, height, depth, chunkSize);
         RandomFillMap();
 
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
@@ -81,18 +72,18 @@ public class MapGenerator : MonoBehaviour
                     float overlapValue;
                     bool overlap = false;
                     if (x % chunkSize == 0 && x > 0) {
-                        overlapValue = chunkMap[chunkX - 1, chunkY, chunkZ].getDensityValue(chunkSize - 1, y % chunkSize, z % chunkSize);
-                        chunkMap[chunkX, chunkY, chunkZ].setDensityMap(x % chunkSize, y % chunkSize, z % chunkSize, overlapValue);
+                        overlapValue = chunkMap[chunkX - 1, chunkY, chunkZ][chunkSize - 1, y % chunkSize, z % chunkSize];
+                        chunkMap[chunkX, chunkY, chunkZ][x % chunkSize, y % chunkSize, z % chunkSize] = overlapValue;
                         overlap = true;
                     }
                     if (y % chunkSize == 0 && y > 0) {
-                        overlapValue = chunkMap[chunkX, chunkY-1, chunkZ].getDensityValue(x % chunkSize, chunkSize - 1, z % chunkSize);
-                        chunkMap[chunkX, chunkY, chunkZ].setDensityMap(x % chunkSize, y % chunkSize, z % chunkSize, overlapValue);
+                        overlapValue = chunkMap[chunkX, chunkY-1, chunkZ][x % chunkSize, chunkSize - 1, z % chunkSize];
+                        chunkMap[chunkX, chunkY, chunkZ][x % chunkSize, y % chunkSize, z % chunkSize] = overlapValue;
                         overlap = true;
                     }
                     if (z % chunkSize == 0 && z > 0) {
-                        overlapValue = chunkMap[chunkX, chunkY, chunkZ - 1].getDensityValue(x % chunkSize, y % chunkSize, chunkSize - 1);
-                        chunkMap[chunkX, chunkY, chunkZ].setDensityMap(x % chunkSize, y % chunkSize, z % chunkSize, overlapValue);
+                        overlapValue = chunkMap[chunkX, chunkY, chunkZ - 1][x % chunkSize, y % chunkSize, chunkSize - 1];
+                        chunkMap[chunkX, chunkY, chunkZ][x % chunkSize, y % chunkSize, z % chunkSize] = overlapValue;
                         overlap = true;
                     }
                     if (overlap)
@@ -106,7 +97,7 @@ public class MapGenerator : MonoBehaviour
                     value += GetValueFromNoises(new Vector3(x, yfloat, z));
 
                     // Apply the density value
-                    chunkMap[chunkX, chunkY, chunkZ].setDensityMap(x % chunkSize, y % chunkSize, z % chunkSize, value);
+                    chunkMap[chunkX, chunkY, chunkZ][x % chunkSize, y % chunkSize, z % chunkSize] = value;
                 }
             }
 
@@ -175,6 +166,19 @@ public class Chunk
     public Vector3 Position { get { return new Vector3(xPos, yPos, zPos); } }
     public Vector3 ChunkmapPosition { get { return new Vector3(xPos * size, yPos * size, zPos * size); } }
     public int Size { get { return size; } }
+    public float this[long xIndex, long yIndex, long zIndex]
+    {
+        get
+        {
+            return densityMap[xIndex, yIndex, zIndex];
+        }
+
+        set
+        {
+            densityMap[xIndex, yIndex, zIndex] = value;
+        }
+    }
+
 
     /* Construcors */
 
@@ -195,15 +199,102 @@ public class Chunk
         this.yPos = yPos;
         this.zPos = zPos;
     }
+}
 
-    /* Getters and Setters */
-    public void setDensityMap(int x, int y, int z, float value)
+public class ChunkMap : IEnumerable
+{
+    private Chunk[, ,] chunkMap;
+
+    // Indexer property to provide read access to the private chunkmap
+    public Chunk this[long xIndex, long yIndex, long zIndex]
     {
-        densityMap[x, y, z] = value;
+        get
+        {
+            return chunkMap[xIndex, yIndex, zIndex];
+        }
     }
 
-    public float getDensityValue(int x, int y, int z)
+    public int GetLength(int dimension)
     {
-        return densityMap[x, y, z];
+        return chunkMap.GetLength(dimension);
+    }
+
+    // Constructor
+    public ChunkMap(int width, int height, int depth, int chunkSize)
+    {
+        chunkMap = new Chunk[width, height, depth];
+        for (int x = 0; x < width; ++x) {
+            for (int y = 0; y < height; ++y) {
+                for (int z = 0; z < depth; ++z) {
+                    Chunk chunk = new Chunk(x, y, z, chunkSize);
+                    chunkMap[x, y, z] = chunk;
+                }
+            }
+        }
+    }
+
+    public IEnumerator GetEnumerator()
+    {
+        return (IEnumerator)GetChunkMapEnumerator();
+    }
+
+    public ChunkMapEnum GetChunkMapEnumerator()
+    {
+        return new ChunkMapEnum(chunkMap);
+    }
+}
+
+public class ChunkMapEnum : IEnumerator
+{
+    private Chunk[, ,] chunkMap;
+    private int posX = 0;
+    private int posY = 0;
+    private int posZ = -1;
+    public ChunkMapEnum(Chunk[, ,] chunks)
+    {
+        chunkMap = chunks;
+    }
+    public Chunk Current
+    {
+        get 
+        {
+            try {
+                return chunkMap[posX, posY, posZ];
+            }
+            catch (IndexOutOfRangeException) {
+                Debug.Log("Tried to access chunkmap at: " + posX + "," + posY + "," + posZ);
+                throw new InvalidOperationException();
+            }
+        }
+    }
+
+    object IEnumerator.Current
+    {
+        get { return Current; }
+    }
+
+    bool IEnumerator.MoveNext()
+    {
+        posZ++;
+        if (posZ == chunkMap.GetLength(2)) {
+            posZ = 0;
+            posY++;
+        }
+        if (posY == chunkMap.GetLength(1)) {
+            posY = 0;
+            posX++;
+        }
+        if (posX == chunkMap.GetLength(0)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    void IEnumerator.Reset()
+    {
+        posX = 0;
+        posY = 0;
+        posZ = -1;
     }
 }
