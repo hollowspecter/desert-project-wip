@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,9 +8,12 @@ public class MeshGenerator : MonoBehaviour
 {
     [SerializeField]
     private GameObject chunkPrefab;
+    [SerializeField]
+    private bool showNormals = false;
 
     private Voxel[,,] voxels;
     private List<Vector3> vertices;
+    private List<Vector3> normals;
     private List<int> triangles;
     private string progressBarName = "Meshes are being calculated...";
     private string progressBarInfo = "This may take a while, please be patient.";
@@ -43,8 +47,8 @@ public class MeshGenerator : MonoBehaviour
                             -mapSize / 2f + z * size + size / 2f);
 
                         // Calculate the Normal for this Node using Central Difference on the volumetric data
-                        Vector3 normal = new Vector3();
-                        
+                        Vector3 chunkPos = chunk.ChunkmapPosition;
+                        Vector3 normal = chunkMap.GetNormal((int) chunkPos.x + x, (int) chunkPos.y + y, (int) chunkPos.z + z);
 
                         // Fetch the density value and store into the node
                         float value = chunk[x, y, z];
@@ -77,17 +81,33 @@ public class MeshGenerator : MonoBehaviour
 
             // Create Vertices and Triangles
             vertices = new List<Vector3>();
+            normals = new List<Vector3>();
             triangles = new List<int>();
+            MapGenerator mapgen = GetComponent<MapGenerator>();
+            Assert.IsNotNull<MapGenerator>(mapgen);
             int vertexCount = 0;
 
             foreach (Voxel voxel in voxels) {
+                // Create a Triangle Aray using the Marching Cubes Algorithm
                 TRIANGLE[] tris = Polygonise(voxel, isolevel);
+
+                // Check if Triangles are found
                 if (tris == null)
                     continue;
+
+                // For each Triangle
                 foreach (TRIANGLE t in tris) {
+                    // Add the Vertices
                     vertices.Add(t.p[0]);
                     vertices.Add(t.p[1]);
                     vertices.Add(t.p[2]);
+
+                    // Add the Normals
+                    normals.Add(t.n[0]);
+                    normals.Add(t.n[1]);
+                    normals.Add(t.n[2]);
+
+                    // Add the indices
                     triangles.Add(vertexCount + 2); // 0
                     triangles.Add(vertexCount + 1); // 1
                     triangles.Add(vertexCount + 0); // 2
@@ -104,7 +124,8 @@ public class MeshGenerator : MonoBehaviour
             chunkGO.GetComponent<MeshFilter>().mesh = mesh;
             mesh.vertices = vertices.ToArray();
             mesh.triangles = triangles.ToArray();
-            mesh.RecalculateNormals();
+            mesh.normals = normals.ToArray();
+            //mesh.RecalculateNormals();
 
             // Reposition chunk
             chunkGO.transform.position = chunk.Position * mapSize - chunk.Position*size;
@@ -122,20 +143,33 @@ public class MeshGenerator : MonoBehaviour
         EditorUtility.ClearProgressBar();
     }
 
+    void OnDrawGizmos()
+    {
+        if (!showNormals || vertices == null || normals == null)
+            return;
+
+        for (int i = 0; i < vertices.Count; ++i) {
+            Gizmos.DrawLine(vertices[i], vertices[i] + normals[i]);
+        }
+    }
+
     #region structs and SubClasses
 
     public struct TRIANGLE
     {
         public Vector3[] p;
-        public TRIANGLE(Vector3 p1, Vector3 p2, Vector3 p3)
+        public Vector3[] n;
+        public TRIANGLE(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 n1, Vector3 n2, Vector3 n3)
         {
             p = new Vector3[3] { p1, p2, p3 };
+            n = new Vector3[3] { n1, n2, n3 };
         }
     }
 
     public class Voxel
     {
         public Vector3[] nodes;
+        public Vector3[] normals;
         public float[] values;
 
         public Voxel(Node[] n, float size)
@@ -145,11 +179,13 @@ public class MeshGenerator : MonoBehaviour
             }
 
             nodes = new Vector3[8];
+            normals = new Vector3[8];
             values = new float[8];
 
             for (int i = 0; i < 8; ++i) {
                 nodes[i] = n[i].position;
                 values[i] = n[i].value;
+                normals[i] = n[i].normal;
             }
         }
     }
@@ -176,6 +212,7 @@ public class MeshGenerator : MonoBehaviour
     {
         int cubeindex = 0;
         Vector3[] vertlist = new Vector3[12];
+        Vector3[] normlist = new Vector3[12];
         List<TRIANGLE> triangles = new List<TRIANGLE>();
 
         /*
@@ -197,49 +234,64 @@ public class MeshGenerator : MonoBehaviour
         }
 
         /* Find the vertices where the surface intersects the cube */
-        if ((edgeTable[cubeindex] & 1)==1)
-            vertlist[0] =
-               VertexInterp(isolevel, cube.nodes[0], cube.nodes[1], cube.values[0], cube.values[1]);
-        if ((edgeTable[cubeindex] & 2) == 2)                             
-            vertlist[1] =                                                
-               VertexInterp(isolevel, cube.nodes[1], cube.nodes[2], cube.values[1], cube.values[2]);
-        if ((edgeTable[cubeindex] & 4) == 4)                              
-            vertlist[2] =                                                 
-               VertexInterp(isolevel, cube.nodes[2], cube.nodes[3], cube.values[2], cube.values[3]);
-        if ((edgeTable[cubeindex] & 8) == 8)                               
-            vertlist[3] =                                                  
-               VertexInterp(isolevel, cube.nodes[3], cube.nodes[0], cube.values[3], cube.values[0]);
-        if ((edgeTable[cubeindex] & 16) == 16)                   
-            vertlist[4] =                                       
-               VertexInterp(isolevel, cube.nodes[4], cube.nodes[5], cube.values[4], cube.values[5]);
-        if ((edgeTable[cubeindex] & 32) == 32)                     
-            vertlist[5] =                                         
-               VertexInterp(isolevel, cube.nodes[5], cube.nodes[6], cube.values[5], cube.values[6]);
-        if ((edgeTable[cubeindex] & 64) == 64)                    
-            vertlist[6] =                                        
-               VertexInterp(isolevel, cube.nodes[6], cube.nodes[7], cube.values[6], cube.values[7]);
-        if ((edgeTable[cubeindex] & 128) == 128)                     
-            vertlist[7] =                                          
-               VertexInterp(isolevel, cube.nodes[7], cube.nodes[4], cube.values[7], cube.values[4]);
-        if ((edgeTable[cubeindex] & 256) == 256)                   
-            vertlist[8] =                                        
-               VertexInterp(isolevel, cube.nodes[0], cube.nodes[4], cube.values[0], cube.values[4]);
-        if ((edgeTable[cubeindex] & 512) == 512)                   
-            vertlist[9] =                                        
-               VertexInterp(isolevel, cube.nodes[1], cube.nodes[5], cube.values[1], cube.values[5]);
-        if ((edgeTable[cubeindex] & 1024) == 1024)                
-            vertlist[10] =                                     
-               VertexInterp(isolevel, cube.nodes[2], cube.nodes[6], cube.values[2], cube.values[6]);
-        if ((edgeTable[cubeindex] & 2048) == 2048)                  
-            vertlist[11] =                                       
-               VertexInterp(isolevel, cube.nodes[3], cube.nodes[7], cube.values[3], cube.values[7]);
+        if ((edgeTable[cubeindex] & 1) == 1) {
+            vertlist[0] = VertexInterp(isolevel, cube.nodes[0], cube.nodes[1], cube.values[0], cube.values[1]);
+            normlist[0] = VertexInterp(isolevel, cube.normals[0], cube.normals[1], cube.values[0], cube.values[1]);
+        }
+        if ((edgeTable[cubeindex] & 2) == 2) {
+            vertlist[1] = VertexInterp(isolevel, cube.nodes[1], cube.nodes[2], cube.values[1], cube.values[2]);
+            normlist[1] = VertexInterp(isolevel, cube.normals[1], cube.normals[2], cube.values[1], cube.values[2]);
+        }
+        if ((edgeTable[cubeindex] & 4) == 4) {
+            vertlist[2] = VertexInterp(isolevel, cube.nodes[2], cube.nodes[3], cube.values[2], cube.values[3]);
+            normlist[2] = VertexInterp(isolevel, cube.normals[2], cube.normals[3], cube.values[2], cube.values[3]);
+        }
+        if ((edgeTable[cubeindex] & 8) == 8) {
+            vertlist[3] = VertexInterp(isolevel, cube.nodes[3], cube.nodes[0], cube.values[3], cube.values[0]);
+            normlist[3] = VertexInterp(isolevel, cube.normals[3], cube.normals[0], cube.values[3], cube.values[0]);
+        }
+        if ((edgeTable[cubeindex] & 16) == 16) {
+            vertlist[4] = VertexInterp(isolevel, cube.nodes[4], cube.nodes[5], cube.values[4], cube.values[5]);
+            normlist[4] = VertexInterp(isolevel, cube.normals[4], cube.normals[5], cube.values[4], cube.values[5]);
+        }
+        if ((edgeTable[cubeindex] & 32) == 32) {
+            vertlist[5] = VertexInterp(isolevel, cube.nodes[5], cube.nodes[6], cube.values[5], cube.values[6]);
+            normlist[5] = VertexInterp(isolevel, cube.normals[5], cube.normals[6], cube.values[5], cube.values[6]);
+        }
+        if ((edgeTable[cubeindex] & 64) == 64) {
+            vertlist[6] = VertexInterp(isolevel, cube.nodes[6], cube.nodes[7], cube.values[6], cube.values[7]);
+            normlist[6] = VertexInterp(isolevel, cube.normals[6], cube.normals[7], cube.values[6], cube.values[7]);
+        }
+        if ((edgeTable[cubeindex] & 128) == 128) {
+            vertlist[7] = VertexInterp(isolevel, cube.nodes[7], cube.nodes[4], cube.values[7], cube.values[4]);
+            normlist[7] = VertexInterp(isolevel, cube.normals[7], cube.normals[4], cube.values[7], cube.values[4]);
+        }
+        if ((edgeTable[cubeindex] & 256) == 256) {
+            vertlist[8] = VertexInterp(isolevel, cube.nodes[0], cube.nodes[4], cube.values[0], cube.values[4]);
+            normlist[8] = VertexInterp(isolevel, cube.normals[0], cube.normals[4], cube.values[0], cube.values[4]);
+        }
+        if ((edgeTable[cubeindex] & 512) == 512) {
+            vertlist[9] = VertexInterp(isolevel, cube.nodes[1], cube.nodes[5], cube.values[1], cube.values[5]);
+            normlist[9] = VertexInterp(isolevel, cube.normals[1], cube.normals[5], cube.values[1], cube.values[5]);
+        }
+        if ((edgeTable[cubeindex] & 1024) == 1024) {
+            vertlist[10] = VertexInterp(isolevel, cube.nodes[2], cube.nodes[6], cube.values[2], cube.values[6]);
+            normlist[10] = VertexInterp(isolevel, cube.normals[2], cube.normals[6], cube.values[2], cube.values[6]);
+        }
+        if ((edgeTable[cubeindex] & 2048) == 2048) {
+            vertlist[11] = VertexInterp(isolevel, cube.nodes[3], cube.nodes[7], cube.values[3], cube.values[7]);
+            normlist[11] = VertexInterp(isolevel, cube.normals[3], cube.normals[7], cube.values[3], cube.values[7]);
+        }                
 
         /* Create the triangles */
         for (int i = 0; triangleConnectionTable[cubeindex,i] != -1; i += 3) {
             TRIANGLE tri = new TRIANGLE(
                 vertlist[triangleConnectionTable[cubeindex, i]],
                 vertlist[triangleConnectionTable[cubeindex, i + 1]],
-                vertlist[triangleConnectionTable[cubeindex, i + 2]]);
+                vertlist[triangleConnectionTable[cubeindex, i + 2]],
+                normlist[triangleConnectionTable[cubeindex, i]],
+                normlist[triangleConnectionTable[cubeindex, i + 1]],
+                normlist[triangleConnectionTable[cubeindex, i + 2]]);
             triangles.Add(tri);
         }
 

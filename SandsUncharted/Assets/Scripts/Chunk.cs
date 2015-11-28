@@ -53,6 +53,7 @@ public class Chunk
 public class ChunkMap : IEnumerable
 {
     private Chunk[, ,] chunkMap;
+    private int chunkSize;
 
     // Indexer property to provide read access to the private chunkmap
     public Chunk this[long xIndex, long yIndex, long zIndex]
@@ -62,6 +63,10 @@ public class ChunkMap : IEnumerable
             return chunkMap[xIndex, yIndex, zIndex];
         }
     }
+
+    public int TotalWidth { get { return GetLength(0) * chunkSize; } }
+    public int TotalHeight { get { return GetLength(1) * chunkSize; } }
+    public int TotalDepth { get { return GetLength(2) * chunkSize; } }
 
     public int GetLength(int dimension)
     {
@@ -80,6 +85,76 @@ public class ChunkMap : IEnumerable
                 }
             }
         }
+
+        this.chunkSize = chunkSize;
+    }
+
+    // Calculating Normal
+    public Vector3 GetNormal(int x, int y, int z)
+    {
+        // Return zero if the positions are not in bounds
+        if (!isInAbsoluteBounds(x, y, z))
+        {
+            Debug.LogWarning("The Positions to calculate the Normal are not in Bounds! x:" + x + ",y:" + y + ",z" + z);
+            return Vector3.zero;
+        }
+
+        // Initialize the components of the normal
+        float[] normal = new float[3];
+        int[] pos = new int[] { x, y, z };
+        int[] borders = new int[] { TotalWidth, TotalHeight, TotalDepth };
+
+        // For each dimension, do the same
+        int stepX, stepY, stepZ;
+        for (int i = 0; i < 3; ++i) {
+            stepX = (i == 0) ? 1 : 0;
+            stepY = (i == 1) ? 1 : 0;
+            stepZ = (i == 2) ? 1 : 0;
+
+            // Check if it is on the border of the map => Endpunktformel
+            if (pos[i] == 0) {
+                normal[i] = -3f * GetValueInChunk(x, y, z)
+                    + 4f * GetValueInChunk(x + stepX, y + stepY, z + stepZ)
+                    - GetValueInChunk(x + stepX * 2, y + stepY * 2, z + stepZ * 2);
+            }
+            else if (pos[i] == borders[i] - 1) {
+                normal[i] = -3f * GetValueInChunk(x, y, z)
+                    + 4f * GetValueInChunk(x - stepX, y - stepY, z - stepZ)
+                    - GetValueInChunk(x - stepX * 2, y - stepY * 2, z - stepZ * 2);
+            }
+            else {
+                // Position is somewhere in the middle => Mittelpunktformel
+                // Check for Overlap. Is it at the beginning of a chunk?
+                if (pos[i] % chunkSize == 0) {
+                    normal[i] = GetValueInChunk(x + stepX, y + stepY, z + stepZ)
+                        - GetValueInChunk(x - stepX * 2, y - stepY * 2, z - stepZ * 2);
+                }
+                // Or at the end of a chunk?
+                else if (pos[i] % chunkSize == chunkSize - 1) {
+                    normal[i] = GetValueInChunk(x + stepX * 2, y + stepY * 2, z + stepZ * 2)
+                        - GetValueInChunk(x - stepX, y - stepY, z - stepZ);
+                }
+                else {
+                    normal[i] = GetValueInChunk(x + stepX, y + stepY, z + stepZ)
+                        - GetValueInChunk(x - stepX, y - stepY, z - stepZ);
+                }
+            }
+        }
+
+        return new Vector3(normal[0], normal[1], normal[2]).normalized;
+    }
+
+    // x y z are absolute "world coordinates" and not "chunk coordinates"
+    public float GetValueInChunk(int x, int y, int z)
+    {
+        return chunkMap[x / chunkSize, y / chunkSize, z / chunkSize][x % chunkSize, y % chunkSize, z % chunkSize];
+    }
+
+    public bool isInAbsoluteBounds(int x, int y, int z)
+    {
+        return (x >= 0 && x < TotalWidth &&
+            y >= 0 && y < TotalHeight &&
+            z >= 0 && z < TotalDepth);
     }
 
     // IEnumerable Interface

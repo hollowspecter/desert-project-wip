@@ -58,6 +58,7 @@ public class MapGenerator : MonoBehaviour
         for (int x = 0; x < totalWidth; ++x) {
             for (int y = 0; y < totalHeight; ++y) {
                 for (int z = 0; z < totalDepth; ++z) {
+
                     // Set map to 1 or 0 depending the PerlinNoise
                     float yfloat = (float)y / height;
 
@@ -66,7 +67,7 @@ public class MapGenerator : MonoBehaviour
                     int chunkY = y / chunkSize;
                     int chunkZ = z / chunkSize;
 
-                    // Check if it is an overlapping value
+                    // Check if it is an overlapping value by only checking the beginning of the chunk (not the end)
                     float overlapValue;
                     bool overlap = false;
                     if (x % chunkSize == 0 && x > 0) {
@@ -90,7 +91,6 @@ public class MapGenerator : MonoBehaviour
                     /*
                      * Calculate density value from noise layers
                      */
-                    
                     float value = yfloat;
                     value += GetValueFromNoises(new Vector3(x, yfloat, z));
 
@@ -130,21 +130,50 @@ public class MapGenerator : MonoBehaviour
         return value;
     }
 
+    public float GetValueFromNoises(float x, float y, float z)
+    {
+        return GetValueFromNoises(new Vector3(x, y, z));
+    }
+
     public void SaveAndDeleteTerrain()
     {
+        // Find the chunks Game Object
         GameObject chunks = GameObject.FindGameObjectWithTag(Tags.TERRAIN_TAG);
+        // If found...
         if (chunks != null) {
+            // Create a string name for saving it as a prefab
             string time = System.DateTime.Now.ToString();
             time = time.Replace("/", "_");
             time = time.Replace(" ", "_");
             time = time.Replace(":", "-");
             var targetPath = FileUtil.GetProjectRelativePath(EditorUtility.SaveFilePanel("Saves the old Terrain", Application.dataPath, "terrain_" + time, "prefab"));
+            // If the user cancels saving, dont save
             if (targetPath.Length > 0)
                 PrefabUtility.CreatePrefab(targetPath, chunks);
+            // Destroy the old Terrain
             DestroyImmediate(chunks);
         }
         else {
             Debug.Log("Did not found a gameobject with \"Terrain\" tag.");
         }
     }
+
+    ///// <summary>
+    ///// Calculates the Normals by using the central difference of the volumetric data
+    ///// in each direction
+    ///// </summary>
+    ///// <param name="p"></param>
+    ///// <returns></returns>
+    ///// 
+    ///*
+    // * calculate normals in every node and interpolate in marhcing cube algorithm
+    // */
+    //public Vector3 CalculateNormal(int x, int y, int z)
+    //{
+    //    float step = 0.01f;
+    //    float x = GetValueFromNoises(p.x + step, p.y, p.z) - GetValueFromNoises(p.x - step, p.y, p.z);
+    //    float y = GetValueFromNoises(p.x, p.y + step, p.z) - GetValueFromNoises(p.x, p.y - step, p.z);
+    //    float z = GetValueFromNoises(p.x, p.y, p.z + step) - GetValueFromNoises(p.x, p.y, p.z - step);
+    //    return new Vector3(x, y, z).normalized;
+    //}
 }
