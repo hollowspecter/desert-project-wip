@@ -137,7 +137,7 @@ public class MeshGenerator : MonoBehaviour
             // Update Progress Bar
             progress += step;
             EditorUtility.DisplayProgressBar(progressBarName, progressBarInfo, progress);
-        }
+        } // end foreach
 
         // End the Progress Bar
         EditorUtility.ClearProgressBar();

@@ -97,13 +97,33 @@ public class NoiseLayerDrawer : PropertyDrawer
         content = new GUIContent("Weight", "Tooltip");
         EditorGUI.PropertyField(contentPosition, property.FindPropertyRelative("weight"), content);
 
+        // Next Line
+        contentPosition.y += 18f;
+        contentPosition = EditorGUI.IndentedRect(position);
+
+        // Offset Position
+        contentPosition.y += 18f * 5;
+        EditorGUIUtility.labelWidth = 80f;
+        content = new GUIContent("Position", "Tooltip");
+        EditorGUI.PropertyField(contentPosition, property.FindPropertyRelative("offsetPosition"), content);
+
+        // Next Line
+        contentPosition.y += 18f;
+        contentPosition = EditorGUI.IndentedRect(position);
+
+        // Offset Rotation
+        contentPosition.y += 18f * 6;
+        EditorGUIUtility.labelWidth = 80f;
+        content = new GUIContent("Rotation", "Tooltip");
+        EditorGUI.PropertyField(contentPosition, property.FindPropertyRelative("offsetRotation"), content);
+
         EditorGUI.EndProperty();
     }
 
     // Determines the height of this property. Fixed height!
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-        int lineCount = 5;
+        int lineCount = 7;
         return 16f + 18f*(lineCount - 1);
     }
 }

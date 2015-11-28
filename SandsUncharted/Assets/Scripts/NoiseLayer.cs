@@ -61,6 +61,14 @@ public class NoiseLayer
     [SerializeField]
     private float weight = 1f;
 
+    [Tooltip("Offset to which the points will be sampled. Basically \"moves\" the noise around.")]
+    [SerializeField]
+    private Vector3 offsetPosition = new Vector3();
+
+    [Tooltip("Rotationoffset to which the points will be sampled. Basically \"rotates\" the noise around its origin.")]
+    [SerializeField]
+    private Vector3 offsetRotation = new Vector3();
+
     #endregion
 
     #region public Properties
@@ -73,8 +81,11 @@ public class NoiseLayer
 
     /* Methods */
 
-    public float getValue(Vector3 point)
+    public float getValue(Vector3 p)
     {
+        Vector3 point = p;
+        point += offsetPosition;
+        point = Quaternion.Euler(offsetRotation) * point;
         NoiseMethod method = Noise.methods[(int)type][dimension - 1];
         return Noise.Sum(method, point, frequency, octaves, lacunarity, persistence) * amplitude;
     }
