@@ -120,10 +120,10 @@ public class MapGenerator : MonoBehaviour
             NoiseLayer.NoiseOperators op = noises[i].Operation;
             switch (op) {
                 case NoiseLayer.NoiseOperators.Add:
-                    value += noises[i].getValue(point);
+                    value += noises[i].getValue(point) * noises[i].Weight;
                     break;
                 case NoiseLayer.NoiseOperators.Subtract:
-                    value -= noises[i].getValue(point);
+                    value -= noises[i].getValue(point) * noises[i].Weight;
                     break;
             }
         }

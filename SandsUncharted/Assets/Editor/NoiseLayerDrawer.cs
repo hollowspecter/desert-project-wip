@@ -86,9 +86,16 @@ public class NoiseLayerDrawer : PropertyDrawer
         // Active
         contentPosition.height = 16f;
         contentPosition.y += 18f*4;
+        contentPosition.width *= 0.33f;
         EditorGUIUtility.labelWidth = 60f;
         content = new GUIContent("Active", "Is this noise active");
         EditorGUI.PropertyField(contentPosition, property.FindPropertyRelative("active"), content);
+
+        // Weight
+        contentPosition.x += contentPosition.width;
+        EditorGUIUtility.labelWidth = 60f;
+        content = new GUIContent("Weight", "Tooltip");
+        EditorGUI.PropertyField(contentPosition, property.FindPropertyRelative("weight"), content);
 
         EditorGUI.EndProperty();
     }

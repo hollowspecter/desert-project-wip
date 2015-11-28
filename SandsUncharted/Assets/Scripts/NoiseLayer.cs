@@ -57,12 +57,17 @@ public class NoiseLayer
     [SerializeField]
     private bool active = true;
 
+    [Tooltip("The final Noise is a weighted sum of the several noise layers. Every Noiselayer will be multiplied by its weight.")]
+    [SerializeField]
+    private float weight = 1f;
+
     #endregion
 
     #region public Properties
 
     public NoiseOperators Operation { get { return operation; } }
     public bool Active{ get { return active; } }
+    public float Weight { get { return weight; } }
 
     #endregion
 
