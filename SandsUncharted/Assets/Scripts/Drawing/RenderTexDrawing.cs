@@ -142,17 +142,6 @@ public class RenderTexDrawing : MonoBehaviour
         DestroyImmediate(rt);
     }
 
-    void CombineTextures(Texture2D texture0, Texture2D texture1)
-    {
-        Color32[] arr0 = texture0.GetPixels32();
-        Color32[] arr1 = texture1.GetPixels32();
-
-        for(int i = 0; i < arr0.Length; ++i)
-        {
-
-        }
-    }
-
 
     void UpdateCursorPosition(float h, float v)
     {
