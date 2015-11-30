@@ -113,31 +113,20 @@ public class ChunkMap : IEnumerable
 
             // Check if it is on the border of the map => Endpunktformel
             if (pos[i] == 0) {
-                normal[i] = -3f * GetValueInChunk(x, y, z)
-                    + 4f * GetValueInChunk(x + stepX, y + stepY, z + stepZ)
-                    - GetValueInChunk(x + stepX * 2, y + stepY * 2, z + stepZ * 2);
+                normal[i] = -3f * GetDensityValue(x, y, z)
+                    + 4f * GetDensityValue(x + stepX, y + stepY, z + stepZ)
+                    - GetDensityValue(x + stepX * 2, y + stepY * 2, z + stepZ * 2);
             }
             else if (pos[i] == borders[i] - 1) {
-                normal[i] = -3f * GetValueInChunk(x, y, z)
-                    + 4f * GetValueInChunk(x - stepX, y - stepY, z - stepZ)
-                    - GetValueInChunk(x - stepX * 2, y - stepY * 2, z - stepZ * 2);
+                normal[i] = -3f * GetDensityValue(x, y, z)
+                    + 4f * GetDensityValue(x - stepX, y - stepY, z - stepZ)
+                    - GetDensityValue(x - stepX * 2, y - stepY * 2, z - stepZ * 2);
             }
+            // Else, its in the Middle => Mittelpunktformel
             else {
-                // Position is somewhere in the middle => Mittelpunktformel
-                // Check for Overlap. Is it at the beginning of a chunk?
-                if (pos[i] % chunkSize == 0) {
-                    normal[i] = GetValueInChunk(x + stepX, y + stepY, z + stepZ)
-                        - GetValueInChunk(x - stepX * 2, y - stepY * 2, z - stepZ * 2);
-                }
-                // Or at the end of a chunk?
-                else if (pos[i] % chunkSize == chunkSize - 1) {
-                    normal[i] = GetValueInChunk(x + stepX * 2, y + stepY * 2, z + stepZ * 2)
-                        - GetValueInChunk(x - stepX, y - stepY, z - stepZ);
-                }
-                else {
-                    normal[i] = GetValueInChunk(x + stepX, y + stepY, z + stepZ)
-                        - GetValueInChunk(x - stepX, y - stepY, z - stepZ);
-                }
+                normal[i] = GetDensityValue(x + stepX, y + stepY, z + stepZ)
+                    - GetDensityValue(x - stepX, y - stepY, z - stepZ);
+
             }
         }
 
@@ -145,16 +134,33 @@ public class ChunkMap : IEnumerable
     }
 
     // x y z are absolute "world coordinates" and not "chunk coordinates"
-    public float GetValueInChunk(int x, int y, int z)
+    public float GetDensityValue(int x, int y, int z)
     {
         return chunkMap[x / chunkSize, y / chunkSize, z / chunkSize][x % chunkSize, y % chunkSize, z % chunkSize];
     }
 
+    // x y z are absolute "world coordinates" and not "chunk coordinates"
     public bool isInAbsoluteBounds(int x, int y, int z)
     {
         return (x >= 0 && x < TotalWidth &&
             y >= 0 && y < TotalHeight &&
             z >= 0 && z < TotalDepth);
+    }
+
+    // x y z define a chunk in the chunkmap
+    public bool IsInBounds(int chunkX, int chunkY, int chunkZ)
+    {
+        return (chunkX >= 0 && chunkX < chunkMap.GetLength(0) &&
+            chunkY >= 0 && chunkY < chunkMap.GetLength(1) &&
+            chunkZ >= 0 && chunkZ < chunkMap.GetLength(2));
+    }
+
+    public bool IsInBounds(Vector3 chunkPosition)
+    {
+        int chunkX = Mathf.RoundToInt(chunkPosition.x);
+        int chunkY = Mathf.RoundToInt(chunkPosition.y);
+        int chunkZ = Mathf.RoundToInt(chunkPosition.z);
+        return IsInBounds(chunkX, chunkY, chunkZ);
     }
 
     // IEnumerable Interface

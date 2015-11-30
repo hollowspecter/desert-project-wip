@@ -67,27 +67,6 @@ public class MapGenerator : MonoBehaviour
                     int chunkY = y / chunkSize;
                     int chunkZ = z / chunkSize;
 
-                    // Check if it is an overlapping value by only checking the beginning of the chunk (not the end)
-                    float overlapValue;
-                    bool overlap = false;
-                    if (x % chunkSize == 0 && x > 0) {
-                        overlapValue = chunkMap[chunkX - 1, chunkY, chunkZ][chunkSize - 1, y % chunkSize, z % chunkSize];
-                        chunkMap[chunkX, chunkY, chunkZ][x % chunkSize, y % chunkSize, z % chunkSize] = overlapValue;
-                        overlap = true;
-                    }
-                    if (y % chunkSize == 0 && y > 0) {
-                        overlapValue = chunkMap[chunkX, chunkY-1, chunkZ][x % chunkSize, chunkSize - 1, z % chunkSize];
-                        chunkMap[chunkX, chunkY, chunkZ][x % chunkSize, y % chunkSize, z % chunkSize] = overlapValue;
-                        overlap = true;
-                    }
-                    if (z % chunkSize == 0 && z > 0) {
-                        overlapValue = chunkMap[chunkX, chunkY, chunkZ - 1][x % chunkSize, y % chunkSize, chunkSize - 1];
-                        chunkMap[chunkX, chunkY, chunkZ][x % chunkSize, y % chunkSize, z % chunkSize] = overlapValue;
-                        overlap = true;
-                    }
-                    if (overlap)
-                        continue;
-
                     /*
                      * Calculate density value from noise layers
                      */

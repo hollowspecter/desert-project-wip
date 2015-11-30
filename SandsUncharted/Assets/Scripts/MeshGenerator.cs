@@ -18,6 +18,12 @@ public class MeshGenerator : MonoBehaviour
     private string progressBarName = "Meshes are being calculated...";
     private string progressBarInfo = "This may take a while, please be patient.";
 
+    /// <summary>
+    /// Generates a mesh for a given chunkMap.
+    /// </summary>
+    /// <param name="chunkMap">The density maps combined in a chunkmap</param>
+    /// <param name="size">The size of one voxel (edge)</param>
+    /// <param name="isolevel">Isolevel to extract the surface from</param>
     public void GenerateMesh(ChunkMap chunkMap, float size, float isolevel)
     {
         // Create the parent GameObject Chunks
@@ -31,34 +37,53 @@ public class MeshGenerator : MonoBehaviour
         float step = chunkMap.GetLength(0) + chunkMap.GetLength(1) + chunkMap.GetLength(2);
         step = 1f / step;
 
+        // For each Chunk
         foreach (Chunk chunk in chunkMap) {
-            int nodeCount = chunk.Size;
-            float mapSize = nodeCount * size;
+
+            // Calculate the Number of Nodes for this Chunk
+            int nodeCountX = chunk.Size;
+            int nodeCountY = chunk.Size;
+            int nodeCountZ = chunk.Size;
+
+            // Cover the Overlap by adding another row if there is
+            // an adjacent chunk in one dimension
+            nodeCountX += (chunkMap.IsInBounds(chunk.Position + Vector3.right)) ? 1 : 0;
+            nodeCountY += (chunkMap.IsInBounds(chunk.Position + Vector3.up)) ? 1 : 0;
+            nodeCountZ += (chunkMap.IsInBounds(chunk.Position + Vector3.forward)) ? 1 : 0;
+            
+            float mapWidth = nodeCountX * size;
+            float mapHeight = nodeCountY * size;
+            float mapDepth = nodeCountZ * size;
 
             // Create Grid of Nodes
-            Node[, ,] nodes = new Node[nodeCount, nodeCount, nodeCount];
-            for (int x = 0; x < nodeCount; ++x) {
-                for (int y = 0; y < nodeCount; ++y) {
-                    for (int z = 0; z < nodeCount; ++z) {
+            Node[, ,] nodes = new Node[nodeCountX, nodeCountY, nodeCountZ];
+            for (int x = 0; x < nodeCountX; ++x) {
+                for (int y = 0; y < nodeCountY; ++y) {
+                    for (int z = 0; z < nodeCountZ; ++z) {
 
                         // Calculate Position of this node
-                        Vector3 pos = new Vector3(-mapSize / 2f + x * size + size / 2f,
-                            -mapSize / 2f + y * size + size / 2f,
-                            -mapSize / 2f + z * size + size / 2f);
+                        Vector3 pos = new Vector3(-mapWidth / 2f + x * size + size / 2f,
+                            -mapHeight / 2f + y * size + size / 2f,
+                            -mapDepth / 2f + z * size + size / 2f);
 
                         // Calculate the Normal for this Node using Central Difference on the volumetric data
                         Vector3 chunkPos = chunk.ChunkmapPosition;
-                        Vector3 normal = chunkMap.GetNormal((int) chunkPos.x + x, (int) chunkPos.y + y, (int) chunkPos.z + z);
+                        // Calc absolute "world coordinates" for the chunk values
+                        int xAbs = (int)chunkPos.x + x;
+                        int yAbs = (int)chunkPos.y + y;
+                        int zAbs = (int)chunkPos.z + z;
+                        Vector3 normal = chunkMap.GetNormal(xAbs, yAbs, zAbs);
 
                         // Fetch the density value and store into the node
-                        float value = chunk[x, y, z];
+                        //float value = chunk[x, y, z];
+                        float value = chunkMap.GetDensityValue(xAbs, yAbs, zAbs);
                         nodes[x, y, z] = new Node(pos, normal, value);
                     }
                 }
             }
 
             // Create Cube Grid // WORKS
-            voxels = new Voxel[nodeCount - 1, nodeCount - 1, nodeCount - 1];
+            voxels = new Voxel[nodeCountX - 1, nodeCountY - 1, nodeCountZ - 1];
             for (int x = 0; x < voxels.GetLength(0); ++x) {
                 for (int y = 0; y < voxels.GetLength(1); ++y) {
                     for (int z = 0; z < voxels.GetLength(2); ++z) {
@@ -128,7 +153,19 @@ public class MeshGenerator : MonoBehaviour
             //mesh.RecalculateNormals();
 
             // Reposition chunk
-            chunkGO.transform.position = chunk.Position * mapSize - chunk.Position*size;
+            float xPos = chunk.Position.x * mapWidth - chunk.Position.x * size;
+            float yPos = chunk.Position.y * mapHeight - chunk.Position.y * size;
+            float zPos = chunk.Position.z * mapDepth - chunk.Position.z * size;
+            if (chunk.Position.x == chunkMap.GetLength(0) - 1) {
+                xPos += chunk.Position.x * size - size / 2f;
+            }
+            if (chunk.Position.y == chunkMap.GetLength(1) - 1) {
+                yPos += chunk.Position.y * size - size / 2f;
+            }
+            if (chunk.Position.z == chunkMap.GetLength(2) - 1) {
+                zPos += chunk.Position.z * size - size / 2f;
+            }
+            chunkGO.transform.position = new Vector3(xPos, yPos, zPos);
 
             // Parent chunk to the chunks GO
             chunkGO.transform.parent = chunksT;
