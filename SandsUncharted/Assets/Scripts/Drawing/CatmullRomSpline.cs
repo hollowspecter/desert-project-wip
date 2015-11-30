@@ -220,7 +220,7 @@ public class CatmullRomSpline
             for (int i = 0; i < controlPoints.Count; i++)
             {
 
-                if ((i == controlPoints.Count - 1) && !isLooping)
+                if ((i == controlPoints.Count -1) && !isLooping)
                 {
                     continue;
                 }

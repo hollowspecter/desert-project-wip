@@ -13,6 +13,11 @@ public class RenderTexDrawing : MonoBehaviour
     [SerializeField]
     private GameObject _splineRenderTarget;
 
+    [SerializeField]
+    private GameObject captureTest;
+    [SerializeField]
+    private GameObject captureTest2;
+
     List<CatmullRomSpline> splines;
     CatmullRomSpline activeSpline;
 	ControlPointGroup ctrl;
@@ -74,6 +79,7 @@ public class RenderTexDrawing : MonoBehaviour
             }
             else if(Input.GetButtonDown("X"))
             {
+                CaptureRenderTex();
                 activeSpline = null;
                 ctrl = null;
             }
@@ -113,13 +119,48 @@ public class RenderTexDrawing : MonoBehaviour
         }
     }
 
+    void CaptureRenderTex()
+    {
+        Camera captureCamera = transform.Find("CaptureCamera").GetComponent<Camera>();
+        captureCamera.enabled = true;
+        RenderTexture rt = new RenderTexture(512, 512, 24);
+
+        captureCamera.targetTexture = rt;
+        captureCamera.Render();
+        RenderTexture original = RenderTexture.active;
+        RenderTexture.active = rt;      
+
+        Texture2D t = new Texture2D(512, 512, TextureFormat.ARGB32, true);
+        t.ReadPixels(new Rect(0, 0, 512, 512), 0, 0);
+        t.Apply(true);
+        captureTest.GetComponent<MeshRenderer>().materials[0].mainTexture = t;
+        captureTest2.GetComponent<MeshRenderer>().materials[0].mainTexture = t;
+
+        captureCamera.targetTexture = null;
+        captureCamera.enabled = false;
+        RenderTexture.active = original;
+        DestroyImmediate(rt);
+    }
+
+    void CombineTextures(Texture2D texture0, Texture2D texture1)
+    {
+        Color32[] arr0 = texture0.GetPixels32();
+        Color32[] arr1 = texture1.GetPixels32();
+
+        for(int i = 0; i < arr0.Length; ++i)
+        {
+
+        }
+    }
+
+
     void UpdateCursorPosition(float h, float v)
     {
         Vector3 axisVector = h * transform.right + v * transform.up;
         axisVector = axisVector.sqrMagnitude >= 0.03 ? axisVector : new Vector3();
 
-        /****move Reticle based on acceleration and right stick vector****/
-        speed += 50f * axisVector * Time.deltaTime; //make velocityvector
+        /****move Reticle based on acceleration and left stick vector****/
+        speed += 15f * axisVector * Time.deltaTime; //make velocityvector
         _cursor.position += speed * Time.deltaTime; //make movementvector
     }
 }
