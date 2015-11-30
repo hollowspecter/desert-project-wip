@@ -10,7 +10,7 @@ public class Chunk
 {
     private int xPos, yPos, zPos;
     private int size;
-    private float[, ,] densityMap;
+    private float[] densityMap;
 
     public Vector3 Position { get { return new Vector3(xPos, yPos, zPos); } }
     public Vector3 ChunkmapPosition { get { return new Vector3(xPos * size, yPos * size, zPos * size); } }
@@ -19,12 +19,12 @@ public class Chunk
     {
         get
         {
-            return densityMap[xIndex, yIndex, zIndex];
+            return densityMap[xIndex + size * (yIndex + size * zIndex)];
         }
 
         set
         {
-            densityMap[xIndex, yIndex, zIndex] = value;
+            densityMap[xIndex + size * (yIndex + size * zIndex)] = value;
         }
     }
 
@@ -36,7 +36,7 @@ public class Chunk
         xPos = 0;
         yPos = 0;
         zPos = 0;
-        densityMap = new float[size, size, size];
+        densityMap = new float[size * size * size];
         densityMap.Initialize();
         this.size = size;
     }

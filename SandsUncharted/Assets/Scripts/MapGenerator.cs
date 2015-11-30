@@ -48,12 +48,14 @@ public class MapGenerator : MonoBehaviour
         EditorUtility.DisplayProgressBar(progressBarTitle, progressBarInfo, progress);
 
         // Calculate the total of the map
-        int totalWidth = width * chunkSize;// -(width - 1);
-        int totalHeight = height * chunkSize;// -(height - 1);
-        int totalDepth = depth * chunkSize;// -(depth - 1);
+        int totalWidth = width * chunkSize;
+        int totalHeight = height * chunkSize;
+        int totalDepth = depth * chunkSize;
 
         // Calculate the step
         float step = 1f / totalWidth;
+
+        float time = Time.realtimeSinceStartup;
 
         for (int x = 0; x < totalWidth; ++x) {
             for (int y = 0; y < totalHeight; ++y) {
@@ -84,6 +86,7 @@ public class MapGenerator : MonoBehaviour
 
         } // end last for loop
 
+        Debug.Log("Passed Time: " + (Time.realtimeSinceStartup - time));
         EditorUtility.ClearProgressBar();
     } // end random fill
 
