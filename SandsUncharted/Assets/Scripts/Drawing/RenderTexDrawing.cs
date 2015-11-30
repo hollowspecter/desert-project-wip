@@ -142,7 +142,6 @@ public class RenderTexDrawing : MonoBehaviour
         DestroyImmediate(rt);
     }
 
-
     void UpdateCursorPosition(float h, float v)
     {
         Vector3 axisVector = h * transform.right + v * transform.up;
