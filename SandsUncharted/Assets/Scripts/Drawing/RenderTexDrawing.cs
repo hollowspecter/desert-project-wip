@@ -5,8 +5,6 @@ using System.Collections.Generic;
 public class RenderTexDrawing : MonoBehaviour
 {
     [SerializeField]
-    private GameObject prefab;
-    [SerializeField]
     private Transform _cursor;
     [SerializeField]
     private Camera _renderCam;
@@ -18,12 +16,20 @@ public class RenderTexDrawing : MonoBehaviour
     [SerializeField]
     private GameObject captureTest2;
 
+    #region splinedrawing members
     List<CatmullRomSpline> splines;
     CatmullRomSpline activeSpline;
 	ControlPointGroup ctrl;
     Vector3 speed;
+    float selectionDistance = 0.5f;
 
-	float selectionDistance = 0.5f;
+    #endregion
+
+    #region stamping members
+    StampManager _stampManager;
+    float rotationSpeed = 40f;
+    float scaleSpeed = 5f;
+    #endregion
 
     // Use this for initialization
     void Start()
@@ -32,6 +38,8 @@ public class RenderTexDrawing : MonoBehaviour
         activeSpline = new CatmullRomSpline(_splineRenderTarget, GetComponent<ControlPointRenderer>());
         splines.Add(activeSpline);
         ctrl = activeSpline.ControlPoints;
+
+        _stampManager = GetComponent<StampManager>();
 	}
 	
 	// Update is called once per frame
@@ -42,6 +50,34 @@ public class RenderTexDrawing : MonoBehaviour
         UpdateCursorPosition(h, v);
 
         Vector3 offsetCursor = new Vector3(_cursor.position.x, _cursor.position.y, _cursor.position.z + 0.1f);
+
+
+        float rX = Input.GetAxis("RightStickX");
+        float rY = Input.GetAxis("RightStickY");
+        if (Mathf.Abs(rX) > 0.5f && Mathf.Abs(rY) < 0.5f)
+        {
+            _cursor.Rotate(new Vector3(0f, 0f, Mathf.Sign(rX) * rotationSpeed * Time.deltaTime));
+        }
+        else if (Mathf.Abs(rX) < 0.5f && Mathf.Abs(rY) > 0.5f)
+        {
+            _cursor.localScale += Mathf.Sign(rY) * new Vector3(scaleSpeed, scaleSpeed, scaleSpeed) * Time.deltaTime;
+            float clamped = Mathf.Clamp(_cursor.localScale.x, 0.5f, 4f);
+            _cursor.localScale = new Vector3(clamped, clamped, clamped);
+        }
+
+        if (Input.GetButtonDown("Y"))
+        {
+            if(activeSpline != null)
+            {
+                Debug.Log("test");
+                CaptureRenderTex();
+                activeSpline = null;
+                ctrl = null;
+            }
+            _cursor.GetComponentInChildren<SpriteRenderer>().sprite = _stampManager.GetSelected();
+
+            _stampManager.StampSelectedImage(offsetCursor, _cursor.localRotation, _cursor.localScale.x * 0.3f);
+        }
 
         if (activeSpline != null)
         {
@@ -89,6 +125,8 @@ public class RenderTexDrawing : MonoBehaviour
         {
             if(Input.GetButtonDown("A"))
             {
+                _cursor.rotation = Quaternion.identity;
+                _cursor.localScale = new Vector3(1f, 1f, 1f);
                 for(int i = 0; i < splines.Count - 1; ++i)
                 {
                     if(splines[i].ControlPoints.IsCloseToSpline(offsetCursor))
@@ -106,17 +144,18 @@ public class RenderTexDrawing : MonoBehaviour
                     ctrl = activeSpline.ControlPoints;
                 }
             }
+            
         }
 
         speed *= 0.75f;//friction
 	}
 
     void OnDrawGizmos()
-    {
+    {/*
         for (int i = 0; i < splines.Count - 1; ++i)
         {
             splines[i].DrawGizmos();
-        }
+        }*/
     }
 
     void CaptureRenderTex()
