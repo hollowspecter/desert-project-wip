@@ -58,39 +58,40 @@ public class MapGenerator : MonoBehaviour
         int totalDepth = depth * chunkSize;
 
         //// Calculate the step
-        float step = 1f / totalWidth;
+        float step = 1f / chunkMap.Count;
 
-        for (int x = 0; x < totalWidth; ++x) {
-            for (int y = 0; y < totalHeight; ++y) {
-                for (int z = 0; z < totalDepth; ++z) {
+        float timer = Time.realtimeSinceStartup;
 
-                    // Set map to 1 or 0 depending the PerlinNoise
-                    float yfloat = (float)y / height;
+        foreach (Chunk c in chunkMap) {
 
-                    // Get corresponding chunk
-                    int chunkX = x / chunkSize;
-                    int chunkY = y / chunkSize;
-                    int chunkZ = z / chunkSize;
+            for (int x = 0; x < chunkSize; ++x) {
+                for (int y = 0; y < chunkSize; ++y) {
+                    for (int z = 0; z < chunkSize; ++z) {
 
-                    /*
-                     * Calculate density value from noise layers
-                     */
-                    float value = yfloat;
-                    value += GetValueFromNoises(new Vector3(x, yfloat, z));
+                        int xPos = x + (int) c.ChunkmapPosition.x;
+                        int yPos = y + (int)c.ChunkmapPosition.y;
+                        int zPos = z + (int)c.ChunkmapPosition.z;
 
-                    // Apply the density value
-                    chunkMap[chunkX, chunkY, chunkZ][x % chunkSize, y % chunkSize, z % chunkSize] = value;
+                        float yfloat = (float)yPos / height;
+
+                        /*
+                         * Calculate density value from noise layers
+                         */
+                        float value = yfloat;
+                        value += GetValueFromNoises(new Vector3(xPos, yfloat, zPos));
+                        c[x, y, z] = value;
+                    }
                 }
             }
 
-            // Update the Progress Bar
             progress += step;
             if (EditorUtility.DisplayCancelableProgressBar(progressBarTitle, progressBarInfo, progress)) {
                 EditorUtility.ClearProgressBar();
                 return false;
             }
+        }
 
-        } // end last for loop
+        Debug.Log("Time for chunkiteration: " + (Time.realtimeSinceStartup - timer));
 
         EditorUtility.ClearProgressBar();
         return true;
@@ -145,23 +146,4 @@ public class MapGenerator : MonoBehaviour
             Debug.Log("Did not found a gameobject with \"Terrain\" tag.");
         }
     }
-
-    ///// <summary>
-    ///// Calculates the Normals by using the central difference of the volumetric data
-    ///// in each direction
-    ///// </summary>
-    ///// <param name="p"></param>
-    ///// <returns></returns>
-    ///// 
-    ///*
-    // * calculate normals in every node and interpolate in marhcing cube algorithm
-    // */
-    //public Vector3 CalculateNormal(int x, int y, int z)
-    //{
-    //    float step = 0.01f;
-    //    float x = GetValueFromNoises(p.x + step, p.y, p.z) - GetValueFromNoises(p.x - step, p.y, p.z);
-    //    float y = GetValueFromNoises(p.x, p.y + step, p.z) - GetValueFromNoises(p.x, p.y - step, p.z);
-    //    float z = GetValueFromNoises(p.x, p.y, p.z + step) - GetValueFromNoises(p.x, p.y, p.z - step);
-    //    return new Vector3(x, y, z).normalized;
-    //}
 }

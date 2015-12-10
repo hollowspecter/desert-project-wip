@@ -73,6 +73,8 @@ public class ChunkMap : IEnumerable
         return chunkMap.GetLength(dimension);
     }
 
+    public int Count { get { return GetLength(0) + GetLength(1) + GetLength(2); } }
+
     // Constructor
     public ChunkMap(int width, int height, int depth, int chunkSize)
     {
