@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEditor;
 
 public class MapGenerator : MonoBehaviour
@@ -21,7 +22,7 @@ public class MapGenerator : MonoBehaviour
     private float isolevel = 0;
 
     private ChunkMap chunkMap;
-    private TextureCreator textureCreator;
+    private LUTGenerator lutGen;
     private string progressBarTitle = "Density Map is being calculated";
     private string progressBarInfo = "Please sit back and have a sip of tea.";
     #endregion
@@ -35,27 +36,29 @@ public class MapGenerator : MonoBehaviour
     public void GenerateMap()
     {
         chunkMap = new ChunkMap(width, height, depth, chunkSize);
-        RandomFillMap();
+
+        if (!RandomFillMap()) {
+            Debug.Log("Building was cancelled");
+            return;
+        }
 
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
         meshGen.GenerateMesh(chunkMap, voxelSize, isolevel);
     }
 
-    void RandomFillMap()
+    private bool RandomFillMap()
     {
         // Initialize a Progress Bar
         float progress = 0f;
-        EditorUtility.DisplayProgressBar(progressBarTitle, progressBarInfo, progress);
+        EditorUtility.DisplayCancelableProgressBar(progressBarTitle, progressBarInfo, progress);
 
         // Calculate the total of the map
         int totalWidth = width * chunkSize;
         int totalHeight = height * chunkSize;
         int totalDepth = depth * chunkSize;
 
-        // Calculate the step
+        //// Calculate the step
         float step = 1f / totalWidth;
-
-        float time = Time.realtimeSinceStartup;
 
         for (int x = 0; x < totalWidth; ++x) {
             for (int y = 0; y < totalHeight; ++y) {
@@ -82,12 +85,15 @@ public class MapGenerator : MonoBehaviour
 
             // Update the Progress Bar
             progress += step;
-            EditorUtility.DisplayProgressBar(progressBarTitle, progressBarInfo, progress);
+            if (EditorUtility.DisplayCancelableProgressBar(progressBarTitle, progressBarInfo, progress)) {
+                EditorUtility.ClearProgressBar();
+                return false;
+            }
 
         } // end last for loop
 
-        Debug.Log("Passed Time: " + (Time.realtimeSinceStartup - time));
         EditorUtility.ClearProgressBar();
+        return true;
     } // end random fill
 
     public float GetValueFromNoises(Vector3 point)
