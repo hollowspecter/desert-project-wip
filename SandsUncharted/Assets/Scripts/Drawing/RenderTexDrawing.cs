@@ -35,6 +35,8 @@ public class RenderTexDrawing : MonoBehaviour
     #endregion
 
     private ToolMenu _toolMenu;
+    [SerializeField]
+    private MeshLine _line;
 
     // Use this for initialization
     void Start()
@@ -102,6 +104,20 @@ public class RenderTexDrawing : MonoBehaviour
                 activeSpline.Update();
                 Vector3 closestPoint = ctrl.GetClosestPoint(offsetCursor);
 
+                if (ctrl.Count >= 2)
+                {
+                    int insertIndex = ctrl.FindInsertIndex(offsetCursor);
+                    if (insertIndex != ctrl.Count)
+                    {
+                        _line.SetStart(ctrl[insertIndex - 1]);
+                        _line.SetEnd(ctrl[insertIndex]);
+                    }
+                    else if(! (ctrl[ctrl.SelectedIndex] == _line.GetStart()) || !(ctrl[ctrl.SelectedIndex] == _line.GetEnd()))
+                    {
+                        _line.clearMesh();
+                    }
+                }
+
                 if (Input.GetButton("A") && (ctrl.SelectedIndex >= 0) && Vector3.Distance(offsetCursor, ctrl[ctrl.SelectedIndex]) < selectionDistance)
                 {
                     ctrl.MoveControlPoint(ctrl.SelectedIndex, speed * Time.deltaTime);
@@ -166,9 +182,10 @@ public class RenderTexDrawing : MonoBehaviour
             
             }
 
-            speed *= 0.75f;//friction
-            }
-	}
+        }
+
+        speed *= 0.75f;//friction
+    }
 
     void OnDrawGizmos()
     {/*
