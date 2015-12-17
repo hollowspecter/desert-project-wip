@@ -66,4 +66,12 @@ public class StampManager : MonoBehaviour
         objects.RemoveAt(0);
         GameObject.DestroyImmediate(g);
     }
+
+    public void RemoveAll()
+    {
+        for(int i = 0; i < objects.Count; ++i)
+        {
+            objects.RemoveAt(i);
+        }
+    }
 }

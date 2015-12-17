@@ -21,7 +21,10 @@ public class RenderTexDrawing : MonoBehaviour
     CatmullRomSpline activeSpline;
 	ControlPointGroup ctrl;
     Vector3 speed;
+    float acceleration = 25f;
     float selectionDistance = 0.5f;
+
+    private int captureResolution = 1024;
 
     #endregion
 
@@ -31,6 +34,8 @@ public class RenderTexDrawing : MonoBehaviour
     float scaleSpeed = 5f;
     #endregion
 
+    private ToolMenu _toolMenu;
+
     // Use this for initialization
     void Start()
     {
@@ -39,34 +44,19 @@ public class RenderTexDrawing : MonoBehaviour
         splines.Add(activeSpline);
         ctrl = activeSpline.ControlPoints;
 
+        _toolMenu = GetComponent<ToolMenu>();
         _stampManager = GetComponent<StampManager>();
 	}
 	
 	// Update is called once per frame
 	void Update ()
     {
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
-        UpdateCursorPosition(h, v);
 
-        Vector3 offsetCursor = new Vector3(_cursor.position.x, _cursor.position.y, _cursor.position.z + 0.1f);
-
-
-        float rX = Input.GetAxis("RightStickX");
-        float rY = Input.GetAxis("RightStickY");
-        if (Mathf.Abs(rX) > 0.5f && Mathf.Abs(rY) < 0.5f)
-        {
-            _cursor.Rotate(new Vector3(0f, 0f, Mathf.Sign(rX) * rotationSpeed * Time.deltaTime));
-        }
-        else if (Mathf.Abs(rX) < 0.5f && Mathf.Abs(rY) > 0.5f)
-        {
-            _cursor.localScale += Mathf.Sign(rY) * new Vector3(scaleSpeed, scaleSpeed, scaleSpeed) * Time.deltaTime;
-            float clamped = Mathf.Clamp(_cursor.localScale.x, 0.5f, 4f);
-            _cursor.localScale = new Vector3(clamped, clamped, clamped);
-        }
 
         if (Input.GetButtonDown("Y"))
         {
+            _toolMenu.Activate();
+            /*
             if(activeSpline != null)
             {
                 Debug.Log("test");
@@ -77,77 +67,107 @@ public class RenderTexDrawing : MonoBehaviour
             _cursor.GetComponentInChildren<SpriteRenderer>().sprite = _stampManager.GetSelected();
 
             _stampManager.StampSelectedImage(offsetCursor, _cursor.localRotation, _cursor.localScale.x * 0.3f);
+            */
         }
 
-        if (activeSpline != null)
+        if (Input.GetButtonUp("Y"))
         {
-            activeSpline.Update();
-            Vector3 closestPoint = ctrl.GetClosestPoint(offsetCursor);
-
-            if (Input.GetButton("A") && (ctrl.SelectedIndex >= 0) && Vector3.Distance(offsetCursor, ctrl[ctrl.SelectedIndex]) < selectionDistance)
-            {
-                ctrl.MoveControlPoint(ctrl.SelectedIndex, speed * Time.deltaTime);
-            }
-
-            else if (Input.GetButtonDown("A"))
-            {
-                if (Vector3.Distance(closestPoint, offsetCursor) < selectionDistance)
-                {
-                    if (ctrl.SelectedIndex != ctrl.IndexOf(closestPoint))
-                        ctrl.SelectedIndex = ctrl.IndexOf(closestPoint);
-                    else
-                        ctrl.SelectedIndex = -1;
-                }
-                else
-                {
-                    Vector3 pos = offsetCursor;
-                    int index = ctrl.FindInsertIndex(pos);
-                    ctrl.Insert(pos, index);
-                }
-            }
-
-            else if (Input.GetButtonDown("B"))
-            {
-                if (Vector3.Distance(closestPoint, offsetCursor) < selectionDistance)
-                {
-                    ctrl.Remove(closestPoint);
-                }
-            }
-            else if(Input.GetButtonDown("X"))
-            {
-                CaptureRenderTex();
-                activeSpline = null;
-                ctrl = null;
-            }
-
+            _toolMenu.Deactivate();
         }
-        else
-        {
-            if(Input.GetButtonDown("A"))
+
+        if(!Input.GetButton("Y"))
+        { 
+            float h = Input.GetAxis("Horizontal");
+            float v = Input.GetAxis("Vertical");
+            UpdateCursorPosition(h, v);
+
+            Vector3 offsetCursor = new Vector3(_cursor.position.x, _cursor.position.y, _cursor.position.z + 0.1f);
+
+
+            float rX = Input.GetAxis("RightStickX");
+            float rY = Input.GetAxis("RightStickY");
+            if (Mathf.Abs(rX) > 0.5f && Mathf.Abs(rY) < 0.5f)
             {
-                _cursor.rotation = Quaternion.identity;
-                _cursor.localScale = new Vector3(1f, 1f, 1f);
-                for(int i = 0; i < splines.Count - 1; ++i)
+                _cursor.Rotate(new Vector3(0f, 0f, Mathf.Sign(rX) * rotationSpeed * Time.deltaTime));
+            }
+            else if (Mathf.Abs(rX) < 0.5f && Mathf.Abs(rY) > 0.5f)
+            {
+                _cursor.localScale += Mathf.Sign(rY) * new Vector3(scaleSpeed, scaleSpeed, scaleSpeed) * Time.deltaTime;
+                float clamped = Mathf.Clamp(_cursor.localScale.x, 0.5f, 4f);
+                _cursor.localScale = new Vector3(clamped, clamped, clamped);
+            }
+
+            if (activeSpline != null)
+            {
+                activeSpline.Update();
+                Vector3 closestPoint = ctrl.GetClosestPoint(offsetCursor);
+
+                if (Input.GetButton("A") && (ctrl.SelectedIndex >= 0) && Vector3.Distance(offsetCursor, ctrl[ctrl.SelectedIndex]) < selectionDistance)
                 {
-                    if(splines[i].ControlPoints.IsCloseToSpline(offsetCursor))
+                    ctrl.MoveControlPoint(ctrl.SelectedIndex, speed * Time.deltaTime);
+                }
+
+                else if (Input.GetButtonDown("A"))
+                {
+                    if (Vector3.Distance(closestPoint, offsetCursor) < selectionDistance)
                     {
-                        activeSpline = splines[i];
-                        ctrl = activeSpline.ControlPoints;
-                        break;
+                        if (ctrl.SelectedIndex != ctrl.IndexOf(closestPoint))
+                            ctrl.SelectedIndex = ctrl.IndexOf(closestPoint);
+                        else
+                            ctrl.SelectedIndex = -1;
+                    }
+                    else
+                    {
+                        Vector3 pos = offsetCursor;
+                        int index = ctrl.FindInsertIndex(pos);
+                        ctrl.Insert(pos, index);
                     }
                 }
 
-                if(activeSpline == null)
+                else if(Input.GetButtonDown("B"))
                 {
-                    activeSpline = new CatmullRomSpline(_splineRenderTarget, GetComponent<ControlPointRenderer>());
-                    splines.Add(activeSpline);
-                    ctrl = activeSpline.ControlPoints;
+                    if (Vector3.Distance(closestPoint, offsetCursor) < selectionDistance)
+                    {
+                        ctrl.Remove(closestPoint);
+                    }
                 }
-            }
-            
-        }
 
-        speed *= 0.75f;//friction
+                else if(Input.GetButtonDown("X"))
+                {
+                    CaptureRenderTex();
+                    activeSpline = null;
+                    ctrl = null;
+                }
+
+            }
+            else
+            {
+                if(Input.GetButtonDown("A"))
+                {
+                    _cursor.rotation = Quaternion.identity;
+                    _cursor.localScale = new Vector3(1f, 1f, 1f);
+                    for(int i = 0; i < splines.Count - 1; ++i)
+                    {
+                        if(splines[i].ControlPoints.IsCloseToSpline(offsetCursor))
+                        {
+                            activeSpline = splines[i];
+                            ctrl = activeSpline.ControlPoints;
+                            break;
+                        }
+                    }
+
+                    if(activeSpline == null)
+                    {
+                        activeSpline = new CatmullRomSpline(_splineRenderTarget, GetComponent<ControlPointRenderer>());
+                        splines.Add(activeSpline);
+                        ctrl = activeSpline.ControlPoints;
+                    }
+                }
+            
+            }
+
+            speed *= 0.75f;//friction
+            }
 	}
 
     void OnDrawGizmos()
@@ -162,15 +182,15 @@ public class RenderTexDrawing : MonoBehaviour
     {
         Camera captureCamera = transform.Find("CaptureCamera").GetComponent<Camera>();
         captureCamera.enabled = true;
-        RenderTexture rt = new RenderTexture(512, 512, 24);
+        RenderTexture rt = new RenderTexture(captureResolution, captureResolution, 24);
 
         captureCamera.targetTexture = rt;
         captureCamera.Render();
         RenderTexture original = RenderTexture.active;
         RenderTexture.active = rt;      
 
-        Texture2D t = new Texture2D(512, 512, TextureFormat.ARGB32, true);
-        t.ReadPixels(new Rect(0, 0, 512, 512), 0, 0);
+        Texture2D t = new Texture2D(captureResolution, captureResolution, TextureFormat.ARGB32, true);
+        t.ReadPixels(new Rect(0, 0, captureResolution, captureResolution), 0, 0);
         t.Apply(true);
         captureTest.GetComponent<MeshRenderer>().materials[0].mainTexture = t;
         captureTest2.GetComponent<MeshRenderer>().materials[0].mainTexture = t;
@@ -179,6 +199,7 @@ public class RenderTexDrawing : MonoBehaviour
         captureCamera.enabled = false;
         RenderTexture.active = original;
         DestroyImmediate(rt);
+        _stampManager.RemoveAll();
     }
 
     void UpdateCursorPosition(float h, float v)
@@ -187,7 +208,7 @@ public class RenderTexDrawing : MonoBehaviour
         axisVector = axisVector.sqrMagnitude >= 0.03 ? axisVector : new Vector3();
 
         /****move Reticle based on acceleration and left stick vector****/
-        speed += 15f * axisVector * Time.deltaTime; //make velocityvector
+        speed += acceleration * axisVector * Time.deltaTime; //make velocityvector
         _cursor.position += speed * Time.deltaTime; //make movementvector
     }
 }
