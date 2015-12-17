@@ -23,7 +23,7 @@ public class MeshLine : MonoBehaviour
     // Use this for initialization
     void Start ()
     {
-        vertices = new Vector3[4];
+        vertices = new Vector3[12];
         _text = transform.GetChild(0);
 	}
 	
@@ -41,18 +41,41 @@ public class MeshLine : MonoBehaviour
         if (startPoint != null && endPoint != null)
         {
             float thickness = lineWidth;
-
+            Vector3 s, e;
+            Vector3 direction = (endPoint - startPoint).normalized;
             tangent = (endPoint - startPoint).normalized;
             tangent *= thickness;
             tangent = new Vector3(-tangent.y, tangent.x, tangent.z);
-            Vector3 s1 = startPoint + tangent;
+
+            if ((endPoint - startPoint).x < 0)
+            {
+                s = startPoint - 10 * tangent;
+                e = endPoint - 10 * tangent;
+            }
+            else
+            {
+                s = startPoint + 10 * tangent;
+                e = endPoint + 10 * tangent;
+            }
+
+            Vector3 s1 = s + tangent * 5;
             vertices[0] = s1;
-            Vector3 s2 = startPoint - tangent;
+            Vector3 s2 = s - tangent * 5;
             vertices[1] = s2;
-            Vector3 e1 = endPoint + tangent;
-            vertices[2] = e1;
-            Vector3 e2 = endPoint - tangent;
-            vertices[3] = e2;
+            vertices[2] = s1 + direction * thickness;
+            vertices[3] = s2 + direction * thickness;
+            vertices[4] = s + tangent + direction * thickness;
+            vertices[5] = s - tangent + direction * thickness;
+
+
+            Vector3 e1 = e + tangent * 5;
+            vertices[6] = e1;
+            Vector3 e2 = e - tangent * 5;
+            vertices[7] = e2;
+            vertices[8] = e1 - direction * thickness;
+            vertices[9] = e2 - direction * thickness;
+            vertices[10] = e + tangent - direction * thickness;
+            vertices[11] = e - tangent - direction * thickness;
         }
     }
 
@@ -65,15 +88,32 @@ public class MeshLine : MonoBehaviour
             Mesh m = new Mesh();
             m.name = "Procedural_Line_Mesh";
             m.vertices = vertices;
-            //Debug.Log("VertexCount: " + vertices.Count);
-            int[] indices = new int[6];
-            // Debug.Log("indicesCount: " + indices.Length);
+            int triCount = vertices.Length - 2;
+            int[] indices = new int[3*triCount];
             indices[0] = 2;
             indices[1] = 1;
             indices[2] = 0;
+
             indices[3] = 1;
             indices[4] = 2;
             indices[5] = 3;
+
+            indices[6] = 10;
+            indices[7] = 5;
+            indices[8] = 4;
+
+            indices[9] = 5;
+            indices[10] = 10;
+            indices[11] = 11;
+
+            indices[12] = 8;
+            indices[13] = 6;
+            indices[14] = 9;
+
+            indices[15] = 9;
+            indices[16] = 6;
+            indices[17] = 7;
+
             m.triangles = indices;
             m.RecalculateNormals();
             GetComponent<MeshFilter>().mesh = m;
@@ -85,7 +125,7 @@ public class MeshLine : MonoBehaviour
         if (startPoint != null && endPoint != null)
         {
             Vector3 lineVector = (endPoint - startPoint);
-            _text.GetComponent<TextMesh>().text = (Vector3.Distance(startPoint, endPoint) * scale).ToString("F2");
+            _text.GetComponent<TextMesh>().text = (Vector3.Distance(startPoint, endPoint) * scale).ToString("F1") + "m";
 
 
 
@@ -94,12 +134,12 @@ public class MeshLine : MonoBehaviour
             bool up;
             if (lineVector.x < 0)
             {
-                rotationTargetVector = -tangent;
+                rotationTargetVector = -tangent * 2;
                 up = lineVector.y > 0? false : true;
             }
             else
             {
-                rotationTargetVector = tangent;
+                rotationTargetVector = tangent * 2;
                 up = lineVector.y > 0 ? true : false;
             }
             
