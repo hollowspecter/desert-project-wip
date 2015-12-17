@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public class RadialMenuView : MonoBehaviour
 {
     [SerializeField]
-    private GameObject prefabMenuItem;
+    private GameObject[] prefabMenuItems;
     [SerializeField]
     private float radiusReduction = 10f;
     [SerializeField]
@@ -46,6 +46,9 @@ public class RadialMenuView : MonoBehaviour
         itemsTransform = transform.FindChild("items").GetComponent<RectTransform>();
         Assert.IsNotNull<RectTransform>(wheel);
 
+        if (prefabMenuItems.Length < 0)
+            Debug.LogError("No Menu Item Prefabs!");
+
         InitialiseWheel();
     }
 
@@ -63,7 +66,15 @@ public class RadialMenuView : MonoBehaviour
     }
 
     void Activate() { ToggleActivation(true); Debug.Log("Menu Activated"); }
-    void Deactivate() { ToggleActivation(false); Debug.Log("Menu Deactivated"); }
+
+    /// <summary>
+    /// When Deactivated, the Action of the Menu Item is called!
+    /// </summary>
+    void Deactivate() {
+        ToggleActivation(false);
+        Debug.Log("Menu Deactivated");
+        items[lastSelected].Action();
+    }
 
     void InitialiseWheel()
     {
@@ -76,6 +87,9 @@ public class RadialMenuView : MonoBehaviour
         arrowSprite.sizeDelta = new Vector2(x, y);
     }
 
+    /// <summary>
+    /// Instantiates the number of menu items from the prefabMenuItems Array
+    /// </summary>
     void CreateMenuItems()
     {
         int number = menu.NumberOfItems;
@@ -83,21 +97,33 @@ public class RadialMenuView : MonoBehaviour
         for (int i = 0; i < number; ++i) {
             //Retrieve Inventory Item
             InventoryItem item = menu.getItem(i);
+
             // Instantiate GO
-            GameObject g = Instantiate(prefabMenuItem);
+            GameObject g;
+            if (prefabMenuItems.Length <= number)
+                g = Instantiate(prefabMenuItems[i]);
+            else {
+                g = Instantiate(prefabMenuItems[0]);
+                Debug.LogWarning("The number of items were higher than the number of item prefabs in the inspector!", this);
+            }
             RectTransform _transform = g.GetComponent<RectTransform>();
+
             // Retrieve Item Script
             RadialMenuItem menuItemScript = g.GetComponent<RadialMenuItem>();
             items.Add(menuItemScript);
+
             // Parent it under Items
             _transform.SetParent(itemsTransform, false);
+
             // Calculate Angle
             float angle = Mathf.Lerp(0f, 360f, ((float)i) / ((float)number));
             Vector2 position = new Vector2(0, radius * radiusItemRadio);
+
             // Construct a quaternion shift and multiply to get your final position
             Quaternion shift = Quaternion.Euler(new Vector3(0, 0, -angle));
             position = shift * position;
             _transform.Translate(position);
+
             // Set the text
             Text t = g.GetComponentInChildren<Text>();
             if (t != null)
