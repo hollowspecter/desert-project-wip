@@ -88,6 +88,16 @@ public class RenderTexDrawing : MonoBehaviour
 
             offsetCursor = new Vector3(_cursor.position.x, _cursor.position.y, _cursor.position.z + 0.1f);
 
+            /*
+            if(Input.GetButton("A"))
+                activeTool.ButtonA();
+
+            */
+
+
+
+
+
             //The Right-Stick movement is used for CursorRotation(xAxis) and -Scaling(yAxis) MOVETO:StampTool
             float rX = Input.GetAxis("RightStickX");
             float rY = Input.GetAxis("RightStickY");
@@ -241,7 +251,7 @@ public class RenderTexDrawing : MonoBehaviour
 
 
     //Saves the current RenderTexture to the backgroundTexture by snapshotting a temporary RenderTexture with the CaptureCamera
-    void CaptureRenderTex()
+    public void CaptureRenderTex()
     {
         //initialize camera and texture
         Camera captureCamera = transform.Find("CaptureCamera").GetComponent<Camera>();
@@ -279,5 +289,10 @@ public class RenderTexDrawing : MonoBehaviour
         /****move Reticle based on acceleration and left stick vector****/
         speed += acceleration * axisVector * Time.deltaTime; //make velocityvector
         _cursor.position += speed * Time.deltaTime; //make movementvector
+    }
+
+    public Vector3 GetSpeed()
+    {
+        return speed;
     }
 }
