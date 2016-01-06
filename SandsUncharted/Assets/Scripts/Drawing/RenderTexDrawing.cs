@@ -53,8 +53,7 @@ public class RenderTexDrawing : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-
-
+        //pressing Y opens the Toolmenu, this blocks all other input
         if (Input.GetButtonDown("Y"))
         {
             _toolMenu.Activate();
@@ -77,15 +76,17 @@ public class RenderTexDrawing : MonoBehaviour
             _toolMenu.Deactivate();
         }
 
+        //If the Toolmenu is not open, process other inputs
         if(!Input.GetButton("Y"))
         { 
+            //The Left-Stick movement is used for CursorMovement
             float h = Input.GetAxis("Horizontal");
             float v = Input.GetAxis("Vertical");
             UpdateCursorPosition(h, v);
 
             Vector3 offsetCursor = new Vector3(_cursor.position.x, _cursor.position.y, _cursor.position.z + 0.1f);
 
-
+            //The Right-Stick movement is used for CursorRotation(xAxis) and -Scaling(yAxis) MOVETO:StampTool
             float rX = Input.GetAxis("RightStickX");
             float rY = Input.GetAxis("RightStickY");
             if (Mathf.Abs(rX) > 0.5f && Mathf.Abs(rY) < 0.5f)
@@ -99,11 +100,14 @@ public class RenderTexDrawing : MonoBehaviour
                 _cursor.localScale = new Vector3(clamped, clamped, clamped);
             }
 
+            //if there is a Spline selected MOVETO:SplineTool
             if (activeSpline != null)
             {
                 activeSpline.Update();
-                Vector3 closestPoint = ctrl.GetClosestPoint(offsetCursor);
 
+                //check if the cursor is above it to measure the distance
+                Vector3 closestPoint = ctrl.GetClosestPoint(offsetCursor);
+                _line.ClearPoints();
                 if (ctrl.Count >= 2)
                 {
                     int insertIndex = ctrl.FindInsertIndex(offsetCursor);
@@ -112,17 +116,18 @@ public class RenderTexDrawing : MonoBehaviour
                         _line.SetStart(ctrl[insertIndex - 1]);
                         _line.SetEnd(ctrl[insertIndex]);
                     }
-                    else if(! (ctrl[ctrl.SelectedIndex] == _line.GetStart()) || !(ctrl[ctrl.SelectedIndex] == _line.GetEnd()))
+                    else if(ctrl.SelectedIndex < 0 || ! (ctrl[ctrl.SelectedIndex] == _line.GetStart()) || !(ctrl[ctrl.SelectedIndex] == _line.GetEnd()))
                     {
-                        _line.clearMesh();
+                        _line.ClearMesh();
                     }
                 }
 
+                //pressing A selects or moves a point if close to one
                 if (Input.GetButton("A") && (ctrl.SelectedIndex >= 0) && Vector3.Distance(offsetCursor, ctrl[ctrl.SelectedIndex]) < selectionDistance)
                 {
                     ctrl.MoveControlPoint(ctrl.SelectedIndex, speed * Time.deltaTime);
                 }
-
+                //and makes a new one otherwise
                 else if (Input.GetButtonDown("A"))
                 {
                     if (Vector3.Distance(closestPoint, offsetCursor) < selectionDistance)
@@ -139,7 +144,7 @@ public class RenderTexDrawing : MonoBehaviour
                         ctrl.Insert(pos, index);
                     }
                 }
-
+                //pressing B deletes a point if close to one
                 else if(Input.GetButtonDown("B"))
                 {
                     if (Vector3.Distance(closestPoint, offsetCursor) < selectionDistance)
@@ -147,7 +152,7 @@ public class RenderTexDrawing : MonoBehaviour
                         ctrl.Remove(closestPoint);
                     }
                 }
-
+                //pressing x finishes the spline
                 else if(Input.GetButtonDown("X"))
                 {
                     CaptureRenderTex();
@@ -156,8 +161,10 @@ public class RenderTexDrawing : MonoBehaviour
                 }
 
             }
+            //if there is no spline selected MOVETO:SplineTool
             else
             {
+                //pressing A selects a spline if close to one
                 if(Input.GetButtonDown("A"))
                 {
                     _cursor.rotation = Quaternion.identity;
@@ -171,7 +178,7 @@ public class RenderTexDrawing : MonoBehaviour
                             break;
                         }
                     }
-
+                    //creates a new one otherwise
                     if(activeSpline == null)
                     {
                         activeSpline = new CatmullRomSpline(_splineRenderTarget, GetComponent<ControlPointRenderer>());
@@ -188,30 +195,33 @@ public class RenderTexDrawing : MonoBehaviour
     }
 
     void OnDrawGizmos()
-    {/*
-        for (int i = 0; i < splines.Count - 1; ++i)
-        {
-            splines[i].DrawGizmos();
-        }*/
+    {
+
     }
 
+
+    //Saves the current RenderTexture to the backgroundTexture by snapshotting a temporary RenderTexture with the CaptureCamera
     void CaptureRenderTex()
     {
+        //initialize camera and texture
         Camera captureCamera = transform.Find("CaptureCamera").GetComponent<Camera>();
         captureCamera.enabled = true;
         RenderTexture rt = new RenderTexture(captureResolution, captureResolution, 24);
 
+        //activate rendertexture and link camera
         captureCamera.targetTexture = rt;
         captureCamera.Render();
         RenderTexture original = RenderTexture.active;
         RenderTexture.active = rt;      
 
+        //snapshot
         Texture2D t = new Texture2D(captureResolution, captureResolution, TextureFormat.ARGB32, true);
         t.ReadPixels(new Rect(0, 0, captureResolution, captureResolution), 0, 0);
         t.Apply(true);
         captureTest.GetComponent<MeshRenderer>().materials[0].mainTexture = t;
         captureTest2.GetComponent<MeshRenderer>().materials[0].mainTexture = t;
-
+        
+        //remove the temporary stuff
         captureCamera.targetTexture = null;
         captureCamera.enabled = false;
         RenderTexture.active = original;
@@ -219,6 +229,8 @@ public class RenderTexDrawing : MonoBehaviour
         _stampManager.RemoveAll();
     }
 
+
+    //move the cursor
     void UpdateCursorPosition(float h, float v)
     {
         Vector3 axisVector = h * transform.right + v * transform.up;

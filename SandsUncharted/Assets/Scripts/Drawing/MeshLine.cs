@@ -83,7 +83,7 @@ public class MeshLine : MonoBehaviour
     {
         if (startPoint != null && endPoint != null)
         {
-            clearMesh();
+            ClearMesh();
 
             Mesh m = new Mesh();
             m.name = "Procedural_Line_Mesh";
@@ -119,6 +119,7 @@ public class MeshLine : MonoBehaviour
             GetComponent<MeshFilter>().mesh = m;
         }
     }
+    #endregion
 
     void PositionText()
     {
@@ -183,7 +184,13 @@ public class MeshLine : MonoBehaviour
         return endPoint;
     }
 
-    public void clearMesh()
+    public void ClearPoints()
+    {
+        startPoint = Vector3.zero;
+        endPoint = Vector3.zero;
+    }
+
+    public void ClearMesh()
     {
         GetComponent<MeshFilter>().mesh = null;
 
@@ -194,5 +201,4 @@ public class MeshLine : MonoBehaviour
         Gizmos.color = Color.blue;
         Gizmos.DrawRay(startPoint, tangent*10);
     }
-    #endregion
 }
