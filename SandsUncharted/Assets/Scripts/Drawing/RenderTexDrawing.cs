@@ -16,6 +16,8 @@ public class RenderTexDrawing : MonoBehaviour
     [SerializeField]
     private GameObject captureTest2;
 
+    Vector3 offsetCursor;
+
     #region splinedrawing members
     List<CatmullRomSpline> splines;
     CatmullRomSpline activeSpline;
@@ -84,21 +86,12 @@ public class RenderTexDrawing : MonoBehaviour
             float v = Input.GetAxis("Vertical");
             UpdateCursorPosition(h, v);
 
-            Vector3 offsetCursor = new Vector3(_cursor.position.x, _cursor.position.y, _cursor.position.z + 0.1f);
+            offsetCursor = new Vector3(_cursor.position.x, _cursor.position.y, _cursor.position.z + 0.1f);
 
             //The Right-Stick movement is used for CursorRotation(xAxis) and -Scaling(yAxis) MOVETO:StampTool
             float rX = Input.GetAxis("RightStickX");
             float rY = Input.GetAxis("RightStickY");
-            if (Mathf.Abs(rX) > 0.5f && Mathf.Abs(rY) < 0.5f)
-            {
-                _cursor.Rotate(new Vector3(0f, 0f, Mathf.Sign(rX) * rotationSpeed * Time.deltaTime));
-            }
-            else if (Mathf.Abs(rX) < 0.5f && Mathf.Abs(rY) > 0.5f)
-            {
-                _cursor.localScale += Mathf.Sign(rY) * new Vector3(scaleSpeed, scaleSpeed, scaleSpeed) * Time.deltaTime;
-                float clamped = Mathf.Clamp(_cursor.localScale.x, 0.5f, 4f);
-                _cursor.localScale = new Vector3(clamped, clamped, clamped);
-            }
+            RotateAndScaleCursor(rX, rY);
 
             //if there is a Spline selected MOVETO:SplineTool
             if (activeSpline != null)
@@ -107,21 +100,7 @@ public class RenderTexDrawing : MonoBehaviour
 
                 //check if the cursor is above it to measure the distance
                 Vector3 closestPoint = ctrl.GetClosestPoint(offsetCursor);
-                _line.ClearPoints();
-                if (ctrl.Count >= 2)
-                {
-                    int insertIndex = ctrl.FindInsertIndex(offsetCursor);
-                    if (insertIndex != ctrl.Count)
-                    {
-                        _line.SetStart(ctrl[insertIndex - 1]);
-                        _line.SetEnd(ctrl[insertIndex]);
-                    }
-                    else if(ctrl.SelectedIndex < 0 || ! (ctrl[ctrl.SelectedIndex] == _line.GetStart()) || !(ctrl[ctrl.SelectedIndex] == _line.GetEnd()))
-                    {
-                        _line.ClearMesh();
-                    }
-                }
-
+                DisplayMeter();
                 //pressing A selects or moves a point if close to one
                 if (Input.GetButton("A") && (ctrl.SelectedIndex >= 0) && Vector3.Distance(offsetCursor, ctrl[ctrl.SelectedIndex]) < selectionDistance)
                 {
@@ -130,34 +109,17 @@ public class RenderTexDrawing : MonoBehaviour
                 //and makes a new one otherwise
                 else if (Input.GetButtonDown("A"))
                 {
-                    if (Vector3.Distance(closestPoint, offsetCursor) < selectionDistance)
-                    {
-                        if (ctrl.SelectedIndex != ctrl.IndexOf(closestPoint))
-                            ctrl.SelectedIndex = ctrl.IndexOf(closestPoint);
-                        else
-                            ctrl.SelectedIndex = -1;
-                    }
-                    else
-                    {
-                        Vector3 pos = offsetCursor;
-                        int index = ctrl.FindInsertIndex(pos);
-                        ctrl.Insert(pos, index);
-                    }
+                    AddPoint(closestPoint);
                 }
                 //pressing B deletes a point if close to one
                 else if(Input.GetButtonDown("B"))
                 {
-                    if (Vector3.Distance(closestPoint, offsetCursor) < selectionDistance)
-                    {
-                        ctrl.Remove(closestPoint);
-                    }
+                    RemovePoint(closestPoint);
                 }
                 //pressing x finishes the spline
                 else if(Input.GetButtonDown("X"))
                 {
-                    CaptureRenderTex();
-                    activeSpline = null;
-                    ctrl = null;
+                    FinishSpline();
                 }
 
             }
@@ -167,24 +129,7 @@ public class RenderTexDrawing : MonoBehaviour
                 //pressing A selects a spline if close to one
                 if(Input.GetButtonDown("A"))
                 {
-                    _cursor.rotation = Quaternion.identity;
-                    _cursor.localScale = new Vector3(1f, 1f, 1f);
-                    for(int i = 0; i < splines.Count - 1; ++i)
-                    {
-                        if(splines[i].ControlPoints.IsCloseToSpline(offsetCursor))
-                        {
-                            activeSpline = splines[i];
-                            ctrl = activeSpline.ControlPoints;
-                            break;
-                        }
-                    }
-                    //creates a new one otherwise
-                    if(activeSpline == null)
-                    {
-                        activeSpline = new CatmullRomSpline(_splineRenderTarget, GetComponent<ControlPointRenderer>());
-                        splines.Add(activeSpline);
-                        ctrl = activeSpline.ControlPoints;
-                    }
+                    SelectSpline();
                 }
             
             }
@@ -192,6 +137,101 @@ public class RenderTexDrawing : MonoBehaviour
         }
 
         speed *= 0.75f;//friction
+    }
+
+    //Rotate(xAxis) and Scale(yAxis) the cursor for Stamping
+    void RotateAndScaleCursor(float rX, float rY)
+    {
+
+        if (Mathf.Abs(rX) > 0.5f && Mathf.Abs(rY) < 0.5f)
+        {
+            _cursor.Rotate(new Vector3(0f, 0f, Mathf.Sign(rX) * rotationSpeed * Time.deltaTime));
+        }
+        else if (Mathf.Abs(rX) < 0.5f && Mathf.Abs(rY) > 0.5f)
+        {
+            _cursor.localScale += Mathf.Sign(rY) * new Vector3(scaleSpeed, scaleSpeed, scaleSpeed) * Time.deltaTime;
+            float clamped = Mathf.Clamp(_cursor.localScale.x, 0.5f, 4f);
+            _cursor.localScale = new Vector3(clamped, clamped, clamped);
+        }
+    }
+
+    //Check if you should display the DistanceMeasureTool
+    void DisplayMeter()
+    {
+        _line.ClearPoints();
+        if (ctrl.Count >= 2)
+        {
+            int insertIndex = ctrl.FindInsertIndex(offsetCursor);
+            if (insertIndex != ctrl.Count)
+            {
+                _line.SetStart(ctrl[insertIndex - 1]);
+                _line.SetEnd(ctrl[insertIndex]);
+            }
+            else if (ctrl.SelectedIndex < 0 || !(ctrl[ctrl.SelectedIndex] == _line.GetStart()) || !(ctrl[ctrl.SelectedIndex] == _line.GetEnd()))
+            {
+                _line.ClearMesh();
+            }
+        }
+
+    }
+
+    //insert a point into the spline or add one at the end if the cursor is not on the spline
+    void AddPoint(Vector3 closestPoint)
+    {
+        if (Vector3.Distance(closestPoint, offsetCursor) < selectionDistance)
+        {
+            if (ctrl.SelectedIndex != ctrl.IndexOf(closestPoint))
+                ctrl.SelectedIndex = ctrl.IndexOf(closestPoint);
+            else
+                ctrl.SelectedIndex = -1;
+        }
+        else
+        {
+            Vector3 pos = offsetCursor;
+            int index = ctrl.FindInsertIndex(pos);
+            ctrl.Insert(pos, index);
+        }
+    }
+
+    //Remove the point
+    void RemovePoint(Vector3 point)
+    {
+        if (Vector3.Distance(point, offsetCursor) < selectionDistance)
+        {
+            ctrl.Remove(point);
+        }
+    }
+
+    //Rasterize and deactivate the spline
+    void FinishSpline()
+    {
+        CaptureRenderTex();
+        activeSpline = null;
+        ctrl = null;
+    }
+
+    //Select a spline if you are above one or create a new one
+    void SelectSpline()
+    {
+        _cursor.rotation = Quaternion.identity;
+        _cursor.localScale = new Vector3(1f, 1f, 1f);
+        //check for all splines if the cursor is above them if so select it
+        for(int i = 0; i<splines.Count - 1; ++i)
+        {
+            if(splines[i].ControlPoints.IsCloseToSpline(offsetCursor))
+            {
+                activeSpline = splines[i];
+                ctrl = activeSpline.ControlPoints;
+                break;
+            }
+        }
+        //creates a new one otherwise
+        if(activeSpline == null)
+        {
+            activeSpline = new CatmullRomSpline(_splineRenderTarget, GetComponent<ControlPointRenderer>());
+            splines.Add(activeSpline);
+            ctrl = activeSpline.ControlPoints;
+        }
     }
 
     void OnDrawGizmos()
