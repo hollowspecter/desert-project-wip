@@ -10,6 +10,9 @@ public class ToolMenu : MonoBehaviour
 
     private bool activated = false;
     private float angle;
+
+    int toolIndex;
+
     // Use this for initialization
     void Start ()
     {
@@ -33,13 +36,28 @@ public class ToolMenu : MonoBehaviour
             // Activate this code if you want the arrow to "snap back" when no input
             //else
             //    angle = 0;
-
-            // Select an item
+            toolIndex  = GetSelected(2, angle);
 
             Vector3 eulerAngles = new Vector3(0, 0, angle);
             _arrowT.localRotation = Quaternion.Euler(eulerAngles);
         }
 	}
+    int GetSelected(int numberOfItems, float angle)
+    {
+        // First, map the angles on 0 to 360 degree
+        float tmpAngle = this.angle;
+        if (tmpAngle < 0) tmpAngle *= -1f;
+        else if (tmpAngle > 0)
+        {
+            float newAngle = 180;
+            newAngle += 180f - (tmpAngle % 360f);
+            tmpAngle = newAngle;
+        }
+
+        float step = 360f / ((float)numberOfItems);
+        tmpAngle = (tmpAngle /*- (step / 2f)*/) % 360f;
+        return Mathf.RoundToInt(tmpAngle / step) % numberOfItems;
+    }
 
     public void Activate()
     {
@@ -47,9 +65,10 @@ public class ToolMenu : MonoBehaviour
         _menuUI.gameObject.SetActive(true);
     }
 
-    public void Deactivate()
+    public int Deactivate()
     {
         activated = false;
         _menuUI.gameObject.SetActive(false);
+        return toolIndex;
     }
 }

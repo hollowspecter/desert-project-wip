@@ -59,7 +59,7 @@ public class RenderTexDrawing : MonoBehaviour
         stampTool = new StampTool(this, _images, _stampPrefab);
 
         activeTool = splineTool;
-        splineTool.Activate();
+        activeTool.Activate();
         _toolMenu = GetComponent<ToolMenu>();
         _stampManager = GetComponent<StampManager>();
 	}
@@ -71,12 +71,22 @@ public class RenderTexDrawing : MonoBehaviour
         if (Input.GetButtonDown("Y"))
         {
             _toolMenu.Activate();
-
+            activeTool.Deactivate();
         }
 
         if (Input.GetButtonUp("Y"))
         {
-            _toolMenu.Deactivate();
+            int toolIndex = _toolMenu.Deactivate();
+            switch(toolIndex)
+            {
+                case 0:
+                    activeTool = splineTool;
+                    break;
+                case 1:
+                    activeTool = stampTool;
+                    break;
+            }
+            activeTool.Activate();
         }
 
         //If the Toolmenu is not open, process other inputs
