@@ -10,6 +10,8 @@ public class CatmullRomSpline
 
     private GameObject _renderTarget; //The object that displays the splinemesh
 
+    private float linewidth = 1f;
+
     private ControlPointGroup controlPoints;
 	public ControlPointGroup ControlPoints
 	{
@@ -138,56 +140,13 @@ public class CatmullRomSpline
     }
     #endregion
 
-#region HelperFunctions
-    //Get all controlpoints relevant to the spline where the index "pos" is the second point
-    Vector3[] GetPartControlPoints(int pos)
-    {
-        Vector3[] points = new Vector3[4];
-        points[0] = ClampListPosition(pos - 1);
-        points[1] = ClampListPosition(pos);
-        points[2] = ClampListPosition(pos + 1);
-        points[3] = ClampListPosition(pos + 2);
-        return points;
-    }
-
-    Vector3 ClampListPosition(int pos)
-    {
-        Vector3 tmp;
-        if(pos < 0)
-        {
-            if (isLooping)
-                tmp = controlPoints[controlPoints.Count - 1];
-            else
-                tmp = startControlPoint;
-        }
-        else
-        {
-            if (!isLooping && pos == controlPoints.Count)
-                tmp = endControlPoint;
-            else
-                tmp = controlPoints[pos % controlPoints.Count];
-        }
-
-        return tmp;
-    }
-
-    void CalcStartEndControlPoint()
-    {
-        if (!isLooping && controlPoints.Count > 1)
-        {
-            int n = controlPoints.Count - 1;
-            startControlPoint = controlPoints[0] + (controlPoints[0] - controlPoints[1]);
-            endControlPoint = controlPoints[n] + (controlPoints[n] - controlPoints[n - 1]);
-        }
-    }
-    #endregion
 
 
 #region Mesh-Calculation methods
     void CalcMeshVertexPart(int pos)
     {
         float step = 0.0625f;
-        float thickness = 0.03125f;
+        float thickness = 0.03125f * linewidth;
 
         Vector3[] p = GetPartControlPoints(pos);
 
@@ -264,10 +223,56 @@ public class CatmullRomSpline
     {
         _renderTarget.GetComponent<MeshFilter>().mesh = null;
     }
-	#endregion
+    #endregion
 
-#region ControlPoint Getter
-	public void AddControlPoint(Vector3 pos)
+
+
+    #region HelperFunctions
+    //Get all controlpoints relevant to the spline where the index "pos" is the second point
+    Vector3[] GetPartControlPoints(int pos)
+    {
+        Vector3[] points = new Vector3[4];
+        points[0] = ClampListPosition(pos - 1);
+        points[1] = ClampListPosition(pos);
+        points[2] = ClampListPosition(pos + 1);
+        points[3] = ClampListPosition(pos + 2);
+        return points;
+    }
+
+    Vector3 ClampListPosition(int pos)
+    {
+        Vector3 tmp;
+        if (pos < 0)
+        {
+            if (isLooping)
+                tmp = controlPoints[controlPoints.Count - 1];
+            else
+                tmp = startControlPoint;
+        }
+        else
+        {
+            if (!isLooping && pos == controlPoints.Count)
+                tmp = endControlPoint;
+            else
+                tmp = controlPoints[pos % controlPoints.Count];
+        }
+
+        return tmp;
+    }
+
+    void CalcStartEndControlPoint()
+    {
+        if (!isLooping && controlPoints.Count > 1)
+        {
+            int n = controlPoints.Count - 1;
+            startControlPoint = controlPoints[0] + (controlPoints[0] - controlPoints[1]);
+            endControlPoint = controlPoints[n] + (controlPoints[n] - controlPoints[n - 1]);
+        }
+    }
+    #endregion
+
+    #region Getter & Setter
+    public void AddControlPoint(Vector3 pos)
 	{
 		controlPoints.Add(pos);
 	}
@@ -286,5 +291,13 @@ public class CatmullRomSpline
     {
         return controlPoints.Count;
     }
-	#endregion
+    #endregion
+
+    public void ChangeLineWidth(float factor)
+    {
+        float changeSpeed = 1f;
+        linewidth += changeSpeed * factor * Time.deltaTime;
+        linewidth = Mathf.Clamp(linewidth, 0.3f, 2f);
+    }
+
 }

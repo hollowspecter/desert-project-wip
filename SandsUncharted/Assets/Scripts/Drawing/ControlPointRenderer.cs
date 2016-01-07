@@ -52,4 +52,12 @@ public class ControlPointRenderer : MonoBehaviour
             Debug.LogError("There are more points to be shown than there are transforms available");
         }
     }
+
+    public void HidePoints()
+    {
+        for (int i = 0; i < objectCount; ++i)
+        {
+            controlObjects[i].gameObject.SetActive(false);
+        }
+    }
 }

@@ -5,6 +5,8 @@ using System.Collections;
 [RequireComponent(typeof(MeshFilter))]
 public class MeshLine : MonoBehaviour
 {
+    
+    #region Fields / private variables
     private float scale = 100f;
 
     private float lineWidth = 0.03125f/2;
@@ -16,9 +18,11 @@ public class MeshLine : MonoBehaviour
     private Transform _text;
 
     private Vector3 tangent;
+    
+    private float angle;
 
-    [SerializeField]
-    float angle;
+    private float lineOffsetFactor;
+    #endregion
 
     // Use this for initialization
     void Start ()
@@ -58,9 +62,9 @@ public class MeshLine : MonoBehaviour
                 e = endPoint + 10 * tangent;
             }
 
-            Vector3 s1 = s + tangent * 5;
+            Vector3 s1 = s + tangent * lineOffsetFactor;
             vertices[0] = s1;
-            Vector3 s2 = s - tangent * 5;
+            Vector3 s2 = s - tangent * lineOffsetFactor;
             vertices[1] = s2;
             vertices[2] = s1 + direction * thickness;
             vertices[3] = s2 + direction * thickness;
@@ -68,9 +72,9 @@ public class MeshLine : MonoBehaviour
             vertices[5] = s - tangent + direction * thickness;
 
 
-            Vector3 e1 = e + tangent * 5;
+            Vector3 e1 = e + tangent * lineOffsetFactor;
             vertices[6] = e1;
-            Vector3 e2 = e - tangent * 5;
+            Vector3 e2 = e - tangent * lineOffsetFactor;
             vertices[7] = e2;
             vertices[8] = e1 - direction * thickness;
             vertices[9] = e2 - direction * thickness;
@@ -153,6 +157,7 @@ public class MeshLine : MonoBehaviour
         }
     }
 
+    #region HelperMethods (Getters, Setters, etc)
     public void SetStart(Vector3 pos)
     {
         if(pos != startPoint)
@@ -201,4 +206,10 @@ public class MeshLine : MonoBehaviour
         Gizmos.color = Color.blue;
         Gizmos.DrawRay(startPoint, tangent*10);
     }
+
+    public void SetLineOffsetFactor(float factor)
+    {
+        lineOffsetFactor = factor;
+    }
+    #endregion
 }
