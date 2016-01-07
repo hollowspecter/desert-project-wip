@@ -6,15 +6,13 @@ using System.Collections;
 
 public class VegetationPlanter : MonoBehaviour
 {
-    // Privates
-    [SerializeField]
-    private float stepSize = 1f;
-
     // Prefabs
     [SerializeField]
     private GameObject[] deadtrees;
     [SerializeField]
     private GameObject[] bushes;
+
+    // Privates
     [SerializeField]
     private NoiseLayer[] deadtreeNoises;
     [SerializeField]
@@ -22,6 +20,11 @@ public class VegetationPlanter : MonoBehaviour
     [SerializeField]
     [Range(0f,1f)]
     private float deadtreeThreshold = 0.8f;
+    [SerializeField]
+    private LayerMask terrainMask;
+    [SerializeField]
+    [Range(0f,3f)]
+    private float sinkInOffset = 0.1f;
 
     private MapGenerator mapgen;
 
@@ -59,13 +62,24 @@ public class VegetationPlanter : MonoBehaviour
                     
                     // Randomly choose a tree and position it above
                     int treeIndex = Random.Range(0, deadtrees.Length);
-                    Vector3 position = new Vector3(x, 300f, y);
+                    Vector3 position = new Vector3(x, 100f, y);
                     position -= new Vector3(16f, 0, 16f);
                     GameObject tree = Instantiate(deadtrees[treeIndex], position, Quaternion.identity) as GameObject;
-                    tree.transform.parent = veggieT;
+                    Transform treeT = tree.transform;
+                    treeT.parent = veggieT;
 
-                    // Perform a Raycast and position it down
-                    // TODO TODO TODO
+                    // Perform a Raycast from the tree
+                    // downwards to the terrain and position it down
+                    RaycastHit hit;
+                    if (Physics.Raycast(new Ray(treeT.position, Vector3.down), out hit, 500f, terrainMask)) {
+
+                        // Calculate and assign new position
+                        treeT.position = new Vector3(treeT.position.x, hit.point.y - sinkInOffset, treeT.position.z);
+                    }
+                    else {
+                        Debug.Log("No Hit!");
+                        //DestroyImmediate(tree);
+                    }
                 }
             }
         }
@@ -106,6 +120,8 @@ public class VegetationPlanter : MonoBehaviour
 
     void FillNormalizedValues(out float[,] values, ref NoiseLayer[] noises)
     {
+        Initialise();
+
         values = new float[mapgen.TotalWidth, mapgen.TotalWidth];
 
         float min = 999f;
