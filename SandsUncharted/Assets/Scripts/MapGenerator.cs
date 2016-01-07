@@ -6,9 +6,9 @@ public class MapGenerator : MonoBehaviour
 {
     #region private
     [SerializeField]
-    private int chunkSize = 16;
+    private Texture2D biomeTexture;
     [SerializeField]
-    private float voxelSize = 1f;
+    private int chunkSize = 16;
     [Range(1,16)]
     [SerializeField]
     private int width = 1;
@@ -29,21 +29,55 @@ public class MapGenerator : MonoBehaviour
 
     #region Properties
 
-    public NoiseLayer[] noises;
+    public enum BiomeSolo { none, red, green, blue };
+
+    public Biome redBiome;
+    public Biome greenBiome;
+    public Biome blueBiome;
+    public BiomeSolo solo;
+
+    public int TotalWidth { get { return width * chunkSize; } }
+    public int TotalHeight { get { return height * chunkSize; } }
+    public int TotalDepth { get { return depth * chunkSize; } }
 
     #endregion
 
+    bool CheckConditions()
+    {
+        if (blueBiome == null ||
+            redBiome == null ||
+            greenBiome == null)
+        {
+            Debug.LogError("At least one biome is null. Error.");
+            return false;
+        }
+
+        if (biomeTexture == null) {
+            Debug.LogError("No Biome Texture is assigned! Error.");
+            return false;
+        }
+
+        return true;
+    }
+
     public void GenerateMap()
     {
+        // Is everything ready to generate the map?
+        if (!CheckConditions())
+            return;
+
+        // Generate a new Chunk Map
         chunkMap = new ChunkMap(width, height, depth, chunkSize);
 
+        // Fill up the map
         if (!RandomFillMap()) {
             Debug.Log("Building was cancelled");
             return;
         }
 
+        // Generate the Mesh
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
-        meshGen.GenerateMesh(chunkMap, voxelSize, isolevel);
+        meshGen.GenerateMesh(chunkMap, 1f, isolevel);
     }
 
     private bool RandomFillMap()
@@ -52,12 +86,7 @@ public class MapGenerator : MonoBehaviour
         float progress = 0f;
         EditorUtility.DisplayCancelableProgressBar(progressBarTitle, progressBarInfo, progress);
 
-        // Calculate the total of the map
-        int totalWidth = width * chunkSize;
-        int totalHeight = height * chunkSize;
-        int totalDepth = depth * chunkSize;
-
-        //// Calculate the step
+        // Calculate the step
         float step = 1f / chunkMap.Count;
 
         float timer = Time.realtimeSinceStartup;
@@ -68,7 +97,7 @@ public class MapGenerator : MonoBehaviour
                 for (int y = 0; y < chunkSize; ++y) {
                     for (int z = 0; z < chunkSize; ++z) {
 
-                        int xPos = x + (int) c.ChunkmapPosition.x;
+                        int xPos = x + (int)c.ChunkmapPosition.x;
                         int yPos = y + (int)c.ChunkmapPosition.y;
                         int zPos = z + (int)c.ChunkmapPosition.z;
 
@@ -78,7 +107,8 @@ public class MapGenerator : MonoBehaviour
                          * Calculate density value from noise layers
                          */
                         float value = yfloat;
-                        value += GetValueFromNoises(new Vector3(xPos, yfloat, zPos));
+                        value += GetValueFromBiomes(new Vector3(xPos, yfloat, zPos));
+                        //value += GetValueFromNoises(new Vector3(xPos, yfloat, zPos));
                         c[x, y, z] = value;
                     }
                 }
@@ -97,31 +127,57 @@ public class MapGenerator : MonoBehaviour
         return true;
     } // end random fill
 
-    public float GetValueFromNoises(Vector3 point)
+    public float GetValueFromBiomes(Vector3 point)
     {
-        float value = 0;
-        for (int i = 0; i < noises.Length; ++i) {
-            // Check if active
-            if (!noises[i].Active)
-                continue;
-
-            // Check the operation and act accordingly
-            NoiseLayer.NoiseOperators op = noises[i].Operation;
-            switch (op) {
-                case NoiseLayer.NoiseOperators.Add:
-                    value += noises[i].getValue(point) * noises[i].Weight;
-                    break;
-                case NoiseLayer.NoiseOperators.Subtract:
-                    value -= noises[i].getValue(point) * noises[i].Weight;
-                    break;
+        // Soloing one Biome everywhere?
+        if (solo != BiomeSolo.none) {
+            switch (solo) {
+                case BiomeSolo.red:
+                    return redBiome.GetValueFromNoises(point);
+                case BiomeSolo.green:
+                    return greenBiome.GetValueFromNoises(point);
+                case BiomeSolo.blue:
+                    return blueBiome.GetValueFromNoises(point);
             }
         }
-        return value;
+
+        // Sample the Texture
+        Color sample = SampleBiomeTexture(point);
+
+        // Calculate Values
+        float[] value = new float[3];
+
+        for (int i = 0; i < 3; ++i) {
+            if ((i == 0 && sample.r > 0) ||
+                (i == 1 && sample.g > 0) ||
+                (i == 2 && sample.b > 0))
+            {
+                value[i] = getBiome(i).GetValueFromNoises(point);
+            }
+        }
+
+        // Calculate the weighted sum
+        return sample.r * value[0] + sample.g * value[1] + sample.b * value[2];
     }
 
-    public float GetValueFromNoises(float x, float y, float z)
+    // Returns sum-normalized color sample from the texture
+    public Color SampleBiomeTexture(Vector3 point)
     {
-        return GetValueFromNoises(new Vector3(x, y, z));
+        float x = (float)point.x / (float)TotalWidth;
+        float z = (float)point.z / (float)TotalDepth;
+
+        int xPixel = Mathf.RoundToInt(x * biomeTexture.width);
+        int yPixel = Mathf.RoundToInt(z * biomeTexture.height);
+
+        Color sample = biomeTexture.GetPixel(xPixel, yPixel);
+
+        // normalize color
+        float sum = sample.r + sample.g + sample.b;
+        sample.r = sample.r / sum;
+        sample.g = sample.g / sum;
+        sample.b = sample.b / sum;
+
+        return sample;
     }
 
     public void SaveAndDeleteTerrain()
@@ -145,5 +201,17 @@ public class MapGenerator : MonoBehaviour
         else {
             Debug.Log("Did not found a gameobject with \"Terrain\" tag.");
         }
+    }
+
+    public Biome getBiome(int index)
+    {
+        if (index == 0)
+            return redBiome;
+        else if (index == 1)
+            return greenBiome;
+        else if (index == 2)
+            return blueBiome;
+        else
+            return null;
     }
 }

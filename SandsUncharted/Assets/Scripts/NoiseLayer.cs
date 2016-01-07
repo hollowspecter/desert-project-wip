@@ -89,4 +89,26 @@ public class NoiseLayer
         NoiseMethod method = Noise.methods[(int)type][dimension - 1];
         return Noise.Sum(method, point, frequency, octaves, lacunarity, persistence) * amplitude;
     }
+
+    public static float getValueFromNoises(ref NoiseLayer[] noises, Vector3 point)
+    {
+        float value = 0;
+        for (int i = 0; i < noises.Length; ++i) {
+            // Check if active
+            if (!noises[i].Active)
+                continue;
+
+            // Check the operation and act accordingly
+            NoiseLayer.NoiseOperators op = noises[i].Operation;
+            switch (op) {
+                case NoiseLayer.NoiseOperators.Add:
+                    value += noises[i].getValue(point) * noises[i].Weight;
+                    break;
+                case NoiseLayer.NoiseOperators.Subtract:
+                    value -= noises[i].getValue(point) * noises[i].Weight;
+                    break;
+            }
+        }
+        return value;
+    }
 }

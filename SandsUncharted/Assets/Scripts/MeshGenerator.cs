@@ -152,6 +152,12 @@ public class MeshGenerator : MonoBehaviour
             mesh.normals = normals.ToArray();
             //mesh.RecalculateNormals();
 
+            // Apply a Mesh Collider
+            MeshCollider meshC = chunkGO.AddComponent(typeof(MeshCollider)) as MeshCollider;
+            meshC.sharedMesh = mesh;
+
+            chunkGO.AddComponent(typeof(MeshCollider));
+
             // Reposition chunk
             float xPos = chunk.Position.x * mapWidth - chunk.Position.x * size;
             float yPos = chunk.Position.y * mapHeight - chunk.Position.y * size;
@@ -225,6 +231,14 @@ public class MeshGenerator : MonoBehaviour
                 normals[i] = n[i].normal;
             }
         }
+
+        //public Vector3 GetCenter()
+        //{
+        //    return nodes[0]
+        //        + 0.5f * (nodes[1] - nodes[0])
+        //        + 0.5f * (nodes[3] - nodes[0])
+        //        + 0.5f * (nodes[4] - nodes[0]);
+        //}
     }
 
     public struct Node
