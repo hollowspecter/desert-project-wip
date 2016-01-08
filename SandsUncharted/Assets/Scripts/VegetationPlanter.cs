@@ -26,8 +26,15 @@ public class VegetationPlanter : MonoBehaviour
     [SerializeField]
     [Range(0f,3f)]
     private float sinkInOffset = 0.1f;
+    [SerializeField]
+    private int deadtreeRadius = 5;
+    [SerializeField]
+    [Range(0f,1f)]
+    private float deadtreeIntensity = 1f;
 
     private MapGenerator mapgen;
+    private string progressBarTitle = "Planting Vegetation";
+    private string progressBarInfo = "0 trees have been planted";
 
     public NoiseLayer[] DeadtreeNoises { get { return deadtreeNoises; } }
 
@@ -54,6 +61,12 @@ public class VegetationPlanter : MonoBehaviour
         float[,] values;
         FillNormalizedValues(out values, ref deadtreeNoises);
 
+        // Show a Progress Bar
+        float progress = 0f;
+        EditorUtility.DisplayCancelableProgressBar(progressBarTitle, progressBarInfo, progress);
+        float progressStep = 1f / (float)mapgen.TotalWidth;
+        int progressTreeCount = 0;
+
         // Iterate over the whole map using 
         for (int x = 0; x < mapgen.TotalWidth; ++x) {
             for (int y = 0; y < mapgen.TotalDepth; ++y) {
@@ -61,29 +74,53 @@ public class VegetationPlanter : MonoBehaviour
                 // Check conditions for planting a tree
                 if (values[x, y] > deadtreeThreshold) {
                     
-                    // Randomly choose a tree and position it above
+                    //  1. Randomly choose a tree and position it above
                     int treeIndex = Random.Range(0, deadtrees.Length);
                     Vector3 position = new Vector3(x, 100f, y);
                     position -= new Vector3(16f, 0, 16f);
-                    GameObject tree = Instantiate(deadtrees[treeIndex], position, Quaternion.identity) as GameObject;
+                    GameObject tree = Instantiate(deadtrees[treeIndex], position, RandomRotation()) as GameObject;
                     Transform treeT = tree.transform;
                     treeT.parent = veggieT;
 
-                    // Perform a Raycast from the tree
+                    // 2. Perform a Raycast from the tree
                     // downwards to the terrain and position it down
                     RaycastHit hit;
                     if (Physics.Raycast(new Ray(treeT.position, Vector3.down), out hit, 500f, terrainMask)) {
 
                         // Calculate and assign new position
                         treeT.position = new Vector3(treeT.position.x, hit.point.y - sinkInOffset, treeT.position.z);
+
+                        // 3. Make sure that no other trees plant themselves nearby
+                        // by reducing the noise values close to the tree
+                        DrawFilledCircle(ref values, Mathf.RoundToInt(x), Mathf.RoundToInt(y), deadtreeRadius, deadtreeIntensity);
+
+                        // Increase Tree Count for the Progress Bar
+                        progressTreeCount++;
                     }
                     else {
-                        Debug.Log("No Hit!");
-                        //DestroyImmediate(tree);
+                        DestroyImmediate(tree);
                     }
                 }
             }
+
+            // Update Progressbar every second row
+            if (x % 5 == 0) {
+                progress += progressStep * 5;
+                if (EditorUtility.DisplayCancelableProgressBar(progressBarTitle, progressTreeCount + " trees have been planted", progress)) {
+                    EditorUtility.ClearProgressBar();
+                    return;
+                }
+            }
         }
+
+        // Clear Progressbar
+        EditorUtility.ClearProgressBar();
+    }
+
+    Quaternion RandomRotation()
+    {
+        float rotationY = Random.Range(0f, 360f);
+        return Quaternion.Euler(Vector3.up * rotationY);
     }
 
     public void VisualizeNoise(NoiseLayer[] noises)
@@ -100,9 +137,6 @@ public class VegetationPlanter : MonoBehaviour
         // Fill in the values (get filled within range of 0 and 1)
         float[,] values;
         FillNormalizedValues(out values, ref noises);
-
-        // DEBUG: Draw a circle!
-        DrawFilledCircle2(ref values, 65, 100, 20, 1f);
 
         // Apply the pixels
         for (int x = 0; x < values.GetLength(0); ++x) {
@@ -225,127 +259,7 @@ public class VegetationPlanter : MonoBehaviour
             c.y >= 0 && c.y < mapgen.TotalDepth;
     }
 
-    //cell Neighbor(cell c, int dir)
-    //{
-    //    if (dir == 0) return new cell(c.x+1, c.y);
-    //    if (dir == 1) return new cell(c.x, c.y+1);
-    //    if (dir == 2) return new cell(c.x-1, c.y);
-    //    if (dir == 3) return new cell(c.x, c.y-1);
-
-    //    Debug.LogWarning("wrong direction", this);
-    //    return new cell(0, 0);
-    //}
-
-    //private void DrawFilledCircle(ref float[,] values, int centerX, int centerY, int radius, float subtrahend, FillMode mode)
-    //{
-    //    // Initialise the Lists
-    //    cell start = new cell(centerX, centerY);
-    //    List<cell> visited = new List<cell>();
-    //    List<cell> border = new List<cell>();
-    //    List<cell> fringe = new List<cell>();
-    //    fringe.Add(start);
-    //    values[centerX, centerY] -= subtrahend;
-    //    float stepsize = 1f / (float)radius;
-
-    //    // Fill in the Border List
-    //    int d = 3 - (2 * radius);
-    //    int x = 0;
-    //    int y = radius;
-    //    do {
-    //        // ensure index is in range before setting (depends on your image implementation)
-    //        // in this case we check if the pixel location is within the bounds of the image before setting the pixel
-    //        // then subtract the subtrahend
-    //        // last, clamp the values between 0 and 1 since they are already normalized
-    //        if (InRange(centerX + x, centerY + y)) { border.Add(new cell(centerX + x, centerY + y)); }
-    //        if (InRange(centerX + x, centerY - y)) { border.Add(new cell(centerX + x, centerY - y)); }
-    //        if (InRange(centerX - x, centerY + y)) { border.Add(new cell(centerX - x, centerY + y)); }
-    //        if (InRange(centerX - x, centerY - y)) { border.Add(new cell(centerX - x, centerY - y)); }
-    //        if (InRange(centerX + y, centerY + x)) { border.Add(new cell(centerX + y, centerY + x)); }
-    //        if (InRange(centerX + y, centerY - x)) { border.Add(new cell(centerX + y, centerY - x)); }
-    //        if (InRange(centerX - y, centerY + x)) { border.Add(new cell(centerX - y, centerY + x)); }
-    //        if (InRange(centerX - y, centerY - x)) { border.Add(new cell(centerX - y, centerY - x)); }
-    //        if (d < 0) {
-    //            d += 2 * x + 1;
-    //        }
-    //        else {
-    //            d += 2 * (x - y) + 1;
-    //            y--;
-    //        }
-    //        x++;
-    //    } while (x <= y);
-
-    //    // Flood fill by filling from the center to the borders
-    //    // when a border is hit, the cell is removed from the border
-    //    for (int i = 0; i < radius-10; ++i) {
-    //        //while (border.Count > 0) {
-    //        List<cell> newfringe = new List<cell>();
-
-    //        if (mode == FillMode.GRADIENT)
-    //            subtrahend += stepsize;
-
-    //        foreach (cell c in fringe) {
-    //            for (int dir = 0; dir < 4; ++dir) {
-    //                cell neighbor = Neighbor(c, dir);
-    //                if (!visited.Contains(neighbor)) {
-    //                    if (!border.Contains(neighbor)) {
-    //                        visited.Add(neighbor);
-    //                        newfringe.Add(neighbor);
-    //                        if (InRange(neighbor))
-    //                            values[neighbor.x, neighbor.y] -= subtrahend;
-    //                    }
-    //                    else
-    //                        border.Remove(neighbor);
-    //                }
-    //            }
-    //        }
-    //        fringe.Clear();
-    //        fringe = newfringe;
-    //    }
-    //}
-
-    //private void DrawFilledCircle(ref float[,] values, int centerX, int centerY, int radius, float subtrahend)
-    //{
-    //    // Fill in the Border List
-    //    int d = 3 - (2 * radius);
-    //    int x = 0;
-    //    int y = radius;
-    //    cell center = new cell(centerX, centerY);
-    //    do {
-    //        FillHorizontalLine(ref values, new cell(centerX + x, centerY + y), new cell(centerX - x, centerY + y), center, subtrahend, radius);
-    //        FillHorizontalLine(ref values, new cell(centerX + x, centerY - y), new cell(centerX - x, centerY - y), center, subtrahend, radius);
-    //        FillHorizontalLine(ref values, new cell(centerX + y, centerY + x), new cell(centerX - y, centerY + x), center, subtrahend, radius);
-    //        FillHorizontalLine(ref values, new cell(centerX + y, centerY - x), new cell(centerX - y, centerY - x), center, subtrahend, radius);
-    //        if (d < 0) {
-    //            d += 2 * x + 1;
-    //        }
-    //        else {
-    //            d += 2 * (x - y) + 1;
-    //            y--;
-    //        }
-    //        x++;
-    //    } while (x <= y);
-    //}
-
-    //private void FillHorizontalLine(ref float[,] values, cell start, cell end, cell center, float subtrahend, int radius)
-    //{
-    //    //// We assume that end is aboce
-    //    if (end.x < start.x) {
-    //        cell tmp = start;
-    //        start = end;
-    //        end = tmp;
-    //    }
-
-    //    int distance = end.x - start.x;
-
-    //    for (int i = 0; i <= distance; ++i) {
-    //        if (InRange(start)) {
-    //            values[start.x + i, start.y] -= subtrahend * GetSubtrahendPercentage(center, start.x + i, start.y, radius);
-    //            Mathf.Clamp(values[start.x+i, start.y], 0f, 1f);
-    //        }
-    //    }
-    //}
-
-    private void DrawFilledCircle2(ref float[,] values, int centerX, int centerY, int radius, float subtrahend)
+    private void DrawFilledCircle(ref float[,] values, int centerX, int centerY, int radius, float subtrahend)
     {
         int x = radius;
         int y = 0;
@@ -386,6 +300,7 @@ public class VegetationPlanter : MonoBehaviour
         foreach (cell c in cells) {
             if (InRange(c)) {
                 values[c.x, c.y] -= subtrahend * GetSubtrahendPercentage(centerX, centerY, c.x, c.y, radius);
+                values[c.x, c.y] = Mathf.Clamp01(values[c.x, c.y]);
             }
         }
     }
