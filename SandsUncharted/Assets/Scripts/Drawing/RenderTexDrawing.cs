@@ -19,7 +19,9 @@ public class RenderTexDrawing : MonoBehaviour
 
     [SerializeField]
     private Camera _renderCam;
-
+    private RenderTexture captureRenderTexture;
+    private Texture2D captureTexture;
+    private Camera captureCamera;
     [SerializeField]
     private GameObject captureTarget;
 
@@ -43,6 +45,13 @@ public class RenderTexDrawing : MonoBehaviour
     private Sprite circleCursor;
     #endregion
 
+    #region eraserTool variables
+    [SerializeField]
+    private Sprite eraserSprite;
+    [SerializeField]
+    private Sprite eraserCursor;
+    #endregion
+
     [SerializeField]
     private MeshLine _line;
     private ToolMenu _toolMenu;
@@ -50,6 +59,7 @@ public class RenderTexDrawing : MonoBehaviour
     private ITool activeTool;
     private SplineTool splineTool;
     private StampTool stampTool;
+    private EraserTool eraserTool;
 
 
     // Use this for initialization
@@ -57,12 +67,15 @@ public class RenderTexDrawing : MonoBehaviour
     {
         splineTool = new SplineTool(this, _splineRenderTarget, _line, circleCursor);
         stampTool = new StampTool(this, _images, _stampPrefab);
+        eraserTool = new EraserTool(this, eraserSprite, eraserCursor);
 
         activeTool = splineTool;
         activeTool.Activate();
         _toolMenu = GetComponent<ToolMenu>();
         _stampManager = GetComponent<StampManager>();
-	}
+        captureTexture = new Texture2D(captureResolution, captureResolution, TextureFormat.ARGB32, true);
+        captureCamera = transform.Find("CaptureCamera").GetComponent<Camera>();
+    }
 	
 	// Update is called once per frame
 	void Update ()
@@ -84,6 +97,9 @@ public class RenderTexDrawing : MonoBehaviour
                     break;
                 case 1:
                     activeTool = stampTool;
+                    break;
+                case 2:
+                    activeTool = eraserTool;
                     break;
             }
             activeTool.Activate();
@@ -145,28 +161,26 @@ public class RenderTexDrawing : MonoBehaviour
     public void CaptureRenderTex()
     {
         //initialize camera and texture
-        Camera captureCamera = transform.Find("CaptureCamera").GetComponent<Camera>();
         captureCamera.enabled = true;
-        RenderTexture rt = new RenderTexture(captureResolution, captureResolution, 24);
-
-        //activate rendertexture and link camera
-        captureCamera.targetTexture = rt;
-        captureCamera.Render();
         RenderTexture original = RenderTexture.active;
-        RenderTexture.active = rt;      
+        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution);
+        captureCamera.targetTexture = captureRenderTexture;
+
+        RenderTexture.active = captureRenderTexture;
+        //activate rendertexture and link camera
+        captureCamera.Render();     
 
         //snapshot
-        Texture2D t = new Texture2D(captureResolution, captureResolution, TextureFormat.ARGB32, true);
-        t.ReadPixels(new Rect(0, 0, captureResolution, captureResolution), 0, 0);
-        t.Apply(true);
-        captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = t;
         
+        captureTexture.ReadPixels(new Rect(0, 0, captureResolution, captureResolution), 0, 0);
+        captureTexture.Apply(true);
+        captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = captureTexture;
+
         //remove the temporary stuff
+        RenderTexture.ReleaseTemporary(captureRenderTexture);
         captureCamera.targetTexture = null;
         captureCamera.enabled = false;
         RenderTexture.active = original;
-        DestroyImmediate(rt);
-        _stampManager.RemoveAll();
     }
 
 

@@ -12,6 +12,7 @@ public class ToolMenu : MonoBehaviour
     private float angle;
 
     int toolIndex;
+    int numOfTools = 3;
 
     // Use this for initialization
     void Start ()
@@ -36,7 +37,7 @@ public class ToolMenu : MonoBehaviour
             // Activate this code if you want the arrow to "snap back" when no input
             //else
             //    angle = 0;
-            toolIndex  = GetSelected(2, angle);
+            toolIndex  = GetSelected(numOfTools, angle);
 
             Vector3 eulerAngles = new Vector3(0, 0, angle);
             _arrowT.localRotation = Quaternion.Euler(eulerAngles);

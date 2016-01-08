@@ -201,6 +201,7 @@ public class SplineTool : ITool
     void FinishSpline()
     {
         _map.CaptureRenderTex();
+        activeSpline.clearMesh();
         activeSpline = null;
         ctrl = null;
         _map.GetComponent<ControlPointRenderer>().HidePoints();

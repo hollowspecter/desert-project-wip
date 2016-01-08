@@ -3,11 +3,10 @@ using System.Collections;
 using System;
 
 public class StampTool : ITool
-{
-    private int selectedIndex = 0;
-
+{ 
     private RenderTexDrawing _map;
-    
+
+    private int selectedIndex = 0;
     float rotationSpeed = 40f;
     float scaleSpeed = 5f;
     private Sprite[] _images;

@@ -219,7 +219,7 @@ public class CatmullRomSpline
         }
     }
 
-    void clearMesh()
+    public void clearMesh()
     {
         _renderTarget.GetComponent<MeshFilter>().mesh = null;
     }
