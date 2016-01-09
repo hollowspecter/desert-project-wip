@@ -26,7 +26,6 @@ public class EraserTool : ITool
         eraserSprite = sprite;
         eraserCursor = cursor;
         _stampObject = _map.transform.Find("StampRenderer").gameObject;
-
     }
 
     public void Update(Vector3 cursorPosition, Quaternion cursorLocalRotation, float cursorLocalScale)
@@ -121,6 +120,6 @@ public class EraserTool : ITool
         _stampObject.transform.localScale = new Vector3(cursorLocalScale, cursorLocalScale, cursorLocalScale);
 
         _map.CaptureRenderTex();
-        _stampObject.transform.localPosition = new Vector3(0, 0, 2.5f); 
+        _stampObject.transform.localPosition = new Vector3(0, 0, 2.5f);
     }
 }

@@ -66,9 +66,17 @@ public class RenderTexDrawing : MonoBehaviour
     private MeterTool meterTool;
     private EraserTool eraserTool;
 
+    private bool captureFrame = true;
+
     // Use this for initialization
     void Start()
     {
+        _toolMenu = GetComponent<ToolMenu>();
+        _stampManager = GetComponent<StampManager>();
+        captureTexture = new Texture2D(captureResolution, captureResolution, TextureFormat.ARGB32, true);
+        captureCamera = transform.Find("CaptureCamera").GetComponent<Camera>();
+
+
         splineTool = new SplineTool(this, _splineRenderTarget, _line, circleCursor);
         stampTool = new StampTool(this, _images, _stampPrefab);
         meterTool = new MeterTool(this, _line, meterCursor);
@@ -76,15 +84,16 @@ public class RenderTexDrawing : MonoBehaviour
 
         activeTool = splineTool;
         activeTool.Activate();
-        _toolMenu = GetComponent<ToolMenu>();
-        _stampManager = GetComponent<StampManager>();
-        captureTexture = new Texture2D(captureResolution, captureResolution, TextureFormat.ARGB32, true);
-        captureCamera = transform.Find("CaptureCamera").GetComponent<Camera>();
     }
 	
 	// Update is called once per frame
 	void Update ()
     {
+        if (captureFrame)
+        {
+            captureFrame = false;
+            Debug.Log(Time.deltaTime);
+        }
         //pressing Y opens the Toolmenu, this blocks all other input
         if (Input.GetButtonDown("Y"))
         {
@@ -168,29 +177,29 @@ public class RenderTexDrawing : MonoBehaviour
     //Saves the current RenderTexture to the backgroundTexture by snapshotting a temporary RenderTexture with the CaptureCamera
     public void CaptureRenderTex()
     {
+        Debug.Log("Capture");
         //initialize camera and texture
         captureCamera.enabled = true;
         RenderTexture original = RenderTexture.active;
         captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution);
-        captureCamera.targetTexture = captureRenderTexture;
-
         RenderTexture.active = captureRenderTexture;
         //activate rendertexture and link camera
-        captureCamera.Render();     
 
+        captureCamera.targetTexture = captureRenderTexture;
+        captureCamera.Render();  
         //snapshot
         
         captureTexture.ReadPixels(new Rect(0, 0, captureResolution, captureResolution), 0, 0);
-        captureTexture.Apply(true);
+        captureTexture.Apply(false);
+        captureFrame = true;
         captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = captureTexture;
 
         //remove the temporary stuff
         RenderTexture.ReleaseTemporary(captureRenderTexture);
-        captureCamera.targetTexture = null;
+        //captureCamera.targetTexture = null;
         captureCamera.enabled = false;
         RenderTexture.active = original;
     }
-
 
     //move the cursor
     void UpdateCursorPosition(float h, float v)

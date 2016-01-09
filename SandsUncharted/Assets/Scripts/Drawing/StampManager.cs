@@ -5,20 +5,20 @@ using System.Collections.Generic;
 public class StampManager : MonoBehaviour
 {
     [SerializeField]
-    private Sprite[] images;
-    private int selectedIndex = 0;
-
-    [SerializeField]
     private GameObject _stampPrefab;
-    private List<GameObject> objects;
+    private GameObject[] objectPool;
     private int maxObjects = 10;
+    private int usedObjects = 0;
+
+    Vector3 removeVector = new Vector3(0, 0, 2.5f);
     [SerializeField]
     private Transform _parentTransform;
 
 	// Use this for initialization
 	void Start ()
     {
-        objects = new List<GameObject>();
+        objectPool = new GameObject[maxObjects];
+        FillPool();
 	}
 	
 	// Update is called once per frame
@@ -27,51 +27,50 @@ public class StampManager : MonoBehaviour
 	    
 	}
 
-    public void ChooseImage(int i)
-    {
-        selectedIndex = i;
-    }
-
-    public Sprite GetSelected()
-    {
-        return images[selectedIndex];
-    }
-
     public bool IsFull()
     {
-        return objects.Count >= maxObjects;
+        return usedObjects >= maxObjects;
     }
 
-    public void StampSelectedImage(Vector3 position, Quaternion rotation, float scale)
+    public void AddStamp(Vector3 position, Quaternion rotation, float scale, Sprite sprite)
     {
-        if(objects.Count >= maxObjects)
+        if (!IsFull())
         {
-            RemoveFirstStamp();
+            objectPool[usedObjects].GetComponent<SpriteRenderer>().sprite = sprite;
+            objectPool[usedObjects].transform.SetParent(_parentTransform, true);
+            objectPool[usedObjects].transform.localScale = new Vector3(scale, scale, scale);
+            usedObjects++;
         }
-        AddStamp(position, rotation, scale);
     }
 
-    void AddStamp(Vector3 position, Quaternion rotation, float scale)
+    void RemoveStampAt(int index)
     {
-        GameObject g = (GameObject)GameObject.Instantiate(_stampPrefab, position, rotation);
-        g.GetComponent<SpriteRenderer>().sprite = images[selectedIndex];
-        g.transform.SetParent(_parentTransform, true);
-        g.transform.localScale = new Vector3(scale, scale, scale);
-        objects.Add(g);
+        objectPool[index].transform.localPosition = removeVector;
     }
 
-    void RemoveFirstStamp()
+    void RemoveAll()
     {
-        GameObject g = objects[0];
-        objects.RemoveAt(0);
-        GameObject.DestroyImmediate(g);
-    }
-
-    public void RemoveAll()
-    {
-        for(int i = 0; i < objects.Count; ++i)
+        for(int i = 0; i < objectPool.Length; ++i)
         {
-            objects.RemoveAt(i);
+            RemoveStampAt(0);
         }
+    }
+
+    void FillPool()
+    {
+        GameObject g;
+        for (int i = 0; i < maxObjects; ++i)
+        {
+            g = (GameObject)GameObject.Instantiate(_stampPrefab, removeVector, Quaternion.identity);
+            g.transform.SetParent(_parentTransform);
+            g.transform.transform.localScale = new Vector3(1, 1, 1);
+            objectPool[i] = g;
+        }
+    }
+
+    public void ResetPool()
+    {
+        RemoveAll();
+        usedObjects = 0;
     }
 }
