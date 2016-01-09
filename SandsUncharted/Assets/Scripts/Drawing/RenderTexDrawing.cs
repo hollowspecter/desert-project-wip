@@ -25,7 +25,7 @@ public class RenderTexDrawing : MonoBehaviour
     [SerializeField]
     private GameObject captureTarget;
 
-    private int captureResolution = 1024;
+    private int captureResolution = 2048;
 
     #endregion
 
@@ -52,6 +52,10 @@ public class RenderTexDrawing : MonoBehaviour
     private Sprite eraserCursor;
     #endregion
 
+    #region meterTool
+    [SerializeField]
+    private Sprite meterCursor;
+    #endregion
     [SerializeField]
     private MeshLine _line;
     private ToolMenu _toolMenu;
@@ -59,14 +63,15 @@ public class RenderTexDrawing : MonoBehaviour
     private ITool activeTool;
     private SplineTool splineTool;
     private StampTool stampTool;
+    private MeterTool meterTool;
     private EraserTool eraserTool;
-
 
     // Use this for initialization
     void Start()
     {
         splineTool = new SplineTool(this, _splineRenderTarget, _line, circleCursor);
         stampTool = new StampTool(this, _images, _stampPrefab);
+        meterTool = new MeterTool(this, _line, meterCursor);
         eraserTool = new EraserTool(this, eraserSprite, eraserCursor);
 
         activeTool = splineTool;
@@ -99,6 +104,9 @@ public class RenderTexDrawing : MonoBehaviour
                     activeTool = stampTool;
                     break;
                 case 2:
+                    activeTool = meterTool;
+                    break;
+                case 3:
                     activeTool = eraserTool;
                     break;
             }

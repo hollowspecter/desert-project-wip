@@ -10,7 +10,7 @@ public class CatmullRomSpline
 
     private GameObject _renderTarget; //The object that displays the splinemesh
 
-    private float linewidth = 1f;
+    private float linewidth = 0.5f;
 
     private ControlPointGroup controlPoints;
 	public ControlPointGroup ControlPoints
@@ -297,7 +297,7 @@ public class CatmullRomSpline
     {
         float changeSpeed = 1f;
         linewidth += changeSpeed * factor * Time.deltaTime;
-        linewidth = Mathf.Clamp(linewidth, 0.3f, 2f);
+        linewidth = Mathf.Clamp(linewidth, 0.25f, 1f);
     }
 
 }

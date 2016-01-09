@@ -53,12 +53,10 @@ public class SplineTool : ITool
 
     }
 
-
-
-
     public void Activate()
     {
         _map.SetCursorImage(cursorImage);
+        _map.ResetCursorRotScal();
     }
 
     public void Deactivate()
@@ -155,7 +153,7 @@ public class SplineTool : ITool
     void DisplayMeter()
     {
         _line.ClearPoints();
-        _line.SetLineOffsetFactor(5);
+        _line.SetLineOffsetFactor(10);
         if (ctrl.Count >= 2)
         {
             int insertIndex = ctrl.FindInsertIndex(cursorPosition);

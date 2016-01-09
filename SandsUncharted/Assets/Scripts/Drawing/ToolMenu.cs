@@ -7,16 +7,24 @@ public class ToolMenu : MonoBehaviour
     private Transform _arrowT;
     [SerializeField]
     private Transform _menuUI;
+    private RectTransform[] items;
 
     private bool activated = false;
     private float angle;
 
     int toolIndex;
-    int numOfTools = 3;
+    int numOfTools = 4;
 
     // Use this for initialization
     void Start ()
     {
+        items = new RectTransform[4];
+        Transform itemParent = _menuUI.Find("items");
+        for (int i = 0; i < numOfTools; ++i)
+        {
+            items[i] = (RectTransform) itemParent.GetChild(i);
+        }
+
         Deactivate();
 	}
 	
@@ -41,6 +49,19 @@ public class ToolMenu : MonoBehaviour
 
             Vector3 eulerAngles = new Vector3(0, 0, angle);
             _arrowT.localRotation = Quaternion.Euler(eulerAngles);
+        }
+
+        //rescale All Items so that the selected one is bigger
+        for(int i = 0; i < numOfTools; ++i)
+        {
+            if(i == toolIndex)
+            {
+                items[i].sizeDelta = new Vector2(100, 100); 
+            }
+            else
+            {
+                items[i].sizeDelta = new Vector2(70, 70); 
+            }
         }
 	}
     int GetSelected(int numberOfItems, float angle)

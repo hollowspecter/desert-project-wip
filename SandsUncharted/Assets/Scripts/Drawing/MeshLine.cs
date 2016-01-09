@@ -53,18 +53,18 @@ public class MeshLine : MonoBehaviour
 
             if ((endPoint - startPoint).x < 0)
             {
-                s = startPoint - 10 * tangent;
-                e = endPoint - 10 * tangent;
+                s = startPoint - lineOffsetFactor * tangent;
+                e = endPoint - lineOffsetFactor * tangent;
             }
             else
             {
-                s = startPoint + 10 * tangent;
-                e = endPoint + 10 * tangent;
+                s = startPoint + lineOffsetFactor * tangent;
+                e = endPoint + lineOffsetFactor * tangent;
             }
 
-            Vector3 s1 = s + tangent * lineOffsetFactor;
+            Vector3 s1 = s + tangent * 5;
             vertices[0] = s1;
-            Vector3 s2 = s - tangent * lineOffsetFactor;
+            Vector3 s2 = s - tangent * 5;
             vertices[1] = s2;
             vertices[2] = s1 + direction * thickness;
             vertices[3] = s2 + direction * thickness;
@@ -72,9 +72,9 @@ public class MeshLine : MonoBehaviour
             vertices[5] = s - tangent + direction * thickness;
 
 
-            Vector3 e1 = e + tangent * lineOffsetFactor;
+            Vector3 e1 = e + tangent * 5;
             vertices[6] = e1;
-            Vector3 e2 = e - tangent * lineOffsetFactor;
+            Vector3 e2 = e - tangent * 5;
             vertices[7] = e2;
             vertices[8] = e1 - direction * thickness;
             vertices[9] = e2 - direction * thickness;
