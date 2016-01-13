@@ -170,7 +170,7 @@ public class SplineTool : ITool
 
     }
 
-    //insert a point into the spline or add one at the end if the cursor is not on the spline
+    //select or deselect a point
     void SelectPoint(Vector3 closestPoint)
     {
         if (ctrl.SelectedIndex != ctrl.IndexOf(closestPoint))
@@ -219,9 +219,10 @@ public class SplineTool : ITool
                 break;
             }
         }
-        //creates a new one otherwise
+        //creates a new one otherwise and delete the old one
         if (activeSpline == null)
         {
+            splines.RemoveAt(0);
             activeSpline = new CatmullRomSpline(_splineRenderTarget, _map.GetComponent<ControlPointRenderer>());
             splines.Add(activeSpline);
             ctrl = activeSpline.ControlPoints;
