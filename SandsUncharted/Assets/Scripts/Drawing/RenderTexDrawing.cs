@@ -25,7 +25,9 @@ public class RenderTexDrawing : MonoBehaviour
     [SerializeField]
     private GameObject captureTarget;
 
-    private int captureResolution = 2048;
+    private int captureResolution = 1024;
+    private int captureWidth = 1920;
+    private int captureHeight = 1080;
 
     #endregion
 
@@ -60,6 +62,8 @@ public class RenderTexDrawing : MonoBehaviour
     private MeshLine _line;
     private ToolMenu _toolMenu;
 
+
+    //The different Tools to choose from in the menu
     private ITool activeTool;
     private SplineTool splineTool;
     private StampTool stampTool;
@@ -68,6 +72,12 @@ public class RenderTexDrawing : MonoBehaviour
 
     private bool captureFrame = true;
 
+
+    private int backupCount = 1; //The number of steps you can undo
+    private int currentBackup = -1;
+    private Color32[][] backups;
+
+    
     // Use this for initialization
     void Start()
     {
@@ -84,6 +94,12 @@ public class RenderTexDrawing : MonoBehaviour
 
         activeTool = splineTool;
         activeTool.Activate();
+
+        backups = new Color32[backupCount][];
+        for(int i = 0; i< backupCount; ++i)
+        {
+            backups[i] = new Color32[captureResolution * captureResolution];
+        }
     }
 	
 	// Update is called once per frame
@@ -92,7 +108,7 @@ public class RenderTexDrawing : MonoBehaviour
         if (captureFrame)
         {
             captureFrame = false;
-            Debug.Log(Time.deltaTime);
+            //Debug.Log(Time.deltaTime);
         }
         //pressing Y opens the Toolmenu, this blocks all other input
         if (Input.GetButtonDown("Y"))
@@ -154,7 +170,10 @@ public class RenderTexDrawing : MonoBehaviour
             if (Input.GetButtonUp("X"))
                 activeTool.ButtonXUp();
 
-
+            if(Input.GetButtonDown("LB"))
+            {
+                Undo();
+            }
 
 
             //The Right-Stick movement is used for CursorRotation(xAxis) and -Scaling(yAxis) MOVETO:StampTool
@@ -186,20 +205,77 @@ public class RenderTexDrawing : MonoBehaviour
         //activate rendertexture and link camera
 
         captureCamera.targetTexture = captureRenderTexture;
-        captureCamera.Render();  
+        captureCamera.Render();
         //snapshot
-        
+
+        NewBackup();
+           
         captureTexture.ReadPixels(new Rect(0, 0, captureResolution, captureResolution), 0, 0);
         captureTexture.Apply(false);
-        captureFrame = true;
+
         captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = captureTexture;
+        captureFrame = true;
 
         //remove the temporary stuff
         RenderTexture.ReleaseTemporary(captureRenderTexture);
-        //captureCamera.targetTexture = null;
+        captureCamera.targetTexture = null;
         captureCamera.enabled = false;
         RenderTexture.active = original;
     }
+    
+    //Move the backups over, copy the new backup in and set it as the current one
+    void NewBackup()
+    {
+        ShiftBackups();
+        CopyArray(captureTexture.GetPixels32(), backups[0]);
+        currentBackup = -1;
+    }
+
+    void Undo()
+    {
+        if (currentBackup != backupCount - 1)
+        {
+            currentBackup++;
+            Debug.Log("undo and load backup no: " + currentBackup);
+            ReadBackup(currentBackup);
+        }
+    }
+
+    void ReadBackup(int i)
+    {
+        CopyToTexture(backups[i], captureTexture);
+    }
+
+
+    //moves all backups one slot to the back to free up slot 0
+    void ShiftBackups()
+    {
+        //Move every backup to its next slot
+        for(int i = backupCount-1; i > 0; --i)
+        {
+            CopyArray(backups[i - 1], backups[i]);
+        }
+    }
+
+    void CopyToTexture(Color32[] source, Texture2D target)
+    {
+        if (source.Length == target.width * target.height)
+        {
+            target.SetPixels32(source);
+            target.Apply();
+        }
+    }
+
+    void CopyArray(Color32[] source, Color32[] target)
+    {
+        for (int i = 0; i < target.Length; ++i)
+        {
+            target[i] = source[i];
+        }
+    }
+
+
+
 
     //move the cursor
     void UpdateCursorPosition(float h, float v)
