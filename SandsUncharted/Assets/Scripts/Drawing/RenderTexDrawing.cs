@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class RenderTexDrawing : MonoBehaviour
 {
@@ -24,7 +25,8 @@ public class RenderTexDrawing : MonoBehaviour
     private Camera captureCamera;
     [SerializeField]
     private GameObject captureTarget;
-
+    [SerializeField]
+    private GameObject captureTarget2;
     private int captureResolution = 1024;
     private int captureWidth = 1920;
     private int captureHeight = 1080;
