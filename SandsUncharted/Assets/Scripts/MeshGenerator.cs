@@ -40,6 +40,9 @@ public class MeshGenerator : MonoBehaviour
         // For each Chunk
         foreach (Chunk chunk in chunkMap) {
 
+            if (!chunk.hasSurface)
+                continue;
+
             // Calculate the Number of Nodes for this Chunk
             int nodeCountX = chunk.Size;
             int nodeCountY = chunk.Size;

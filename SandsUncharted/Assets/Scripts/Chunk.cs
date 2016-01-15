@@ -15,6 +15,7 @@ public class Chunk
     public Vector3 Position { get { return new Vector3(xPos, yPos, zPos); } }
     public Vector3 ChunkmapPosition { get { return new Vector3(xPos * size, yPos * size, zPos * size); } }
     public int Size { get { return size; } }
+    public bool hasSurface;
     public float this[long xIndex, long yIndex, long zIndex]
     {
         get
@@ -39,6 +40,7 @@ public class Chunk
         densityMap = new float[size * size * size];
         densityMap.Initialize();
         this.size = size;
+        hasSurface = true;
     }
 
     public Chunk(int xPos, int yPos, int zPos, int size)

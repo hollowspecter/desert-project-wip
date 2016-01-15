@@ -89,9 +89,15 @@ public class MapGenerator : MonoBehaviour
         // Calculate the step
         float step = 1f / chunkMap.Count;
 
-        float timer = Time.realtimeSinceStartup;
+        // Count the empty chunks
+        int emptyChunkCounter = 0;
 
         foreach (Chunk c in chunkMap) {
+
+            // Determine, if this chunk will have a
+            // surface to extract. If not, flag the chunk
+            float minValue = float.MaxValue;
+            float maxValue = float.MinValue;
 
             for (int x = 0; x < chunkSize; ++x) {
                 for (int y = 0; y < chunkSize; ++y) {
@@ -108,10 +114,19 @@ public class MapGenerator : MonoBehaviour
                          */
                         float value = yfloat;
                         value += GetValueFromBiomes(new Vector3(xPos, yfloat, zPos));
-                        //value += GetValueFromNoises(new Vector3(xPos, yfloat, zPos));
                         c[x, y, z] = value;
+
+                        if (value < minValue)
+                            minValue = value;
+                        if (value > maxValue)
+                            maxValue = value;
                     }
                 }
+            }
+
+            if (!(minValue < isolevel && isolevel < maxValue)) {
+                emptyChunkCounter++;
+                c.hasSurface = false;
             }
 
             progress += step;
@@ -119,9 +134,9 @@ public class MapGenerator : MonoBehaviour
                 EditorUtility.ClearProgressBar();
                 return false;
             }
-        }
+        }//End Foreach over chunkmap
 
-        Debug.Log("Time for chunkiteration: " + (Time.realtimeSinceStartup - timer));
+        Debug.Log("Empty Chunk Counter: " + emptyChunkCounter);
 
         EditorUtility.ClearProgressBar();
         return true;
