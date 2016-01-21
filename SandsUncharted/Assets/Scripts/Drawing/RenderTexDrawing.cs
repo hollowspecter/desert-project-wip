@@ -36,8 +36,6 @@ public class RenderTexDrawing : MonoBehaviour
     #region stamping variables
     StampManager _stampManager;
     [SerializeField]
-    private Sprite[] _images;
-    [SerializeField]
     private GameObject _stampPrefab;
     #endregion
 
@@ -64,7 +62,6 @@ public class RenderTexDrawing : MonoBehaviour
     private MeshLine _line;
     private ToolMenu _toolMenu;
 
-
     //The different Tools to choose from in the menu
     private ITool activeTool;
     private SplineTool splineTool;
@@ -90,7 +87,7 @@ public class RenderTexDrawing : MonoBehaviour
 
 
         splineTool = new SplineTool(this, _splineRenderTarget, _line, circleCursor);
-        stampTool = new StampTool(this, _images, _stampPrefab);
+        stampTool = new StampTool(this, _stampPrefab);
         meterTool = new MeterTool(this, _line, meterCursor);
         eraserTool = new EraserTool(this, eraserSprite, eraserCursor);
 

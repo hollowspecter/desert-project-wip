@@ -138,11 +138,74 @@ public class CatmullRomSpline
         Vector3 tangent = 0.5f * ((-p0 + p2) + 2 * (2 * p0 - 5 * p1 + 4 * p2 - p3) * t + 3 * (-p0 + 3 * p1 - 3 * p2 + p3) * t * t);
         return tangent.normalized;
     }
+
+    //http://gamedevelopment.tutsplus.com/tutorials/how-to-generate-shockingly-good-2d-lightning-effects--gamedev-2681
+    void CalculateJaggedMeshPart(int pos)
+    {
+        const float STEP = 0.0625f;
+        float thickness = 0.03125f * linewidth;
+        const float SWAY = 5;
+        const float JAGGEDNESS = 1/(SWAY);
+
+        Vector3[] p = GetPartControlPoints(pos);
+        float length = Vector3.Distance(p[1], p[2]);
+
+        float adjustedStep = STEP / (length * 2);
+
+        List <float> positions = new List<float>();
+        positions.Add(0);
+        Random.seed = pos;
+        for (int i = 0; i < 1/adjustedStep; ++i)
+            positions.Add(Random.Range(0.0f, 1.0f));
+
+        positions.Sort();
+        Vector3 prevPoint = p[1];
+        float prevDisplacement = 0;
+        //0 is at p1 1 is at p2
+        for (int i = 1; i < positions.Count; ++i)
+        {
+            float t = positions[i];
+            
+            //scales the Jaggedness by both the lenght of the total segment and the difference from the last to the current t
+            float scale = JAGGEDNESS * (t - positions[i-1]);
+
+            //Find the coordinates between the control points with a Catmull-Rom spline
+            Vector3 point = CalculatePosition(t, p[0], p[1], p[2], p[3]);
+            Vector3 tangent = CalculateTangent(t, p[0], p[1], p[2], p[3]);
+            Vector3 normal = new Vector3(-tangent.y, tangent.x, tangent.z);
+            normal *= thickness;
+
+            float displacement = Random.Range(-SWAY, SWAY);
+            displacement -= (displacement - prevDisplacement) * (1 - scale);
+            float envelop = t > 0.5f ? 1 * (1 - Mathf.Abs(0.5f - t)) : 1;
+            displacement *= envelop;
+
+            point += normal.normalized * (displacement);
+
+            Vector3 v1 = point + normal;
+            vertices.Add(v1);
+            Vector3 v2 = point - normal;
+            vertices.Add(v2);
+
+            prevPoint = point;
+            prevDisplacement = displacement;
+        }
+
+        Vector3 endpoint = CalculatePosition(1, p[0], p[1], p[2], p[3]);
+        Vector3 endtangent = CalculateTangent(1, p[0], p[1], p[2], p[3]);
+        Vector3 endnormal = new Vector3(-endtangent.y, endtangent.x, endtangent.z);
+        endnormal *= thickness;
+        Vector3 e1 = endpoint + endnormal;
+        Vector3 e2 = endpoint - endnormal;
+        vertices.Add(e1);
+        vertices.Add(e2);
+    }
     #endregion
 
 
 
 #region Mesh-Calculation methods
+    //pos is the index of the second ControlPoint/point the line is drawn from
     void CalcMeshVertexPart(int pos)
     {
         float step = 0.0625f;
@@ -183,7 +246,7 @@ public class CatmullRomSpline
                 {
                     continue;
                 }
-                CalcMeshVertexPart(i);
+                CalculateJaggedMeshPart(i);
 
             }
         }
@@ -224,8 +287,6 @@ public class CatmullRomSpline
         _renderTarget.GetComponent<MeshFilter>().mesh = null;
     }
     #endregion
-
-
 
     #region HelperFunctions
     //Get all controlpoints relevant to the spline where the index "pos" is the second point

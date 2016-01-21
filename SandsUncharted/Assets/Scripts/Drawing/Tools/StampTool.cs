@@ -6,21 +6,25 @@ public class StampTool : ITool
 { 
     private RenderTexDrawing _map;
 
-    private int selectedIndex = 0;
+    private Sprite currentSprite;
+    
     float rotationSpeed = 40f;
     float scaleSpeed = 5f;
-    private Sprite[] _images;
     private GameObject _stampPrefab;
 
     private Vector3 cursorPosition;
     private Quaternion cursorLocalRotation;
     private float cursorLocalScale;
 
-    public StampTool(RenderTexDrawing map, Sprite[] images, GameObject stampPrefab)
+    private StampMenu _menu;
+
+    public StampTool(RenderTexDrawing map, GameObject stampPrefab)
     {
         _map = map;
-        _images = images;
         _stampPrefab = stampPrefab;
+        _menu = _map.GetComponent<StampMenu>();
+        currentSprite = _menu.Deactivate();
+        ChangeCursor();
     }
 
     public void Update(Vector3 cursorPosition, Quaternion cursorLocalRotation, float cursorLocalScale)
@@ -52,12 +56,14 @@ public class StampTool : ITool
 
     public void ButtonBDown()
     {
-        NextImage();
+        //NextImage();
+        _menu.Activate();
     }
 
     public void ButtonBUp()
     {
-        Debug.Log("No ButtonFunction implemented");
+        currentSprite =_menu.Deactivate();
+        ChangeCursor();
     }
 
     public void ButtonX()
@@ -83,7 +89,7 @@ public class StampTool : ITool
     public void StampSelectedImage()
     {
         GameObject g = (GameObject)GameObject.Instantiate(_stampPrefab, cursorPosition, cursorLocalRotation);
-        g.GetComponent<SpriteRenderer>().sprite = _images[selectedIndex];
+        g.GetComponent<SpriteRenderer>().sprite = currentSprite;
         g.transform.SetParent(_map.transform);
         g.transform.localScale = new Vector3(cursorLocalScale, cursorLocalScale, cursorLocalScale);
 
@@ -91,17 +97,14 @@ public class StampTool : ITool
         GameObject.Destroy(g);
     }
 
-    private void NextImage()
+    private void ChangeCursor()
     {
-        selectedIndex++;
-        if (selectedIndex == _images.Length)
-            selectedIndex = 0;
-        _map.SetCursorImage(_images[selectedIndex]);
+        _map.SetCursorImage(currentSprite);
     }
 
     public void Activate()
     {
-        _map.SetCursorImage(_images[selectedIndex]);
+        ChangeCursor();
     }
 
     public void Deactivate()

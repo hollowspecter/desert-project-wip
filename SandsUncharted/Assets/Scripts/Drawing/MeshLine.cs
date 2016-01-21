@@ -165,7 +165,7 @@ public class MeshLine : MonoBehaviour
             startPoint = pos;
             CalcMeshVertices();
             GenerateMesh();
-            Debug.Log("start");
+           // Debug.Log("start");
         }
     }
 
