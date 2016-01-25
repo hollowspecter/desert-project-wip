@@ -144,7 +144,7 @@ public class CatmullRomSpline
     {
         const float STEP = 0.0625f;
         float thickness = 0.03125f * linewidth;
-        const float SWAY = 5;
+        const float SWAY = 10;
         const float JAGGEDNESS = 1/(SWAY);
 
         Vector3[] p = GetPartControlPoints(pos);
