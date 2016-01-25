@@ -20,6 +20,8 @@ public class SplineTool : ITool
 
     private Sprite cursorImage;
 
+    private const float WAYPOINTSCALE = 100;
+
     public SplineTool(RenderTexDrawing map, GameObject renderTarget, MeshLine line, Sprite cursorImage)
     {
         _map = map;
@@ -229,7 +231,7 @@ public class SplineTool : ITool
             int waypointMultiplier = 4;
             float deltaT = 1.0f / waypointMultiplier;
             //The Array of Waypoints to return
-            Vector3[] waypoints = new Vector3[ctrl.Count * waypointMultiplier];
+            Vector3[] waypoints = new Vector3[(ctrl.Count-1) * waypointMultiplier +1];
 
             //calculate the Waypoints from the active Spline
             for (int i = 0; i < ctrl.Count; ++i)
@@ -237,7 +239,7 @@ public class SplineTool : ITool
                 waypoints[i * waypointMultiplier] = ctrl[i];
 
                 int index = 1;
-                if (i != ctrl.Count)
+                if (i != ctrl.Count-1)
                 {
                     for (int j = 1; j < waypointMultiplier; ++j)
                     {
@@ -261,19 +263,21 @@ public class SplineTool : ITool
     void DebugShowPoints(Vector3[] points)
     {
         GameObject parent = new GameObject("wayPointParent");
-
-        for(int i = 0; i < points.Length; ++i)
+        Matrix4x4 m = Matrix4x4.TRS(new Vector3(0, 0, 0), Quaternion.Euler(90, 0, 0), new Vector3(WAYPOINTSCALE, WAYPOINTSCALE, 1));
+        for (int i = 0; i < points.Length; ++i)
         {
             GameObject g = new GameObject();
-            g.transform.parent = parent.transform;
+            //g.transform.parent = parent.transform;
             g.transform.position = points[i];
         }
 
         parent.transform.rotation = Quaternion.Euler(90, 0, 0);
-        parent.transform.localScale = new Vector3(100, 100, 1);
+        parent.transform.localScale = new Vector3(WAYPOINTSCALE, WAYPOINTSCALE, 1);
+
         for (int i = 0; i < points.Length-1; ++i)
         {
-            Debug.DrawLine(parent.transform.GetChild(i).position, parent.transform.GetChild(i+1).position, Color.red, 1000);
+            //Debug.DrawLine(parent.transform.GetChild(i).position, parent.transform.GetChild(i+1).position, Color.red, 1000);
+            Debug.DrawLine(m * points[i], m * points[i+1], Color.green, 1000);
         }
     }
 
