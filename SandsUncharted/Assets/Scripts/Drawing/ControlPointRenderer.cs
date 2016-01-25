@@ -37,6 +37,7 @@ public class ControlPointRenderer : MonoBehaviour
             {
 				controlObjects[i].gameObject.SetActive(true);
                 controlObjects[i].position = positions[i];
+                controlObjects[i].localPosition = new Vector3(controlObjects[i].localPosition.x, controlObjects[i].localPosition.y, 0f);
 				if(i == selectedIndex)
 					controlObjects[i].GetComponent<SpriteRenderer>().sprite = selectImage;
 				else

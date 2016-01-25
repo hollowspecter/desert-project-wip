@@ -76,7 +76,7 @@ public class RenderTexDrawing : MonoBehaviour
     private int currentBackup = -1;
     private Color32[][] backups;
 
-    
+    #region Standard Methods (Start, Update, etc)
     // Use this for initialization
     void Start()
     {
@@ -185,12 +185,7 @@ public class RenderTexDrawing : MonoBehaviour
 
         speed *= 0.75f;//friction
     }
-    
-    void OnDrawGizmos()
-    {
-
-    }
-
+    #endregion
 
     //Saves the current RenderTexture to the backgroundTexture by snapshotting a temporary RenderTexture with the CaptureCamera
     public void CaptureRenderTex()
@@ -221,7 +216,8 @@ public class RenderTexDrawing : MonoBehaviour
         captureCamera.enabled = false;
         RenderTexture.active = original;
     }
-    
+
+    #region Undo/Backup Methods
     //Move the backups over, copy the new backup in and set it as the current one
     void NewBackup()
     {
@@ -272,6 +268,7 @@ public class RenderTexDrawing : MonoBehaviour
             target[i] = source[i];
         }
     }
+    #endregion
 
 
 

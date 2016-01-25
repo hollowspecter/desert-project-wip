@@ -6,8 +6,7 @@ using System.Collections.Generic;
 public class SplineTool : ITool
 {
     RenderTexDrawing _map;
-
-    List<CatmullRomSpline> splines;
+    
     private CatmullRomSpline activeSpline;
     private Vector3 closestPoint;
     private Vector3 cursorPosition;
@@ -30,12 +29,11 @@ public class SplineTool : ITool
         Init();
     }
 
+    #region Standard methods (Start, Update, Activate, Deactivate)
     // Use this for initialization
     void Init()
     {
-        splines = new List<CatmullRomSpline>();
         activeSpline = new CatmullRomSpline(_splineRenderTarget, _map.GetComponent<ControlPointRenderer>());
-        splines.Add(activeSpline);
         ctrl = activeSpline.ControlPoints;
     }
 
@@ -57,6 +55,7 @@ public class SplineTool : ITool
     {
         _map.SetCursorImage(cursorImage);
         _map.ResetCursorRotScal();
+
     }
 
     public void Deactivate()
@@ -66,7 +65,7 @@ public class SplineTool : ITool
             FinishSpline();
         }
     }
-
+    #endregion
 
     #region buttonMethods
 
@@ -94,7 +93,7 @@ public class SplineTool : ITool
         }
         else
         {
-            SelectSpline();
+            NewSpline();
         }
     }
 
@@ -198,6 +197,8 @@ public class SplineTool : ITool
     //Rasterize and deactivate the spline
     void FinishSpline()
     {
+        Vector3[] test = CalculateWaypoints();
+        DebugShowPoints(test);
         _map.CaptureRenderTex();
         activeSpline.clearMesh();
         activeSpline = null;
@@ -207,27 +208,74 @@ public class SplineTool : ITool
     }
 
     //Select a spline if you are above one or create a new one
-    void SelectSpline()
+    void NewSpline()
     {
-        //check for all splines if the cursor is above them if so select it
-        for (int i = 0; i < splines.Count - 1; ++i)
-        {
-            if (splines[i].ControlPoints.IsCloseToSpline(cursorPosition))
-            {
-                activeSpline = splines[i];
-                ctrl = activeSpline.ControlPoints;
-                break;
-            }
-        }
         //creates a new one otherwise and delete the old one
         if (activeSpline == null)
         {
-            splines.RemoveAt(0);
             activeSpline = new CatmullRomSpline(_splineRenderTarget, _map.GetComponent<ControlPointRenderer>());
-            splines.Add(activeSpline);
             ctrl = activeSpline.ControlPoints;
             AddPoint();
         }
     }
+
+    //Calculate a number of Waypoints for each Controlpoint that was set by the player
+    //However waypoints that are too close to each other are ignored in order to reduce waypoint count
+    Vector3[] CalculateWaypoints()
+    {
+        if (activeSpline != null && ctrl.Count > 0)
+        {
+            //How many Waypoints to create from a single Controlpoint
+            int waypointMultiplier = 4;
+            float deltaT = 1.0f / waypointMultiplier;
+            //The Array of Waypoints to return
+            Vector3[] waypoints = new Vector3[ctrl.Count * waypointMultiplier];
+
+            //calculate the Waypoints from the active Spline
+            for (int i = 0; i < ctrl.Count; ++i)
+            {
+                waypoints[i * waypointMultiplier] = ctrl[i];
+
+                int index = 1;
+                if (i != ctrl.Count)
+                {
+                    for (int j = 1; j < waypointMultiplier; ++j)
+                    {
+                        Debug.Log(deltaT * j);
+                        waypoints[i * waypointMultiplier + index] = activeSpline.GetSplinePoint(i, deltaT * j);
+                        index++;
+                    }
+                }
+            }
+
+            return waypoints;
+        }
+
+        else
+        {
+            Debug.LogError("No Spline Active to calculate Waypoints from");
+            return null;
+        }
+    }
+
+    void DebugShowPoints(Vector3[] points)
+    {
+        GameObject parent = new GameObject("wayPointParent");
+
+        for(int i = 0; i < points.Length; ++i)
+        {
+            GameObject g = new GameObject();
+            g.transform.parent = parent.transform;
+            g.transform.position = points[i];
+        }
+
+        parent.transform.rotation = Quaternion.Euler(90, 0, 0);
+        parent.transform.localScale = new Vector3(100, 100, 1);
+        for (int i = 0; i < points.Length-1; ++i)
+        {
+            Debug.DrawLine(parent.transform.GetChild(i).position, parent.transform.GetChild(i+1).position, Color.red, 1000);
+        }
+    }
+
     #endregion
 }

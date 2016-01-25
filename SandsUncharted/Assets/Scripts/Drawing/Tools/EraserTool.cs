@@ -11,7 +11,7 @@ public class EraserTool : ITool
     private Sprite eraserSprite;
     private GameObject _stampObject;
     
-    float scaleSpeed = 5f;
+    float scaleSpeed = 1.5f;
 
     private Vector3 cursorPosition;
     private float cursorLocalScale;

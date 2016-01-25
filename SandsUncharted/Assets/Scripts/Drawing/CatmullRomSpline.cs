@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public class CatmullRomSpline
 {
-#region Membervariables
+    #region private Variables
     /*http://www.habrador.com/tutorials/catmull-rom-splines/ */
 
     private GameObject _renderTarget; //The object that displays the splinemesh
@@ -13,18 +13,21 @@ public class CatmullRomSpline
     private float linewidth = 0.5f;
 
     private ControlPointGroup controlPoints;
-	public ControlPointGroup ControlPoints
-	{
-		get{ return controlPoints;}
-	}
 
     private Vector3 startControlPoint, endControlPoint; //The first and last controlpoints of the spline, which are mirrored through the first and last actually drawn controlpoint 
     private bool isLooping = false; //if the spline is a full circle (NO USE YET)
     private List<Vector3> vertices; //The procedurally generated vertices of the splinemesh
     private ControlPointRenderer _pointRenderer;
+    private bool jagged = false;
+
     #endregion
 
-#region Constructor, Init, Update and Gizmo
+    public ControlPointGroup ControlPoints
+    {
+        get { return controlPoints; }
+    }
+
+    #region Constructor, Init, Update and Gizmo
     public CatmullRomSpline(GameObject rendertarget, ControlPointRenderer pointRenderer)
     {
         _renderTarget = rendertarget;
@@ -246,8 +249,11 @@ public class CatmullRomSpline
                 {
                     continue;
                 }
-                CalculateJaggedMeshPart(i);
 
+                if (jagged)
+                    CalculateJaggedMeshPart(i);
+                else
+                    CalcMeshVertexPart(i);
             }
         }
     }
@@ -352,6 +358,14 @@ public class CatmullRomSpline
     {
         return controlPoints.Count;
     }
+
+    //returns a Point on the spline determined by the second controlpoint and the points corresponding t 
+    public Vector3 GetSplinePoint(int controlPointIndex, float t)
+    {
+        Vector3[] p = GetPartControlPoints(controlPointIndex);
+        return CalculatePosition(t, p[0], p[1], p[2], p[3]);
+    }
+
     #endregion
 
     public void ChangeLineWidth(float factor)

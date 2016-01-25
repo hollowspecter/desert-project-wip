@@ -9,7 +9,7 @@ public class StampTool : ITool
     private Sprite currentSprite;
     
     float rotationSpeed = 40f;
-    float scaleSpeed = 5f;
+    float scaleSpeed = 2f;
     private GameObject _stampPrefab;
 
     private Vector3 cursorPosition;
