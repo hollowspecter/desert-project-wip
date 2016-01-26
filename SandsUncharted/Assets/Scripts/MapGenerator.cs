@@ -1,10 +1,14 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Assertions;
 using UnityEditor;
+using System.Collections;
 
 public class MapGenerator : MonoBehaviour
 {
     #region private
+    [SerializeField]
+    private Transform UI;
     [SerializeField]
     private Texture2D biomeTexture;
     [SerializeField]
@@ -25,11 +29,20 @@ public class MapGenerator : MonoBehaviour
     private LUTGenerator lutGen;
     private string progressBarTitle = "Density Map is being calculated";
     private string progressBarInfo = "Please sit back and have a sip of tea.";
+    private bool UIenabled = false;
+    private ThreadManagement threading;
+
+    // UI
+    private Text ui_loadingText;
+    private Slider ui_progressSlider;
+    private GameObject ui_loadingPanel;
     #endregion
 
     #region Properties
 
     public enum BiomeSolo { none, red, green, blue };
+
+    public ChunkMap ChunkMap { get { return chunkMap; } }
 
     public Biome redBiome;
     public Biome greenBiome;
@@ -41,6 +54,105 @@ public class MapGenerator : MonoBehaviour
     public int TotalDepth { get { return depth * chunkSize; } }
 
     #endregion
+
+    void Awake()
+    {
+        // Is everything ready to generate the map?
+        if (!CheckConditions()) {
+            Debug.LogError("Errors for initilisation have occurred!");
+        }
+
+        // Generate a new Chunk Map
+        chunkMap = new ChunkMap(width, height, depth, chunkSize);
+
+        // Init the UI feedback
+        if (UI != null) {
+            UIenabled = true;
+            ui_loadingPanel = UI.FindChild("LoadingPanel").gameObject;
+            Assert.IsNotNull<GameObject>(ui_loadingPanel);
+            ui_loadingText = ui_loadingPanel.transform.FindChild("LoadingText").GetComponent<Text>();
+            Assert.IsNotNull<Text>(ui_loadingText);
+            ui_progressSlider = ui_loadingPanel.transform.FindChild("ProgressSlider").GetComponent<Slider>();
+            Assert.IsNotNull<Slider>(ui_progressSlider);
+        }
+
+        threading = GetComponent<ThreadManagement>();
+        Assert.IsNotNull<ThreadManagement>(threading);
+    }
+
+    void Start()
+    {
+        // Start filling the Density map
+        Debug.Log("Filling the density map.");
+        StartCoroutine(CalculateDensityMap());
+    }
+
+    IEnumerator CalculateDensityMap()
+    {
+        // Initialize a Progress Bar
+        int chunkProgress = 0;
+
+        foreach (Chunk c in chunkMap) {
+
+            // Determine, if this chunk will have a
+            // surface to extract. If not, flag the chunk
+            float minValue = float.MaxValue;
+            float maxValue = float.MinValue;
+
+            for (int x = 0; x < chunkSize; ++x) {
+                for (int y = 0; y < chunkSize; ++y) {
+                    for (int z = 0; z < chunkSize; ++z) {
+
+                        int xPos = x + (int)c.ChunkmapPosition.x;
+                        int yPos = y + (int)c.ChunkmapPosition.y;
+                        int zPos = z + (int)c.ChunkmapPosition.z;
+
+                        float yfloat = (float)yPos / height;
+
+                        /*
+                         * Calculate density value from noise layers
+                         */
+                        float value = yfloat;
+                        value += GetValueFromBiomes(new Vector3(xPos, yfloat, zPos));
+                        c[x, y, z] = value;
+
+                        if (value < minValue)
+                            minValue = value;
+                        if (value > maxValue)
+                            maxValue = value;
+                    }
+
+                    
+                }
+            }
+
+            /* End of one chunk */
+
+            if (!(minValue <= isolevel && isolevel <= maxValue)) {
+                c.hasSurface = false;
+            }
+
+            chunkProgress++;
+            if (UIenabled) {
+                ui_progressSlider.value = (float)chunkProgress / (float)chunkMap.COUNT;
+                ui_loadingText.text = "Calculating the desert \n \n" + chunkProgress + "/" + chunkMap.COUNT;
+            }
+            yield return new WaitForEndOfFrame();
+        }
+
+        ui_loadingPanel.SetActive(false);
+
+        // Now queue all the jobs on the ThreadManagement
+        for (int x = 0; x < width; ++x) {
+            for (int y = 0; y < height; ++y) {
+                for (int z = 0; z < depth; ++z) {
+                    if (chunkMap[x,y,z].hasSurface)
+                        threading.EnqueueJob(new MeshTask(x, y, z, chunkSize));
+                }                
+            }
+        }
+        threading.ShowNumberOfJobs();
+    }
 
     bool CheckConditions()
     {
@@ -60,6 +172,9 @@ public class MapGenerator : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Is called from the Editor
+    /// </summary>
     public void GenerateMap()
     {
         // Is everything ready to generate the map?
@@ -77,7 +192,7 @@ public class MapGenerator : MonoBehaviour
 
         // Generate the Mesh
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
-        meshGen.GenerateMesh(chunkMap, 1f, isolevel);
+        meshGen.EditorGenerateMesh(chunkMap, 1f, isolevel);
     }
 
     private bool RandomFillMap()
@@ -87,7 +202,7 @@ public class MapGenerator : MonoBehaviour
         EditorUtility.DisplayCancelableProgressBar(progressBarTitle, progressBarInfo, progress);
 
         // Calculate the step
-        float step = 1f / chunkMap.Count;
+        float step = 1f / (float)chunkMap.Count;
 
         // Count the empty chunks
         int emptyChunkCounter = 0;
@@ -124,7 +239,7 @@ public class MapGenerator : MonoBehaviour
                 }
             }
 
-            if (!(minValue < isolevel && isolevel < maxValue)) {
+            if (!(minValue <= isolevel && isolevel <= maxValue)) {
                 emptyChunkCounter++;
                 c.hasSurface = false;
             }

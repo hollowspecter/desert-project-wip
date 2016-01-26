@@ -31,6 +31,8 @@ public class VegetationPlanter : MonoBehaviour
     [SerializeField]
     [Range(0f,1f)]
     private float deadtreeIntensity = 1f;
+    [SerializeField]
+    private float scaleVariation = 0.3f;
 
     private MapGenerator mapgen;
     private string progressBarTitle = "Planting Vegetation";
@@ -66,6 +68,7 @@ public class VegetationPlanter : MonoBehaviour
         EditorUtility.DisplayCancelableProgressBar(progressBarTitle, progressBarInfo, progress);
         float progressStep = 1f / (float)mapgen.TotalWidth;
         int progressTreeCount = 0;
+        int failedRaycastsCount = 0;
 
         // Iterate over the whole map using 
         for (int x = 0; x < mapgen.TotalWidth; ++x) {
@@ -89,6 +92,7 @@ public class VegetationPlanter : MonoBehaviour
 
                         // Calculate and assign new position
                         treeT.position = new Vector3(treeT.position.x, hit.point.y - sinkInOffset, treeT.position.z);
+                        treeT.localScale = RandomScale();
 
                         // 3. Make sure that no other trees plant themselves nearby
                         // by reducing the noise values close to the tree
@@ -99,6 +103,7 @@ public class VegetationPlanter : MonoBehaviour
                     }
                     else {
                         DestroyImmediate(tree);
+                        failedRaycastsCount++;
                     }
                 }
             }
@@ -111,7 +116,11 @@ public class VegetationPlanter : MonoBehaviour
                     return;
                 }
             }
+
         }
+
+        Debug.Log("Planted " + progressTreeCount + " trees");
+        Debug.Log("Failed Raycasts: " + failedRaycastsCount);
 
         // Clear Progressbar
         EditorUtility.ClearProgressBar();
@@ -121,6 +130,16 @@ public class VegetationPlanter : MonoBehaviour
     {
         float rotationY = Random.Range(0f, 360f);
         return Quaternion.Euler(Vector3.up * rotationY);
+    }
+
+    Vector3 RandomScale()
+    {
+        float maxScale = 1f + scaleVariation;
+        float minScale = 1f - scaleVariation;
+        float r1 = Random.Range(minScale, maxScale);
+        float r2 = Random.Range(minScale, maxScale);
+        float r3 = Random.Range(minScale, maxScale);
+        return new Vector3(r1, r2, r3);
     }
 
     public void VisualizeNoise(NoiseLayer[] noises)

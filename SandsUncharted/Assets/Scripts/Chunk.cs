@@ -66,6 +66,7 @@ public class ChunkMap : IEnumerable
         }
     }
 
+    public int COUNT { get { return GetLength(0) * GetLength(1) * GetLength(2); } }
     public int TotalWidth { get { return GetLength(0) * chunkSize; } }
     public int TotalHeight { get { return GetLength(1) * chunkSize; } }
     public int TotalDepth { get { return GetLength(2) * chunkSize; } }
