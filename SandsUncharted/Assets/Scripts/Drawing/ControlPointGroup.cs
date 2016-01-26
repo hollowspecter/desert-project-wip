@@ -7,10 +7,6 @@ public class ControlPointGroup
     #region member variables
     private List<Vector3> controlPoints;
 
-	public int Count
-	{
-		get{ return controlPoints.Count;}
-	}
 
 	private int selectedIndex = -1;
 
@@ -20,8 +16,13 @@ public class ControlPointGroup
 		set{ selectedIndex = value;}
 	}
 
+    public int Count
+    {
+        get { return controlPoints.Count; }
+    }
     #endregion
 
+    #region Standard Methods (Constructor/Update)
     // Use this for initialization
     public ControlPointGroup()
     {
@@ -33,8 +34,9 @@ public class ControlPointGroup
     {
 
 	}
+    #endregion
 
-	#region Add Remove Get Points and currentIndex
+    #region Add Remove Get Points and currentIndex
     public void Add(Vector3 p)
     {
         controlPoints.Add(p);
@@ -150,4 +152,9 @@ public class ControlPointGroup
 	{
 		controlPoints [pointIndex] += deltaPosition;
 	}
+
+    public void MoveControlPointTo(int pointIndex, Vector3 cursorPosition)
+    {
+        controlPoints[pointIndex] = new Vector3(cursorPosition.x, cursorPosition.y, controlPoints[pointIndex].z);
+    }
 }

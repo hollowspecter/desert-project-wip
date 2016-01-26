@@ -75,7 +75,8 @@ public class SplineTool : ITool
     {
         if (activeSpline != null && (ctrl.SelectedIndex >= 0) && Vector3.Distance(cursorPosition, ctrl[ctrl.SelectedIndex]) <= selectionDistance)
         {
-            ctrl.MoveControlPoint(ctrl.SelectedIndex, _map.GetSpeed() * Time.deltaTime);
+            //ctrl.MoveControlPoint(ctrl.SelectedIndex, _map.GetSpeed() * Time.deltaTime);
+            ctrl.MoveControlPointTo(ctrl.SelectedIndex, cursorPosition);
         }
     }
 
@@ -101,12 +102,10 @@ public class SplineTool : ITool
 
     public void ButtonAUp()
     {
-        Debug.Log("No ButtonFunction implemented in Tool");
     }
 
     public void ButtonB()
     {
-        Debug.Log("No ButtonFunction implemented in Tool");
     }
 
     public void ButtonBDown()
@@ -119,12 +118,10 @@ public class SplineTool : ITool
 
     public void ButtonBUp()
     {
-        Debug.Log("No ButtonFunction implemented in Tool");
     }
 
     public void ButtonX()
     {
-        Debug.Log("No ButtonFunction implemented in Tool");
     }
 
     public void ButtonXDown()
@@ -137,7 +134,6 @@ public class SplineTool : ITool
 
     public void ButtonXUp()
     {
-        Debug.Log("No ButtonFunction implemented in Tool");
     }
     public void RightStick(float x, float y)
     {
@@ -176,8 +172,6 @@ public class SplineTool : ITool
     {
         if (ctrl.SelectedIndex != ctrl.IndexOf(closestPoint))
             ctrl.SelectedIndex = ctrl.IndexOf(closestPoint);
-        else
-            ctrl.SelectedIndex = -1;
     }
 
     void AddPoint()
@@ -199,8 +193,6 @@ public class SplineTool : ITool
     //Rasterize and deactivate the spline
     void FinishSpline()
     {
-        Vector3[] test = CalculateWaypoints();
-        DebugShowPoints(test);
         _map.CaptureRenderTex();
         activeSpline.clearMesh();
         activeSpline = null;

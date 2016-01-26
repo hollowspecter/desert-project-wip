@@ -282,6 +282,7 @@ public class RenderTexDrawing : MonoBehaviour
         /****move Reticle based on acceleration and left stick vector****/
         speed += acceleration * axisVector * Time.deltaTime; //make velocityvector
         _cursor.position += speed * Time.deltaTime; //make movementvector
+        _cursor.localPosition = new Vector3(Mathf.Clamp(_cursor.localPosition.x, -6.8f, 6.8f), Mathf.Clamp(_cursor.localPosition.y, -3, 4f), _cursor.localPosition.z);
     }
 
     //Rotate(xAxis) and Scale(yAxis) the cursor
@@ -295,7 +296,7 @@ public class RenderTexDrawing : MonoBehaviour
         else if (Mathf.Abs(rX) < 0.5f && Mathf.Abs(rY) > 0.5f)
         {
             _cursor.localScale += -Mathf.Sign(rY) * new Vector3(scaleSpeed, scaleSpeed, scaleSpeed) * Time.deltaTime;
-            float clamped = Mathf.Clamp(_cursor.localScale.x, 0.5f, 4f);
+            float clamped = Mathf.Clamp(_cursor.localScale.x, 1f, 2f);
             _cursor.localScale = new Vector3(clamped, clamped, clamped);
         }
     }

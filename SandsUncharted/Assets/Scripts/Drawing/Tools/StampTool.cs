@@ -36,7 +36,6 @@ public class StampTool : ITool
 
     public void ButtonA()
     {
-        Debug.Log("No ButtonFunction implemented");
     }
 
     public void ButtonADown()
@@ -46,12 +45,10 @@ public class StampTool : ITool
 
     public void ButtonAUp()
     {
-        Debug.Log("No ButtonFunction implemented");
     }
 
     public void ButtonB()
     {
-        Debug.Log("No ButtonFunction implemented");
     }
 
     public void ButtonBDown()
@@ -68,17 +65,14 @@ public class StampTool : ITool
 
     public void ButtonX()
     {
-        Debug.Log("No ButtonFunction implemented");
     }
 
     public void ButtonXDown()
     {
-        Debug.Log("No ButtonFunction implemented");
     }
 
     public void ButtonXUp()
     {
-        Debug.Log("No ButtonFunction implemented");
     }
 
     public void RightStick(float x, float y)
