@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class MeshTask : System.IComparable
+public class MeshTask : System.IComparable, ITask
 {
     public int chunkX, chunkY, chunkZ;
     public int chunkSize;

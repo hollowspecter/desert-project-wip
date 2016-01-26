@@ -10,6 +10,8 @@ public class MapGenerator : MonoBehaviour
     [SerializeField]
     private Transform UI;
     [SerializeField]
+    private Transform playerTransform;
+    [SerializeField]
     private Texture2D biomeTexture;
     [SerializeField]
     private int chunkSize = 16;
@@ -76,8 +78,10 @@ public class MapGenerator : MonoBehaviour
             Assert.IsNotNull<Slider>(ui_progressSlider);
         }
 
+        // Some checking
         threading = GetComponent<ThreadManagement>();
         Assert.IsNotNull<ThreadManagement>(threading);
+        Assert.IsNotNull<Transform>(playerTransform);
     }
 
     void Start()
@@ -134,20 +138,22 @@ public class MapGenerator : MonoBehaviour
 
             chunkProgress++;
             if (UIenabled) {
-                ui_progressSlider.value = (float)chunkProgress / (float)chunkMap.COUNT;
-                ui_loadingText.text = "Calculating the desert \n \n" + chunkProgress + "/" + chunkMap.COUNT;
+                ui_progressSlider.value = (float)chunkProgress / (float)chunkMap.Count;
+                ui_loadingText.text = "Calculating the desert \n \n" + chunkProgress + "/" + chunkMap.Count;
             }
             yield return new WaitForEndOfFrame();
         }
-
         ui_loadingPanel.SetActive(false);
 
         // Now queue all the jobs on the ThreadManagement
         for (int x = 0; x < width; ++x) {
             for (int y = 0; y < height; ++y) {
                 for (int z = 0; z < depth; ++z) {
-                    if (chunkMap[x,y,z].hasSurface)
-                        threading.EnqueueJob(new MeshTask(x, y, z, chunkSize));
+                    if (chunkMap[x, y, z].hasSurface) {
+                        // Calculate the priority
+                        float priority = Vector3.Distance(playerTransform.position, chunkMap.GetChunkWorldpos(x,y,z));
+                        threading.EnqueueJob(new MeshTask(x, y, z, chunkSize), priority);
+                    }
                 }                
             }
         }

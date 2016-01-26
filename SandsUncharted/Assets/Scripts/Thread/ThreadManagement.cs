@@ -3,6 +3,7 @@ using UnityEngine.Assertions;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using Priority_Queue;
 
 /// <summary>
 /// Only works with 1 Thread so far!
@@ -34,12 +35,14 @@ public class ThreadManagement : MonoBehaviour
 
     // Job Queue
     private object lock_jobQueue = new object();
-    private Queue<MeshTask> m_jobs = new Queue<MeshTask>();
-    private Queue<MeshTask> Jobs
+    //private SimplePriorityQueue< m_jobs = new SimplePriorityQueue 
+    private SimplePriorityQueue<ITask> m_jobs = new SimplePriorityQueue<ITask>();
+    //private Queue<MeshTask> m_jobs = new Queue<MeshTask>();
+    private SimplePriorityQueue<ITask> Jobs
     {
         get
         {
-            Queue<MeshTask> tmp;
+            SimplePriorityQueue<ITask> tmp;
             lock (lock_jobQueue) {
                 tmp = m_jobs;
             }
@@ -107,14 +110,14 @@ public class ThreadManagement : MonoBehaviour
         }
     }
 
-    public void EnqueueJob(MeshTask task)
+    public void EnqueueJob(MeshTask task, float priority)
     {
-        Jobs.Enqueue(task);
+        Jobs.Enqueue(task, priority);
     }
 
     public void ShowNumberOfJobs()
     {
-        Debug.Log(Jobs.Count);
+        Debug.Log("Total Jobs right now: " + Jobs.Count);
     }
 
     #region Meshcreating Functions
@@ -131,7 +134,7 @@ public class ThreadManagement : MonoBehaviour
         MeshTask task;
         // Check again, if there are jobs rn!!
         if (Jobs.Count > 0)
-            task = Jobs.Dequeue();
+            task = Jobs.Dequeue() as MeshTask;
         else {
             ThreadIsFree = true;
             Debug.Log("Actually no jobs anymore. Abort!");
@@ -280,9 +283,6 @@ public class ThreadManagement : MonoBehaviour
         mesh.normals = task.normals.ToArray();
 
         // Apply a Mesh Collider
-        MeshCollider meshC = chunkGO.AddComponent(typeof(MeshCollider)) as MeshCollider;
-        meshC.sharedMesh = mesh;
-
         chunkGO.AddComponent(typeof(MeshCollider));
 
         // Reposition chunk

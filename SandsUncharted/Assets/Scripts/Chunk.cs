@@ -54,9 +54,12 @@ public class Chunk
 
 public class ChunkMap : IEnumerable
 {
+    #region private members
     private Chunk[, ,] chunkMap;
     private int chunkSize;
+    #endregion
 
+    #region properties
     // Indexer property to provide read access to the private chunkmap
     public Chunk this[long xIndex, long yIndex, long zIndex]
     {
@@ -66,7 +69,6 @@ public class ChunkMap : IEnumerable
         }
     }
 
-    public int COUNT { get { return GetLength(0) * GetLength(1) * GetLength(2); } }
     public int TotalWidth { get { return GetLength(0) * chunkSize; } }
     public int TotalHeight { get { return GetLength(1) * chunkSize; } }
     public int TotalDepth { get { return GetLength(2) * chunkSize; } }
@@ -75,8 +77,8 @@ public class ChunkMap : IEnumerable
     {
         return chunkMap.GetLength(dimension);
     }
-
-    public int Count { get { return GetLength(0) + GetLength(1) + GetLength(2); } }
+    public int Count { get { return GetLength(0) * GetLength(1) * GetLength(2); } }
+    #endregion
 
     // Constructor
     public ChunkMap(int width, int height, int depth, int chunkSize)
@@ -94,6 +96,14 @@ public class ChunkMap : IEnumerable
         this.chunkSize = chunkSize;
     }
 
+    // Retrieving World Position of a Chunk
+    public Vector3 GetChunkWorldpos(int x, int y, int z)
+    {
+        float xPos = x * chunkSize - x;
+        float yPos = y * chunkSize - y;
+        float zPos = z * chunkSize - z;
+        return new Vector3(xPos, yPos, zPos);
+    }
     // Calculating Normal
     public Vector3 GetNormal(int x, int y, int z)
     {
