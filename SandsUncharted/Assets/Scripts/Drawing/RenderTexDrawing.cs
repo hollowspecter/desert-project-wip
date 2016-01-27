@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class RenderTexDrawing : MonoBehaviour
 {
+    /**CAPTUREMODE RENDERTEXTURE ONLY OR TEXTUREMODE**/
+    private bool rtModeON = true;
 
     #region cursor variables
     [SerializeField]
@@ -21,11 +23,14 @@ public class RenderTexDrawing : MonoBehaviour
     [SerializeField]
     private Camera _renderCam;
     private RenderTexture captureRenderTexture;
+    private RenderTexture lastCaptureTexture;
     private Texture2D captureTexture;
     private Camera captureCamera;
     [SerializeField]
     private GameObject captureTarget;
-    private int captureResolution = 1024;
+    [SerializeField]
+    private GameObject captureTarget2;
+    private int captureResolution = 2048;
     private int captureWidth = 1920;
     private int captureHeight = 1080;
 
@@ -70,6 +75,7 @@ public class RenderTexDrawing : MonoBehaviour
 
     private bool captureFrame = true;
 
+    bool undid = false;
 
     private int backupCount = 1; //number of steps you can undo increasing the number comes at a heavy performance cost
     private int currentBackup = -1; //currently active backup
@@ -90,6 +96,7 @@ public class RenderTexDrawing : MonoBehaviour
         stampTool = new StampTool(this, _stampPrefab);
         meterTool = new MeterTool(this, _line, meterCursor);
         eraserTool = new EraserTool(this, eraserSprite, eraserCursor);
+
 
         activeTool = splineTool;
         activeTool.Activate();
@@ -181,6 +188,11 @@ public class RenderTexDrawing : MonoBehaviour
                 Undo();
             }
 
+            if(Input.GetButtonDown("RB"))
+            {
+                Redo();
+            }
+
 
             //The Right-Stick movement is used for CursorRotation(xAxis) and -Scaling(yAxis) MOVETO:StampTool
             float rX = Input.GetAxis("RightStickX");
@@ -193,6 +205,18 @@ public class RenderTexDrawing : MonoBehaviour
         speed *= 0.75f;//friction
     }
     #endregion
+
+    public void Capture()
+    {
+        if(rtModeON)
+        {
+            PureCapture();
+        }
+        else
+        {
+            TextureCapture();
+        }
+    }
 
     //This Version of the Capture Method uses Textures to permanently rasterize the captured pixels.
     //This leads to severe framerate drops when capturing quickly in succession, but enables the usage of the undo feature
@@ -223,7 +247,7 @@ public class RenderTexDrawing : MonoBehaviour
         captureFrame = true; //set Captureframe to true for debug
 
         //remove the temporary stuff
-        //RenderTexture.ReleaseTemporary(captureRenderTexture);
+        RenderTexture.ReleaseTemporary(captureRenderTexture);
         captureCamera.targetTexture = null;
         captureCamera.enabled = false;
         RenderTexture.active = original;
@@ -237,12 +261,19 @@ public class RenderTexDrawing : MonoBehaviour
 
         //initialize camera and texture
         captureCamera.enabled = true;       //activate the cameracomponent
-        RenderTexture original = RenderTexture.active;  //save out the drawingtexture to reenable it later
-        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution);   //get a temporary RenderTexture
+        RenderTexture original = RenderTexture.active;//save out the drawingtexture to reenable it later
+        if(!undid)
+        {
+            if (lastCaptureTexture != null)
+                RenderTexture.ReleaseTemporary(lastCaptureTexture);
+            lastCaptureTexture = captureRenderTexture;
+        }
+        captureTarget2.GetComponent<MeshRenderer>().material.mainTexture = lastCaptureTexture;
 
+        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution);
         //activate rendertexture and link it to the camera
-        RenderTexture.active = captureRenderTexture; //activate the captureRenderTexture
         captureCamera.targetTexture = captureRenderTexture; //link the captureRenderTexture to the camera
+        RenderTexture.active = captureCamera.targetTexture; //activate the captureRenderTexture
 
         //Snapshot with the CaptureCamera to update the drawing
         captureCamera.Render();
@@ -251,13 +282,33 @@ public class RenderTexDrawing : MonoBehaviour
         captureFrame = true; //set Captureframe to true for debug
 
         //remove the temporary stuff
-        //RenderTexture.ReleaseTemporary(captureRenderTexture);
+        undid = false;
         captureCamera.targetTexture = null;
         captureCamera.enabled = false;
         RenderTexture.active = original;
     }
 
-    #region Undo/Backup Methods
+    private void Undo()
+    {
+        if(rtModeON)
+        {
+            RTUndo();
+        }
+        else
+        {
+            TUndo();
+        }
+    }
+
+    private void Redo()
+    {
+        if(rtModeON)
+        {
+            RTRedo();
+        }
+    }
+
+    #region Undo/Backup Methods with textures
     //Move the backups over, copy the new backup in and set it as the current one
     void NewBackup()
     {
@@ -266,7 +317,7 @@ public class RenderTexDrawing : MonoBehaviour
         currentBackup = -1;
     }
 
-    void Undo()
+    void TUndo()
     {
         if (currentBackup != backupCount - 1)
         {
@@ -310,6 +361,23 @@ public class RenderTexDrawing : MonoBehaviour
     }
     #endregion
 
+    #region Undo/Backup RT only
+    private void RTUndo()
+    {
+        captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = lastCaptureTexture;
+        undid = true;
+    }
+
+    private void RTRedo()
+    {
+        if(undid)
+        {
+            captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = captureRenderTexture;
+            undid = false;
+        }
+    }
+
+    #endregion
 
 
 
