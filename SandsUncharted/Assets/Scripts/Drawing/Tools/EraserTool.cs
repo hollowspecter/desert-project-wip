@@ -112,7 +112,7 @@ public class EraserTool : ITool
         _stampObject.GetComponent<SpriteRenderer>().sprite = eraserSprite;
         _stampObject.transform.localScale = new Vector3(cursorLocalScale, cursorLocalScale, cursorLocalScale);
         
-        _map.Capture();
+        _map.EraserCapture(firstFrame);
         _stampObject.transform.localPosition = new Vector3(0, 0, 2.5f);
     }
 }

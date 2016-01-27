@@ -121,7 +121,7 @@ public class RenderTexDrawing : MonoBehaviour
         if (captureFrame)
         {
             captureFrame = false;
-            //Debug.Log(Time.deltaTime);
+            Debug.Log(Time.deltaTime);
         }
         //pressing Y opens the Toolmenu, this blocks all other input
         if (Input.GetButtonDown("Y"))
@@ -218,9 +218,22 @@ public class RenderTexDrawing : MonoBehaviour
         }
     }
 
+    public void EraserCapture(bool firstFrame)
+    {
+        if(rtModeON)
+        {
+            PureEraserCapture(firstFrame);
+        }
+        else
+        {
+            TextureCapture();
+        }
+    }
+
+
     //This Version of the Capture Method uses Textures to permanently rasterize the captured pixels.
-    //This leads to severe framerate drops when capturing quickly in succession, but enables the usage of the undo feature
-    public void TextureCapture()
+    //This leads to severe framerate drops when capturing quickly in succession (like when erasing)
+    private void TextureCapture()
     {
         Debug.Log("Textured Capture");
 
@@ -253,9 +266,9 @@ public class RenderTexDrawing : MonoBehaviour
         RenderTexture.active = original;
     }
 
-    //This Version of the Capture Method does not use a Texture, therefor it does not work with the undo feature
-    //however, it also does not suffer from the extreme framerate drops
-    public void PureCapture()
+    //This Version of the Capture Method does not use a Texture
+    //it does not suffer from the extreme framerate drops of the texturemethod
+    private void PureCapture()
     {
         Debug.Log("Pure Capture");
 
@@ -282,6 +295,46 @@ public class RenderTexDrawing : MonoBehaviour
         captureFrame = true; //set Captureframe to true for debug
 
         //remove the temporary stuff
+        undid = false;
+        captureCamera.targetTexture = null;
+        captureCamera.enabled = false;
+        RenderTexture.active = original;
+    }
+
+    //This variant of the Pure Capture Method also takes into consideration that erasing is a continuos process and only saves a backup when the erase button is pressed down
+    private void PureEraserCapture(bool firstFrame)
+    {
+        Debug.Log("Pure Eraser Capture");
+        RenderTexture rt = null;
+        //initialize camera and texture
+        captureCamera.enabled = true;       //activate the cameracomponent
+        RenderTexture original = RenderTexture.active;//save out the drawingtexture to reenable it later
+        if (!undid && firstFrame)
+        {
+            if (lastCaptureTexture != null)
+                RenderTexture.ReleaseTemporary(lastCaptureTexture);
+            lastCaptureTexture = captureRenderTexture;
+        }
+        else
+        {
+            rt = captureRenderTexture;
+        }
+        captureTarget2.GetComponent<MeshRenderer>().material.mainTexture = lastCaptureTexture;
+
+        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution);
+        //activate rendertexture and link it to the camera
+        captureCamera.targetTexture = captureRenderTexture; //link the captureRenderTexture to the camera
+        RenderTexture.active = captureCamera.targetTexture; //activate the captureRenderTexture
+
+        //Snapshot with the CaptureCamera to update the drawing
+        captureCamera.Render();
+
+        captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = captureRenderTexture; //Set the Texture again (only needed the first time to render it properly
+        captureFrame = true; //set Captureframe to true for debug
+
+        //remove the temporary stuff
+        if(rt != null)
+            RenderTexture.ReleaseTemporary(rt);
         undid = false;
         captureCamera.targetTexture = null;
         captureCamera.enabled = false;
