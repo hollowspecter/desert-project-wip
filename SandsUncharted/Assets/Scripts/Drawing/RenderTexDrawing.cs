@@ -74,6 +74,8 @@ public class RenderTexDrawing : MonoBehaviour
     private int backupCount = 1; //number of steps you can undo increasing the number comes at a heavy performance cost
     private int currentBackup = -1; //currently active backup
     private Color32[][] backups;
+    [SerializeField]
+    private RectTransform UIImageTransform;
 
     #region Standard Methods (Start, Update, etc)
     // Use this for initialization
@@ -91,6 +93,12 @@ public class RenderTexDrawing : MonoBehaviour
 
         activeTool = splineTool;
         activeTool.Activate();
+
+        float mapWHratio = 16.0f / 9.0f;
+        int screenWidth = Screen.width;
+        screenWidth -= screenWidth / 20;
+        int height = (int)(screenWidth / mapWHratio);
+        UIImageTransform.sizeDelta = new Vector2(screenWidth, height);
 
         backups = new Color32[backupCount][];
         for(int i = 0; i< backupCount; ++i)
