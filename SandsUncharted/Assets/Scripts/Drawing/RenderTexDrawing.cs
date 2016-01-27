@@ -25,8 +25,6 @@ public class RenderTexDrawing : MonoBehaviour
     private Camera captureCamera;
     [SerializeField]
     private GameObject captureTarget;
-    [SerializeField]
-    private GameObject captureTarget2;
     private int captureResolution = 1024;
     private int captureWidth = 1920;
     private int captureHeight = 1080;
@@ -54,15 +52,16 @@ public class RenderTexDrawing : MonoBehaviour
     private Sprite eraserCursor;
     #endregion
 
-    #region meterTool
+    #region meterTool variables
     [SerializeField]
     private Sprite meterCursor;
     #endregion
-    [SerializeField]
-    private MeshLine _line;
-    private ToolMenu _toolMenu;
 
-    //The different Tools to choose from in the menu
+    [SerializeField]
+    private MeshLine _line; //renderer of the red line used to measure distances
+    private ToolMenu _toolMenu; //radial tool menu
+
+    //different Tools to choose from in the menu
     private ITool activeTool;
     private SplineTool splineTool;
     private StampTool stampTool;
@@ -72,8 +71,8 @@ public class RenderTexDrawing : MonoBehaviour
     private bool captureFrame = true;
 
 
-    private int backupCount = 1; //The number of steps you can undo
-    private int currentBackup = -1;
+    private int backupCount = 1; //number of steps you can undo increasing the number comes at a heavy performance cost
+    private int currentBackup = -1; //currently active backup
     private Color32[][] backups;
 
     #region Standard Methods (Start, Update, etc)
@@ -82,9 +81,8 @@ public class RenderTexDrawing : MonoBehaviour
     {
         _toolMenu = GetComponent<ToolMenu>();
         _stampManager = GetComponent<StampManager>();
-        captureTexture = new Texture2D(captureResolution, captureResolution, TextureFormat.ARGB32, true);
         captureCamera = transform.Find("CaptureCamera").GetComponent<Camera>();
-
+        captureTexture = new Texture2D(captureResolution, captureResolution, TextureFormat.ARGB32, true);
 
         splineTool = new SplineTool(this, _splineRenderTarget, _line, circleCursor);
         stampTool = new StampTool(this, _stampPrefab);
@@ -99,6 +97,7 @@ public class RenderTexDrawing : MonoBehaviour
         {
             backups[i] = new Color32[captureResolution * captureResolution];
         }
+
     }
 	
 	// Update is called once per frame
@@ -187,31 +186,64 @@ public class RenderTexDrawing : MonoBehaviour
     }
     #endregion
 
-    //Saves the current RenderTexture to the backgroundTexture by snapshotting a temporary RenderTexture with the CaptureCamera
-    public void CaptureRenderTex()
+    //This Version of the Capture Method uses Textures to permanently rasterize the captured pixels.
+    //This leads to severe framerate drops when capturing quickly in succession, but enables the usage of the undo feature
+    public void TextureCapture()
     {
-        Debug.Log("Capture");
+        Debug.Log("Textured Capture");
+
         //initialize camera and texture
-        captureCamera.enabled = true;
-        RenderTexture original = RenderTexture.active;
-        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution);
-        RenderTexture.active = captureRenderTexture;
-        //activate rendertexture and link camera
+        captureCamera.enabled = true;       //activate the cameracomponent
+        RenderTexture original = RenderTexture.active;  //save out the drawingtexture to reenable it later
+        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution);   //get a temporary RenderTexture
+        
+        //activate rendertexture and link it to the camera
+        RenderTexture.active = captureRenderTexture; //activate the captureRenderTexture
+        captureCamera.targetTexture = captureRenderTexture; //link the captureRenderTexture to the camera
 
-        captureCamera.targetTexture = captureRenderTexture;
+        //Snapshot with the CaptureCamera to update the drawing
         captureCamera.Render();
-        //snapshot
-
+        
+        //Make a Backup and transfer the Snapshot to a normal Texture
         NewBackup();
            
-        captureTexture.ReadPixels(new Rect(0, 0, captureResolution, captureResolution), 0, 0);
-        captureTexture.Apply(false);
+        captureTexture.ReadPixels(new Rect(0, 0, captureResolution, captureResolution), 0, 0); //Read out the renderTexture to rasterize it
+        captureTexture.Apply(false);              //Apply the changes to the captureTexture
 
-        captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = captureTexture;
-        captureFrame = true;
+
+        captureTexture = new Texture2D(captureResolution, captureResolution, TextureFormat.ARGB32, true); //Set the Texture again (only needed the first time to render it properly
+        captureFrame = true; //set Captureframe to true for debug
 
         //remove the temporary stuff
-        RenderTexture.ReleaseTemporary(captureRenderTexture);
+        //RenderTexture.ReleaseTemporary(captureRenderTexture);
+        captureCamera.targetTexture = null;
+        captureCamera.enabled = false;
+        RenderTexture.active = original;
+    }
+
+    //This Version of the Capture Method does not use a Texture, therefor it does not work with the undo feature
+    //however, it also does not suffer from the extreme framerate drops
+    public void PureCapture()
+    {
+        Debug.Log("Pure Capture");
+
+        //initialize camera and texture
+        captureCamera.enabled = true;       //activate the cameracomponent
+        RenderTexture original = RenderTexture.active;  //save out the drawingtexture to reenable it later
+        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution);   //get a temporary RenderTexture
+
+        //activate rendertexture and link it to the camera
+        RenderTexture.active = captureRenderTexture; //activate the captureRenderTexture
+        captureCamera.targetTexture = captureRenderTexture; //link the captureRenderTexture to the camera
+
+        //Snapshot with the CaptureCamera to update the drawing
+        captureCamera.Render();
+
+        captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = captureRenderTexture; //Set the Texture again (only needed the first time to render it properly
+        captureFrame = true; //set Captureframe to true for debug
+
+        //remove the temporary stuff
+        //RenderTexture.ReleaseTemporary(captureRenderTexture);
         captureCamera.targetTexture = null;
         captureCamera.enabled = false;
         RenderTexture.active = original;

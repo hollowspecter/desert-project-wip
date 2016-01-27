@@ -193,7 +193,7 @@ public class SplineTool : ITool
     //Rasterize and deactivate the spline
     void FinishSpline()
     {
-        _map.CaptureRenderTex();
+        _map.PureCapture();
         activeSpline.clearMesh();
         activeSpline = null;
         ctrl = null;

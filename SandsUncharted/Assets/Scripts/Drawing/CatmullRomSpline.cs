@@ -18,7 +18,7 @@ public class CatmullRomSpline
     private bool isLooping = false; //if the spline is a full circle (NO USE YET)
     private List<Vector3> vertices; //The procedurally generated vertices of the splinemesh
     private ControlPointRenderer _pointRenderer;
-    private bool jagged = false;
+    private bool jagged = true;
 
     #endregion
 

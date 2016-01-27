@@ -7,7 +7,7 @@ public class StampManager : MonoBehaviour
     [SerializeField]
     private GameObject _stampPrefab;
     private GameObject[] objectPool;
-    private int maxObjects = 10;
+    private int maxObjects = 64;
     private int usedObjects = 0;
 
     Vector3 removeVector = new Vector3(0, 0, 2.5f);
@@ -36,10 +36,17 @@ public class StampManager : MonoBehaviour
     {
         if (!IsFull())
         {
+            objectPool[usedObjects].transform.position = position;
             objectPool[usedObjects].GetComponent<SpriteRenderer>().sprite = sprite;
             objectPool[usedObjects].transform.SetParent(_parentTransform, true);
             objectPool[usedObjects].transform.localScale = new Vector3(scale, scale, scale);
             usedObjects++;
+        }
+        else
+        {
+            Debug.Log("Resetting full pool");
+            ResetPool();
+            AddStamp(position, rotation, scale, sprite);
         }
     }
 

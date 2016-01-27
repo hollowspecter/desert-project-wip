@@ -10,7 +10,7 @@ public class EraserTool : ITool
 
     private Sprite eraserSprite;
     private GameObject _stampObject;
-    
+
     float scaleSpeed = 1.5f;
 
     private Vector3 cursorPosition;
@@ -111,8 +111,8 @@ public class EraserTool : ITool
         _stampObject.transform.localRotation = Quaternion.identity;
         _stampObject.GetComponent<SpriteRenderer>().sprite = eraserSprite;
         _stampObject.transform.localScale = new Vector3(cursorLocalScale, cursorLocalScale, cursorLocalScale);
-
-        _map.CaptureRenderTex();
+        
+        _map.PureCapture();
         _stampObject.transform.localPosition = new Vector3(0, 0, 2.5f);
     }
 }

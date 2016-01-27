@@ -87,7 +87,7 @@ public class StampTool : ITool
         g.transform.SetParent(_map.transform);
         g.transform.localScale = new Vector3(cursorLocalScale, cursorLocalScale, cursorLocalScale);
 
-        _map.CaptureRenderTex();
+        _map.PureCapture();
         GameObject.Destroy(g);
     }
 
