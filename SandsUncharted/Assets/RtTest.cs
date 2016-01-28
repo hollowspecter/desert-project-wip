@@ -35,14 +35,18 @@ public class RtTest : MonoBehaviour
             index = (index + 1) % rt.Length;
             active = rt[index];
 
-            RenderTexture.active = active;
             Debug.Log("render texture: " + index);
             //activate rendertexture and link camera
 
             _camera.targetTexture = active;
+            if(!active.IsCreated())
+            {
+                active.Create();
+            }
+            RenderTexture.active = _camera.targetTexture;
             _camera.Render();
             captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = active;
-            _camera.targetTexture = null;
+            //_camera.targetTexture = null;
             _camera.enabled = false;
         }
 	}

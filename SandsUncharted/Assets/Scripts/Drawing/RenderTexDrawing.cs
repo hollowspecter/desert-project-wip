@@ -28,16 +28,14 @@ public class RenderTexDrawing : MonoBehaviour
     private Camera captureCamera;
     [SerializeField]
     private GameObject captureTarget;
-    [SerializeField]
-    private GameObject captureTarget2;
-    private int captureResolution = 2048;
+    private MeshRenderer captureRenderer;
+    private int captureResolution = 1024;
     private int captureWidth = 1920;
     private int captureHeight = 1080;
 
     #endregion
 
     #region stamping variables
-    StampManager _stampManager;
     [SerializeField]
     private GameObject _stampPrefab;
     #endregion
@@ -88,11 +86,12 @@ public class RenderTexDrawing : MonoBehaviour
     void Start()
     {
         _toolMenu = GetComponent<ToolMenu>();
-        _stampManager = GetComponent<StampManager>();
         captureCamera = transform.Find("CaptureCamera").GetComponent<Camera>();
         captureTexture = new Texture2D(captureResolution, captureResolution, TextureFormat.ARGB32, true);
-
+        captureRenderer = captureTarget.GetComponent<MeshRenderer>();
+        
         splineTool = new SplineTool(this, _splineRenderTarget, _line, circleCursor);
+        splineTool.SetSplineJaggedness(false);
         stampTool = new StampTool(this, _stampPrefab);
         meterTool = new MeterTool(this, _line, meterCursor);
         eraserTool = new EraserTool(this, eraserSprite, eraserCursor);
@@ -104,6 +103,7 @@ public class RenderTexDrawing : MonoBehaviour
         float mapWHratio = 16.0f / 9.0f;
         int screenWidth = Screen.width;
         screenWidth -= screenWidth / 20;
+        screenWidth = Mathf.Min(captureResolution, screenWidth);
         int height = (int)(screenWidth / mapWHratio);
         UIImageTransform.sizeDelta = new Vector2(screenWidth, height);
 
@@ -121,7 +121,7 @@ public class RenderTexDrawing : MonoBehaviour
         if (captureFrame)
         {
             captureFrame = false;
-            Debug.Log(Time.deltaTime);
+            //Debug.Log(Time.deltaTime);
         }
         //pressing Y opens the Toolmenu, this blocks all other input
         if (Input.GetButtonDown("Y"))
@@ -281,9 +281,8 @@ public class RenderTexDrawing : MonoBehaviour
                 RenderTexture.ReleaseTemporary(lastCaptureTexture);
             lastCaptureTexture = captureRenderTexture;
         }
-        captureTarget2.GetComponent<MeshRenderer>().material.mainTexture = lastCaptureTexture;
 
-        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution);
+        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default, 1);
         //activate rendertexture and link it to the camera
         captureCamera.targetTexture = captureRenderTexture; //link the captureRenderTexture to the camera
         RenderTexture.active = captureCamera.targetTexture; //activate the captureRenderTexture
@@ -291,7 +290,7 @@ public class RenderTexDrawing : MonoBehaviour
         //Snapshot with the CaptureCamera to update the drawing
         captureCamera.Render();
 
-        captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = captureRenderTexture; //Set the Texture again (only needed the first time to render it properly
+        captureRenderer.materials[0].mainTexture = captureRenderTexture; //Set the Texture again (only needed the first time to render it properly
         captureFrame = true; //set Captureframe to true for debug
 
         //remove the temporary stuff
@@ -304,7 +303,8 @@ public class RenderTexDrawing : MonoBehaviour
     //This variant of the Pure Capture Method also takes into consideration that erasing is a continuos process and only saves a backup when the erase button is pressed down
     private void PureEraserCapture(bool firstFrame)
     {
-        Debug.Log("Pure Eraser Capture");
+        if(firstFrame)
+            Debug.Log("Pure Eraser Capture");
         RenderTexture rt = null;
         //initialize camera and texture
         captureCamera.enabled = true;       //activate the cameracomponent
@@ -319,9 +319,8 @@ public class RenderTexDrawing : MonoBehaviour
         {
             rt = captureRenderTexture;
         }
-        captureTarget2.GetComponent<MeshRenderer>().material.mainTexture = lastCaptureTexture;
 
-        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution);
+        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default, 1);
         //activate rendertexture and link it to the camera
         captureCamera.targetTexture = captureRenderTexture; //link the captureRenderTexture to the camera
         RenderTexture.active = captureCamera.targetTexture; //activate the captureRenderTexture
@@ -329,7 +328,7 @@ public class RenderTexDrawing : MonoBehaviour
         //Snapshot with the CaptureCamera to update the drawing
         captureCamera.Render();
 
-        captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = captureRenderTexture; //Set the Texture again (only needed the first time to render it properly
+        captureRenderer.materials[0].mainTexture = captureRenderTexture; //Set the Texture again (only needed the first time to render it properly
         captureFrame = true; //set Captureframe to true for debug
 
         //remove the temporary stuff

@@ -22,22 +22,17 @@ public class SplineTool : ITool
 
     private const float WAYPOINTSCALE = 100;
 
+    #region Standard methods (Constructor, Update, Activate, Deactivate)
     public SplineTool(RenderTexDrawing map, GameObject renderTarget, MeshLine line, Sprite cursorImage)
     {
         _map = map;
         _splineRenderTarget = renderTarget;
         _line = line;
         this.cursorImage = cursorImage;
-        Init();
-    }
-
-    #region Standard methods (Start, Update, Activate, Deactivate)
-    // Use this for initialization
-    void Init()
-    {
         activeSpline = new CatmullRomSpline(_splineRenderTarget, _map.GetComponent<ControlPointRenderer>());
         ctrl = activeSpline.ControlPoints;
     }
+
 
     // Update is called once per frame
     public void Update(Vector3 cursorPosition, Quaternion cursorLocalRotation, float cursorLocalScale)
@@ -274,4 +269,10 @@ public class SplineTool : ITool
     }
 
     #endregion
+
+    public void SetSplineJaggedness(bool b)
+    {
+        if (activeSpline != null)
+            activeSpline.SetJagged(b);
+    }
 }
