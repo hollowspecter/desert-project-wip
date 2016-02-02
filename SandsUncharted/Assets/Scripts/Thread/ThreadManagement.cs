@@ -70,9 +70,7 @@ public class ThreadManagement : MonoBehaviour
     private GameObject chunkPrefab;
     [SerializeField]
     private float checkInterval = 1f;
-    [Range(0,3)]
-    [SerializeField]
-    private int lod_input;
+
 
     private ChunkMap chunkmap;
     private MapGenerator mapgen;
