@@ -40,6 +40,7 @@ public class MapGenerator : MonoBehaviour
     private string progressBarInfo = "Please sit back and have a sip of tea.";
     private bool UIenabled = false;
     private ThreadManagement threading;
+    private float size = 1f;
 
     // UI
     private Text ui_loadingText;
@@ -52,6 +53,8 @@ public class MapGenerator : MonoBehaviour
     public enum BiomeSolo { none, red, green, blue };
     public int LOD { get { return (int)Mathf.Pow(2, lod_input); } }
     public int HighestLOD { get { return (int)Mathf.Pow(2, highestLOD_input); } }
+    public float Size { get { return size; } }
+    public float IsoLevel { get { return isolevel; } }
 
     public ChunkMap ChunkMap { get { return chunkMap; } }
 
@@ -163,7 +166,7 @@ public class MapGenerator : MonoBehaviour
                     if (chunkMap[x, y, z].hasSurface) {
                         // Calculate the priority
                         float priority = Vector3.Distance(playerTransform.position, chunkMap.GetChunkWorldpos(x,y,z));
-                        threading.EnqueueJob(new MeshTask(x, y, z, chunkSize), priority);
+                        threading.EnqueueJob(new MeshTask(x, y, z, chunkSize, LOD, HighestLOD), priority);
                     }
                 }                
             }
@@ -211,7 +214,7 @@ public class MapGenerator : MonoBehaviour
 
         // Generate the Mesh
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
-        meshGen.EditorGenerateMesh(chunkMap, 1f, isolevel, LOD, HighestLOD);
+        meshGen.EditorGenerateMesh(chunkMap, size, isolevel, LOD, HighestLOD);
     }
 
     private bool RandomFillMap()

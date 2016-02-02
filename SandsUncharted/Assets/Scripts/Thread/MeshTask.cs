@@ -10,10 +10,11 @@ public class MeshTask : System.IComparable, ITask
     public List<Vector3> normals;
     public List<int> triangles;
     public float mapWidth, mapHeight, mapDepth;
+    public int LOD, highestLOD;
 
     public Vector3 Position { get { return new Vector3(chunkX, chunkY, chunkZ); } }
 
-    public MeshTask(int x, int y, int z, int chunkSize)
+    public MeshTask(int x, int y, int z, int chunkSize, int LOD, int highestLOD)
     {
         chunkX = x;
         chunkY = y;
@@ -22,6 +23,8 @@ public class MeshTask : System.IComparable, ITask
         vertices = new List<Vector3>();
         normals = new List<Vector3>();
         triangles = new List<int>();
+        this.LOD = LOD;
+        this.highestLOD = highestLOD;
     }
 
     public int CompareTo(object obj)
