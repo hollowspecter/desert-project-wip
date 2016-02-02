@@ -1,26 +1,16 @@
-﻿Shader "Unlit/UnlitAlphaColoredTexture"
+﻿Shader "Unlit/NewUnlitShader"
 {
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
-		_Color ("Color", Color)  = (1,1,1,1)
 	}
 	SubShader
 	{
-		Tags{ "Queue" = "Transparent" "IgnoreProjector" = "True" }
+		Tags { "RenderType"="Opaque" }
 		LOD 100
-		ZWrite Off
-		Blend SrcAlpha OneMinusSrcAlpha
 
 		Pass
 		{
-			Stencil{
-			Ref 0
-			Comp NotEqual
-			Pass keep
-			Fail decrWrap
-		}
-
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
@@ -44,7 +34,6 @@
 
 			sampler2D _MainTex;
 			float4 _MainTex_ST;
-			fixed4 _Color;
 			
 			v2f vert (appdata v)
 			{
@@ -59,7 +48,6 @@
 			{
 				// sample the texture
 				fixed4 col = tex2D(_MainTex, i.uv);
-				col *= _Color;
 				// apply fog
 				UNITY_APPLY_FOG(i.fogCoord, col);
 				return col;

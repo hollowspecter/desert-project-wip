@@ -82,6 +82,7 @@ public class RenderTexDrawing : MonoBehaviour
     private Color32[][] backups;
     [SerializeField]
     private RectTransform UIImageTransform;
+    bool opened = false;
 
     #region Standard Methods (Start, Update, etc)
     // Use this for initialization
@@ -143,6 +144,12 @@ public class RenderTexDrawing : MonoBehaviour
         {
             _toolMenu.Activate();
             activeTool.Deactivate();
+        }
+
+        if(Input.GetKeyDown(KeyCode.U))
+        {
+            opened = !opened;
+            Debug.Log("Switch mapopenstate");
         }
 
         if (Input.GetButtonUp("Y"))

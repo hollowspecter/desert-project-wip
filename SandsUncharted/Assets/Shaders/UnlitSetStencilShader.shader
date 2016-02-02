@@ -1,26 +1,37 @@
-﻿Shader "Unlit/UnlitAlphaColoredTexture"
+﻿Shader "Unlit/UnlitSetStencilShader"
 {
 	Properties
 	{
-		_MainTex ("Texture", 2D) = "white" {}
-		_Color ("Color", Color)  = (1,1,1,1)
+		//for UI.Mask
+
+		_StencilComp("Stencil Comparison", Float) = 8
+		_Stencil("Stencil ID", Float) = 0
+		_StencilOp("Stencil Operation", Float) = 0
+		_StencilWriteMask("Stencil Write Mask", Float) = 255
+		_StencilReadMask("Stencil Read Mask", Float) = 255
+		_ColorMask("Color Mask", Float) = 15
 	}
 	SubShader
 	{
 		Tags{ "Queue" = "Transparent" "IgnoreProjector" = "True" }
 		LOD 100
-		ZWrite Off
 		Blend SrcAlpha OneMinusSrcAlpha
+			
+		Stencil
+		{
+			Ref 1
+			Comp always
+			Pass replace
+			ReadMask[_StencilReadMask]
+			WriteMask[_StencilMask]
+
+		}
+		ColorMask[_ColorMask]
 
 		Pass
 		{
-			Stencil{
-			Ref 0
-			Comp NotEqual
-			Pass keep
-			Fail decrWrap
-		}
 
+			
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
@@ -44,7 +55,6 @@
 
 			sampler2D _MainTex;
 			float4 _MainTex_ST;
-			fixed4 _Color;
 			
 			v2f vert (appdata v)
 			{
@@ -58,10 +68,8 @@
 			fixed4 frag (v2f i) : SV_Target
 			{
 				// sample the texture
-				fixed4 col = tex2D(_MainTex, i.uv);
-				col *= _Color;
-				// apply fog
-				UNITY_APPLY_FOG(i.fogCoord, col);
+				fixed4 col = float4(0,0,0,0);
+				col.a = 0;
 				return col;
 			}
 			ENDCG
