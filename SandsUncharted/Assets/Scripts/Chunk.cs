@@ -151,7 +151,13 @@ public class ChunkMap : IEnumerable
     // x y z are absolute "world coordinates" and not "chunk coordinates"
     public float GetDensityValue(int x, int y, int z)
     {
-        return chunkMap[x / chunkSize, y / chunkSize, z / chunkSize][x % chunkSize, y % chunkSize, z % chunkSize];
+        try {
+            return chunkMap[x / chunkSize, y / chunkSize, z / chunkSize][x % chunkSize, y % chunkSize, z % chunkSize];
+        }
+        catch (System.Exception) {
+            Debug.LogError(x + "|" + y + "|" + z + " is out of Bounds");
+            return 0f;
+        }
     }
 
     // x y z are absolute "world coordinates" and not "chunk coordinates"

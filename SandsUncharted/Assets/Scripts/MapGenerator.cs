@@ -26,6 +26,13 @@ public class MapGenerator : MonoBehaviour
     private int depth = 1;
     [SerializeField]
     private float isolevel = 0;
+    [Range(0, 4)]
+    [SerializeField]
+    private int lod_input;
+    [SerializeField]
+    private int highestLOD_input = 4;
+    [SerializeField]
+    private bool SortEmptyChunksOut = true;
 
     private ChunkMap chunkMap;
     private LUTGenerator lutGen;
@@ -43,6 +50,8 @@ public class MapGenerator : MonoBehaviour
     #region Properties
 
     public enum BiomeSolo { none, red, green, blue };
+    public int LOD { get { return (int)Mathf.Pow(2, lod_input); } }
+    public int HighestLOD { get { return (int)Mathf.Pow(2, highestLOD_input); } }
 
     public ChunkMap ChunkMap { get { return chunkMap; } }
 
@@ -56,6 +65,8 @@ public class MapGenerator : MonoBehaviour
     public int TotalDepth { get { return depth * chunkSize; } }
 
     #endregion
+
+    #region Play mode methods
 
     void Awake()
     {
@@ -160,6 +171,8 @@ public class MapGenerator : MonoBehaviour
         threading.ShowNumberOfJobs();
     }
 
+    #endregion
+
     bool CheckConditions()
     {
         if (blueBiome == null ||
@@ -198,7 +211,7 @@ public class MapGenerator : MonoBehaviour
 
         // Generate the Mesh
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
-        meshGen.EditorGenerateMesh(chunkMap, 1f, isolevel);
+        meshGen.EditorGenerateMesh(chunkMap, 1f, isolevel, LOD, HighestLOD);
     }
 
     private bool RandomFillMap()
@@ -245,11 +258,13 @@ public class MapGenerator : MonoBehaviour
                 }
             }
 
-            if (!(minValue <= isolevel && isolevel <= maxValue)) {
-                emptyChunkCounter++;
-                c.hasSurface = false;
+            if (SortEmptyChunksOut) {
+                if (!(minValue <= isolevel && isolevel <= maxValue)) {
+                    emptyChunkCounter++;
+                    c.hasSurface = false;
+                }
             }
-
+            
             progress += step;
             if (EditorUtility.DisplayCancelableProgressBar(progressBarTitle, progressBarInfo, progress)) {
                 EditorUtility.ClearProgressBar();
