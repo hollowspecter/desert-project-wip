@@ -87,9 +87,17 @@ public class RenderTexDrawing : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        if(QualitySettings.currentLevel >= QualityLevel.Good)
+        if(QualitySettings.GetQualityLevel() >= 4)
         {
             captureResolution = 2048;
+        }
+        if(QualitySettings.GetQualityLevel() == 5)
+        {
+            captureAASetting = 2;
+        }
+        else if(QualitySettings.GetQualityLevel() > 5)
+        {
+            captureAASetting = 4;
         }
 
         _toolMenu = GetComponent<ToolMenu>();
@@ -289,7 +297,7 @@ public class RenderTexDrawing : MonoBehaviour
             lastCaptureTexture = captureRenderTexture;
         }
 
-        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default, captureAASetting);
+        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default, captureAASetting );
         //activate rendertexture and link it to the camera
         captureCamera.targetTexture = captureRenderTexture; //link the captureRenderTexture to the camera
         RenderTexture.active = captureCamera.targetTexture; //activate the captureRenderTexture
@@ -327,7 +335,7 @@ public class RenderTexDrawing : MonoBehaviour
             rt = captureRenderTexture;
         }
 
-        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default, 1);
+        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default, captureAASetting);
         //activate rendertexture and link it to the camera
         captureCamera.targetTexture = captureRenderTexture; //link the captureRenderTexture to the camera
         RenderTexture.active = captureCamera.targetTexture; //activate the captureRenderTexture
