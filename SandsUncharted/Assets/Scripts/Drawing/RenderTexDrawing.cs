@@ -62,6 +62,7 @@ public class RenderTexDrawing : MonoBehaviour
     private Sprite meterCursor;
     #endregion
 
+    #region General Tools
     [SerializeField]
     private MeshLine _line; //renderer of the red line used to measure distances
     private ToolMenu _toolMenu; //radial tool menu
@@ -73,32 +74,37 @@ public class RenderTexDrawing : MonoBehaviour
     private MeterTool meterTool;
     private EraserTool eraserTool;
 
-    private bool captureFrame = true;
 
     bool undid = false;
-
     private int backupCount = 1; //number of steps you can undo increasing the number comes at a heavy performance cost
     private int currentBackup = -1; //currently active backup
     private Color32[][] backups;
+    #endregion
+
     [SerializeField]
     private RectTransform UIImageTransform;
-    bool opened = false;
+
+    private bool captureFrame = true;
 
     #region Standard Methods (Start, Update, etc)
     // Use this for initialization
     void Start()
     {
+        Debug.Log(QualitySettings.GetQualityLevel().ToString());
         if(QualitySettings.GetQualityLevel() >= 4)
         {
-            captureResolution = 2048;
+            Debug.Log("CaptureRes: 2048");
+            captureResolution = 1024;
         }
         if(QualitySettings.GetQualityLevel() == 5)
         {
-            captureAASetting = 2;
+            Debug.Log("CaptureAA: 2");
+            captureAASetting = 1;
         }
         else if(QualitySettings.GetQualityLevel() > 5)
         {
-            captureAASetting = 4;
+            Debug.Log("CaptureAA: 4");
+            captureAASetting = 1;
         }
 
         _toolMenu = GetComponent<ToolMenu>();
@@ -144,12 +150,6 @@ public class RenderTexDrawing : MonoBehaviour
         {
             _toolMenu.Activate();
             activeTool.Deactivate();
-        }
-
-        if(Input.GetKeyDown(KeyCode.U))
-        {
-            opened = !opened;
-            Debug.Log("Switch mapopenstate");
         }
 
         if (Input.GetButtonUp("Y"))
@@ -227,6 +227,8 @@ public class RenderTexDrawing : MonoBehaviour
         speed *= 0.75f;//friction
     }
     #endregion
+
+    #region CaptureMethods
 
     public void Capture()
     {
@@ -362,6 +364,9 @@ public class RenderTexDrawing : MonoBehaviour
         RenderTexture.active = original;
     }
 
+    #endregion
+
+    #region Undo/Backup
     private void Undo()
     {
         if(rtModeON)
@@ -381,8 +386,7 @@ public class RenderTexDrawing : MonoBehaviour
             RTRedo();
         }
     }
-
-    #region Undo/Backup Methods with textures
+    
     //Move the backups over, copy the new backup in and set it as the current one
     void NewBackup()
     {
@@ -433,9 +437,10 @@ public class RenderTexDrawing : MonoBehaviour
             target[i] = source[i];
         }
     }
-    #endregion
 
-    #region Undo/Backup RT only
+
+    /**RENDERTEXTURE UNDO**********/
+
     private void RTUndo()
     {
         captureTarget.GetComponent<MeshRenderer>().materials[0].mainTexture = lastCaptureTexture;
@@ -454,7 +459,7 @@ public class RenderTexDrawing : MonoBehaviour
     #endregion
 
 
-
+    #region CursorMethods
     //move the cursor
     void UpdateCursorPosition(float h, float v)
     {
@@ -498,4 +503,6 @@ public class RenderTexDrawing : MonoBehaviour
     {
         return speed;
     }
+
+    #endregion
 }

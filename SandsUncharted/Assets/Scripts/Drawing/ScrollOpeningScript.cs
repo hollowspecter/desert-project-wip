@@ -11,21 +11,27 @@ public class ScrollOpeningScript : MonoBehaviour
     private float currentLerptime = 0f;
 
     private bool opened = false;
+    private bool done = true;
 
     private float mapWidth;
     private float mapHeight;
+    
 
     // Use this for initialization
     void Start ()
     {
-        float mapWHratio = Screen.width / Screen.height;
+        float mapWHratio = 16 / 9.0f;
         ownRectT = GetComponent<RectTransform>();
         mapWidth = Screen.width;
         mapWidth -= mapWidth / 20;
+        mapWidth = Mathf.Min(1024, mapWidth);
         mapHeight = (int)(mapWidth / mapWHratio);
 
         ownRectT.sizeDelta = new Vector2(0, mapHeight);
-
+        RectTransform t = ownRectT.GetChild(0).GetComponent<RectTransform>();
+        t.sizeDelta = new Vector2(t.sizeDelta.x, mapHeight * 1.1f);
+        t = ownRectT.GetChild(1).GetComponent<RectTransform>();
+        t.sizeDelta = new Vector2(t.sizeDelta.x, mapHeight * 1.1f);
     }
 
     // Update is called once per frame
@@ -33,7 +39,10 @@ public class ScrollOpeningScript : MonoBehaviour
     {
         currentLerptime += Time.deltaTime;
         if (currentLerptime > DURATION)
+        {
+            done = true;
             currentLerptime = DURATION;
+        }
 
         float t = currentLerptime / DURATION;
         t = curve.Evaluate(t);
@@ -48,7 +57,7 @@ public class ScrollOpeningScript : MonoBehaviour
             ownRectT.sizeDelta = new Vector2(Mathf.Lerp(mapWidth, 0, t), mapHeight);
         }
 
-        if(Input.GetKeyDown(KeyCode.U))
+        if(Input.GetKeyDown(KeyCode.U) && done)
         {
             ResetTimer();
         }
@@ -56,6 +65,7 @@ public class ScrollOpeningScript : MonoBehaviour
     void ResetTimer()
     {
         opened = !opened;
+        done = false;
         if (currentLerptime >= DURATION)
             currentLerptime = 0f;
         else
