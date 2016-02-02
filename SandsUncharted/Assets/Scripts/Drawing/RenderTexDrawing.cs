@@ -29,7 +29,9 @@ public class RenderTexDrawing : MonoBehaviour
     [SerializeField]
     private GameObject captureTarget;
     private MeshRenderer captureRenderer;
+
     private int captureResolution = 1024;
+    private int captureAASetting = 1;
     private int captureWidth = 1920;
     private int captureHeight = 1080;
 
@@ -85,6 +87,11 @@ public class RenderTexDrawing : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        if(QualitySettings.currentLevel >= QualityLevel.Good)
+        {
+            captureResolution = 2048;
+        }
+
         _toolMenu = GetComponent<ToolMenu>();
         captureCamera = transform.Find("CaptureCamera").GetComponent<Camera>();
         captureTexture = new Texture2D(captureResolution, captureResolution, TextureFormat.ARGB32, true);
@@ -282,7 +289,7 @@ public class RenderTexDrawing : MonoBehaviour
             lastCaptureTexture = captureRenderTexture;
         }
 
-        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default, 1);
+        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default, captureAASetting);
         //activate rendertexture and link it to the camera
         captureCamera.targetTexture = captureRenderTexture; //link the captureRenderTexture to the camera
         RenderTexture.active = captureCamera.targetTexture; //activate the captureRenderTexture
