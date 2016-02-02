@@ -154,6 +154,7 @@ public class MeshGenerator : MonoBehaviour
             mesh.vertices = vertices.ToArray();
             mesh.triangles = triangles.ToArray();
             mesh.normals = normals.ToArray();
+            mesh.Optimize();
             //mesh.RecalculateNormals();
 
             // Apply a Mesh Collider

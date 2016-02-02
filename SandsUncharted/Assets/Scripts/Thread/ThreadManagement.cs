@@ -281,6 +281,7 @@ public class ThreadManagement : MonoBehaviour
         mesh.vertices = task.vertices.ToArray();
         mesh.triangles = task.triangles.ToArray();
         mesh.normals = task.normals.ToArray();
+        mesh.Optimize();
 
         // Apply a Mesh Collider
         chunkGO.AddComponent(typeof(MeshCollider));
