@@ -24,14 +24,14 @@ public class ScrollOpeningScript : MonoBehaviour
         ownRectT = GetComponent<RectTransform>();
         mapWidth = Screen.width;
         mapWidth -= mapWidth / 20;
-        mapWidth = Mathf.Min(1024, mapWidth);
+        mapWidth = Mathf.Min(1024 * 1.25f, mapWidth);
         mapHeight = (int)(mapWidth / mapWHratio);
 
         ownRectT.sizeDelta = new Vector2(0, mapHeight);
-        RectTransform t = ownRectT.GetChild(0).GetComponent<RectTransform>();
-        t.sizeDelta = new Vector2(t.sizeDelta.x, mapHeight * 1.1f);
-        t = ownRectT.GetChild(1).GetComponent<RectTransform>();
-        t.sizeDelta = new Vector2(t.sizeDelta.x, mapHeight * 1.1f);
+        RectTransform t = ownRectT.Find("RightBorder").GetComponent<RectTransform>();
+        t.sizeDelta = new Vector2(t.sizeDelta.x, mapHeight * 1.0f);
+        t = ownRectT.Find("LeftBorder").GetComponent<RectTransform>();
+        t.sizeDelta = new Vector2(t.sizeDelta.x, mapHeight * 1.0f);
     }
 
     // Update is called once per frame

@@ -125,7 +125,7 @@ public class RenderTexDrawing : MonoBehaviour
         float mapWHratio = 16.0f / 9.0f;
         int screenWidth = Screen.width;
         screenWidth -= screenWidth / 20;
-        screenWidth = Mathf.Min(captureResolution, screenWidth);
+        screenWidth = (int) Mathf.Min(captureResolution * 1.25f, screenWidth);
         int height = (int)(screenWidth / mapWHratio);
         UIImageTransform.sizeDelta = new Vector2(screenWidth, height);
 
