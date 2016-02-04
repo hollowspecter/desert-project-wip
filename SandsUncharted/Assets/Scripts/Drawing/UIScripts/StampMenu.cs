@@ -10,6 +10,8 @@ public class StampMenu : MonoBehaviour
     private Transform _menuUI;
     [SerializeField]
     private GameObject _prefab;
+    [SerializeField]
+    private Sprite selectionCircle;
 
     private RectTransform[] items;
 
@@ -18,7 +20,7 @@ public class StampMenu : MonoBehaviour
 
     private int stampOffset = 130;
 
-    private int columnCount = 3;
+    private int columnCount = 4;
 
     bool moved = false;
     float moveTimer = 0f;
@@ -27,7 +29,10 @@ public class StampMenu : MonoBehaviour
 	void Start ()
     {
         items = new RectTransform[stamps.Length];
-
+        float parentSize = _menuUI.parent.GetComponent<RectTransform>().sizeDelta.x;
+        float sizeFactor = parentSize/500;
+        stampOffset = (int)(parentSize / columnCount);
+        //stampOffset = (int)(stampOffset *  sizeFactor);
         int currentRow = 0;
 	    for(int i = 0; i < stamps.Length; ++i)
         {
@@ -39,8 +44,11 @@ public class StampMenu : MonoBehaviour
             g.transform.SetParent(_menuUI);
             RectTransform t = g.GetComponent<RectTransform>();
             t.localScale = new Vector3(1, 1, 1);
+            float ownSize = t.sizeDelta.x * sizeFactor;
+            t.sizeDelta = new Vector2(ownSize, ownSize);
             t.anchoredPosition = new Vector2(stampOffset/2 + stampOffset * ((i%columnCount)), -(stampOffset/2 + stampOffset * (currentRow)));
             g.transform.GetChild(0).GetComponent<Image>().sprite = stamps[i];
+            t.GetComponent<Image>().sprite = selectionCircle;
             items[i] = t;
         }
 	}
@@ -90,10 +98,12 @@ public class StampMenu : MonoBehaviour
                 if (i == stampIndex)
                 {
                     items[i].localScale = new Vector2(1, 1);
+                    items[i].GetComponent<Image>().enabled = true;
                 }
                 else
                 {
                     items[i].localScale = new Vector2(0.7f, 0.7f);
+                    items[i].GetComponent<Image>().enabled = false;
                 }
             }
         }

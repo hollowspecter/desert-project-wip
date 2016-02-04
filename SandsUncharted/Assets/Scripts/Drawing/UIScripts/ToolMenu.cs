@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class ToolMenu : MonoBehaviour
 { 
@@ -7,6 +8,8 @@ public class ToolMenu : MonoBehaviour
     private Transform _arrowT;
     [SerializeField]
     private Transform _menuUI;
+    [SerializeField]
+    private Sprite selcetionCircle;
     private RectTransform[] items;
 
     private bool activated = false;
@@ -56,11 +59,13 @@ public class ToolMenu : MonoBehaviour
         {
             if(i == toolIndex)
             {
-                items[i].sizeDelta = new Vector2(100, 100); 
+                items[i].localScale = new Vector3(1, 1, 1);
+               //items[i].transform.GetChild(0).GetComponent<Image>().enabled = true;
             }
             else
             {
-                items[i].sizeDelta = new Vector2(70, 70); 
+                items[i].localScale = new Vector3(0.7f, 0.7f, 0.7f);
+                //items[i].transform.GetChild(0).GetComponent<Image>().enabled = false;
             }
         }
 	}
