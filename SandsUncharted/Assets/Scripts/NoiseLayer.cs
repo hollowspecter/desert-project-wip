@@ -81,6 +81,16 @@ public class NoiseLayer
 
     /* Methods */
 
+    public void setOffsetPosition(Vector3 pos)
+    {
+        offsetPosition = pos;
+    }
+
+    public void setOffsetRotation(Vector3 euler)
+    {
+        offsetRotation = euler;
+    }
+
     public float getValue(Vector3 p)
     {
         Vector3 point = p;

@@ -179,7 +179,7 @@ public class VegetationPlanter : MonoBehaviour
     {
         Initialise();
 
-        values = new float[mapgen.TotalWidth, mapgen.TotalWidth];
+        values = new float[mapgen.TotalWidth, mapgen.TotalDepth];
 
         float min = 999f;
         float max = float.MinValue;

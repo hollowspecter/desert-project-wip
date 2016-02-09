@@ -71,7 +71,6 @@ public class ThreadManagement : MonoBehaviour
     [SerializeField]
     private float checkInterval = 1f;
 
-
     private ChunkMap chunkmap;
     private MapGenerator mapgen;
     private GameObject chunksParent;
@@ -89,6 +88,8 @@ public class ThreadManagement : MonoBehaviour
             Debug.Log("Destroyed le old chunks");
         }
 
+        mapgen = GetComponent<MapGenerator>();
+        Assert.IsNotNull<MapGenerator>(mapgen);
         size = mapgen.Size;
         isolevel = mapgen.IsoLevel;
     }
