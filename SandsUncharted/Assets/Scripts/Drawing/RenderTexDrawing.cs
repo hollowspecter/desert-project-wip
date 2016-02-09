@@ -23,6 +23,8 @@ public class RenderTexDrawing : MonoBehaviour
     [SerializeField]
     private Camera _renderCam;
     private RenderTexture captureRenderTexture;
+    private RenderTexture[] renderTexturePool;
+    private int poolIndex = 0;
     private RenderTexture lastCaptureTexture;
     private Texture2D captureTexture;
     private Camera captureCamera;
@@ -91,17 +93,17 @@ public class RenderTexDrawing : MonoBehaviour
     void Start()
     {
         Debug.Log(QualitySettings.GetQualityLevel().ToString());
-        if(QualitySettings.GetQualityLevel() >= 4)
+        if (QualitySettings.GetQualityLevel() >= 4)
         {
             Debug.Log("CaptureRes: 2048");
             captureResolution = 1024;
         }
-        if(QualitySettings.GetQualityLevel() == 5)
+        if (QualitySettings.GetQualityLevel() == 5)
         {
             Debug.Log("CaptureAA: 2");
-            captureAASetting = 1;
+            captureAASetting = 2;
         }
-        else if(QualitySettings.GetQualityLevel() > 5)
+        else if (QualitySettings.GetQualityLevel() > 5)
         {
             Debug.Log("CaptureAA: 4");
             captureAASetting = 1;
@@ -111,7 +113,15 @@ public class RenderTexDrawing : MonoBehaviour
         captureCamera = transform.Find("CaptureCamera").GetComponent<Camera>();
         captureTexture = new Texture2D(captureResolution, captureResolution, TextureFormat.ARGB32, true);
         captureRenderer = captureTarget.GetComponent<MeshRenderer>();
-        
+        renderTexturePool = new RenderTexture[2];
+        for (int i = 0; i < 2; ++i)
+        {
+            renderTexturePool[i] = new RenderTexture(captureResolution, captureResolution, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+            renderTexturePool[i].antiAliasing = captureAASetting;
+            renderTexturePool[i].Create();
+        }
+
+
         splineTool = new SplineTool(this, _splineRenderTarget, _line, circleCursor);
         splineTool.SetSplineJaggedness(false);
         stampTool = new StampTool(this, _stampPrefab);
@@ -302,11 +312,13 @@ public class RenderTexDrawing : MonoBehaviour
         if(!undid)
         {
             if (lastCaptureTexture != null)
-                RenderTexture.ReleaseTemporary(lastCaptureTexture);
+                //RenderTexture.ReleaseTemporary(lastCaptureTexture);
             lastCaptureTexture = captureRenderTexture;
         }
 
-        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default, captureAASetting );
+        //captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default, captureAASetting );
+        captureRenderTexture = renderTexturePool[poolIndex];
+        poolIndex = (poolIndex + 1) % 2;
         //activate rendertexture and link it to the camera
         captureCamera.targetTexture = captureRenderTexture; //link the captureRenderTexture to the camera
         RenderTexture.active = captureCamera.targetTexture; //activate the captureRenderTexture
@@ -336,7 +348,7 @@ public class RenderTexDrawing : MonoBehaviour
         if (!undid && firstFrame)
         {
             if (lastCaptureTexture != null)
-                RenderTexture.ReleaseTemporary(lastCaptureTexture);
+                //RenderTexture.ReleaseTemporary(lastCaptureTexture);
             lastCaptureTexture = captureRenderTexture;
         }
         else
@@ -344,7 +356,9 @@ public class RenderTexDrawing : MonoBehaviour
             rt = captureRenderTexture;
         }
 
-        captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default, captureAASetting);
+        //captureRenderTexture = RenderTexture.GetTemporary(captureResolution, captureResolution, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default, captureAASetting);
+        captureRenderTexture = renderTexturePool[poolIndex];
+        poolIndex = (poolIndex + 1) % 2;
         //activate rendertexture and link it to the camera
         captureCamera.targetTexture = captureRenderTexture; //link the captureRenderTexture to the camera
         RenderTexture.active = captureCamera.targetTexture; //activate the captureRenderTexture
@@ -357,7 +371,7 @@ public class RenderTexDrawing : MonoBehaviour
 
         //remove the temporary stuff
         if(rt != null)
-            RenderTexture.ReleaseTemporary(rt);
+            //RenderTexture.ReleaseTemporary(rt);
         undid = false;
         captureCamera.targetTexture = null;
         captureCamera.enabled = false;

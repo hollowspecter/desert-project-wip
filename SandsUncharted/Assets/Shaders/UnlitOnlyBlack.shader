@@ -49,10 +49,10 @@
 				// sample the texture
 				fixed4 col = tex2D(_MainTex, i.uv);
 				float a = 1.0f - col.r;
-				if (a <= 0.5f)
+				if (a <= 0.3f)
 				{
 					col.r = 1.0f;
-					col.a = a;
+					col.a = 0.05f;
 				}
 				else
 				{
