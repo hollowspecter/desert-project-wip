@@ -168,16 +168,13 @@ public class MeshGenerator : MonoBehaviour
             float yPos = chunk.Position.y * mapHeight - chunk.Position.y * size;
             float zPos = chunk.Position.z * mapDepth - chunk.Position.z * size;
             if (chunk.Position.x == chunkMap.GetLength(0) - 1) {
-                xPos += chunk.Position.x * size;
-                xPos -= ((float)(subtractor + 1) / 2f) * size;
+                xPos = chunk.Position.x * chunk.Size - (float)chunk.Size / ((float)highestLOD / 2f);
             }
             if (chunk.Position.y == chunkMap.GetLength(1) - 1) {
-                yPos += chunk.Position.y * size;
-                yPos -= ((float)(subtractor + 1) / 2f) * size;
+                yPos = chunk.Position.y * chunk.Size - (float)chunk.Size / ((float)highestLOD / 2f);
             }
             if (chunk.Position.z == chunkMap.GetLength(2) - 1) {
-                zPos += chunk.Position.z * size;
-                zPos -= ((float)(subtractor + 1) / 2f) * size;
+                zPos = chunk.Position.z * chunk.Size - (float)chunk.Size / ((float)highestLOD / 2f);
             }
             chunkGO.transform.position = new Vector3(xPos, yPos, zPos);
 
@@ -483,113 +480,6 @@ public class MeshGenerator : MonoBehaviour
             }
         }
     }
-
-    ///// <summary>
-    ///// Function that is used by the Playmode Multithreading to
-    ///// extract the surfaces from the density field (chunkmap)
-    ///// </summary>
-    ///// <param name="task">The MeshTask data to save in the mesh data</param>
-    ///// <param name="chunkmap">The density map</param>
-    ///// <param name="chunk">The passed in Chunk to generate</param>
-    ///// <param name="size">The size of one voxel</param>
-    ///// <param name="isolevel"></param>
-    ///// <param name="LOD"></param>
-    //public static void ThreadGenerateMesh(ref MeshTask task, ChunkMap chunkmap, Chunk chunk, float size, float isolevel)
-    //{
-    //    // Calculate the Number of Nodes for this Chunk
-    //    int nodeCountX = chunk.Size;
-    //    int nodeCountY = chunk.Size;
-    //    int nodeCountZ = chunk.Size;
-
-    //    // Cover the Overlap by adding another row if there is
-    //    // an adjacent chunk in one dimension
-    //    nodeCountX += (chunkmap.IsInBounds(chunk.Position + Vector3.right)) ? 1 : 0;
-    //    nodeCountY += (chunkmap.IsInBounds(chunk.Position + Vector3.up)) ? 1 : 0;
-    //    nodeCountZ += (chunkmap.IsInBounds(chunk.Position + Vector3.forward)) ? 1 : 0;
-
-    //    float mapWidth = nodeCountX * size; task.mapWidth = mapWidth;
-    //    float mapHeight = nodeCountY * size; task.mapHeight = mapHeight;
-    //    float mapDepth = nodeCountZ * size; task.mapDepth = mapDepth;
-
-    //    // Create Grid of Nodes
-    //    Node[, ,] nodes = new Node[nodeCountX, nodeCountY, nodeCountZ];
-    //    for (int x = 0; x < nodeCountX; ++x) {
-    //        for (int y = 0; y < nodeCountY; ++y) {
-    //            for (int z = 0; z < nodeCountZ; ++z) {
-
-    //                // Calculate Position of this node
-    //                Vector3 pos = new Vector3(-mapWidth / 2f + x * size + size / 2f,
-    //                    -mapHeight / 2f + y * size + size / 2f,
-    //                    -mapDepth / 2f + z * size + size / 2f);
-
-    //                // Calculate the Normal for this Node using Central Difference on the volumetric data
-    //                Vector3 chunkPos = chunk.ChunkmapPosition;
-    //                // Calc absolute "world coordinates" for the chunk values
-    //                int xAbs = (int)chunkPos.x + x;
-    //                int yAbs = (int)chunkPos.y + y;
-    //                int zAbs = (int)chunkPos.z + z;
-    //                Vector3 normal = chunkmap.GetNormal(xAbs, yAbs, zAbs);
-
-    //                // Fetch the density value and store into the node
-    //                //float value = chunk[x, y, z];
-    //                float value = chunkmap.GetDensityValue(xAbs, yAbs, zAbs);
-    //                nodes[x, y, z] = new Node(pos, normal, value);
-    //            }
-    //        }
-    //    }
-
-    //    // Create Cube Grid // WORKS
-    //    Voxel[, ,] voxels = new Voxel[nodeCountX - 1, nodeCountY - 1, nodeCountZ - 1];
-    //    for (int x = 0; x < voxels.GetLength(0); ++x) {
-    //        for (int y = 0; y < voxels.GetLength(1); ++y) {
-    //            for (int z = 0; z < voxels.GetLength(2); ++z) {
-    //                Node[] voxelNodes = new Node[8]{
-    //                    // Reihenfolge wie bei Paul Bourke
-    //                    nodes[x,y,z],
-    //                    nodes[x,y,z+1],
-    //                    nodes[x+1,y,z+1],
-    //                    nodes[x+1,y,z],
-
-    //                    nodes[x,y+1,z],
-    //                    nodes[x,y+1,z+1],
-    //                    nodes[x+1,y+1,z+1],
-    //                    nodes[x+1,y+1,z]
-    //                    };
-    //                voxels[x, y, z] = new Voxel(voxelNodes, size);
-    //            }
-    //        }
-    //    }
-
-    //    // Create Vertices and Triangles
-    //    int vertexCount = 0;
-    //    foreach (Voxel voxel in voxels) {
-    //        // Create a Triangle Aray using the Marching Cubes Algorithm
-    //        TRIANGLE[] tris = MarchingCubes.Polygonise(voxel, isolevel);
-
-    //        // Check if Triangles are found
-    //        if (tris == null)
-    //            continue;
-
-    //        // For each Triangle
-    //        foreach (TRIANGLE t in tris) {
-    //            // Add the Vertices
-    //            task.vertices.Add(t.p[0]);
-    //            task.vertices.Add(t.p[1]);
-    //            task.vertices.Add(t.p[2]);
-
-    //            // Add the Normals
-    //            task.normals.Add(t.n[0]);
-    //            task.normals.Add(t.n[1]);
-    //            task.normals.Add(t.n[2]);
-
-    //            // Add the indices
-    //            task.triangles.Add(vertexCount + 2); // 0
-    //            task.triangles.Add(vertexCount + 1); // 1
-    //            task.triangles.Add(vertexCount + 0); // 2
-    //            vertexCount += 3;
-    //        }
-    //    }
-    //}
 
     void OnDrawGizmos()
     {

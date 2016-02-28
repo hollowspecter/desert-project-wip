@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+// Thanks to CAT LIKE CODING
+// http://catlikecoding.com/unity/tutorials/noise/
+
 public delegate float NoiseMethod (Vector3 point, float frequency);
 
 public enum NoiseMethodType {

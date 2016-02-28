@@ -39,7 +39,6 @@ public class LUTGenerator : MonoBehaviour
 
                 // Red is sand, Blue is rock
                 float uPercentage = ((float)u) / ((float)resolution);
-                //float vPercentage = ((float)v) / ((float)resolution);
 
                 float minSandPercentage = ((float)minAngleForSand) / 180f;
                 float maxSandPercentage = ((float)maxAngleForSand) / 180f;

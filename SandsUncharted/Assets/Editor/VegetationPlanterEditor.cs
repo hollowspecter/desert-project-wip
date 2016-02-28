@@ -18,7 +18,7 @@ public class VegetationPlanterEditor : Editor
 
         // Creating
         if (GUILayout.Button(visualizeButton)) {
-            vegScript.VisualizeNoise(vegScript.DeadtreeNoises);
+            vegScript.VisualizeNoise(vegScript.Noises);
             AssetDatabase.Refresh();
         }
 

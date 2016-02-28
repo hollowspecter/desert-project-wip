@@ -158,7 +158,6 @@ public class ThreadManagement : MonoBehaviour
         }
 
         MeshGenerator.ThreadGenerateMesh(ref task, chunkmap, chunk, size, isolevel);
-        
 
         /* Step 3: End this
          */
@@ -203,39 +202,38 @@ public class ThreadManagement : MonoBehaviour
         int LOD = task.LOD;
         int highestLOD = task.highestLOD;
         float LODf = (float)LOD;
-        float scaledSize = size * LODf;
         int subtractor = (-highestLOD / LOD) + 1;
 
         // Reposition chunk
-        float xPos = task.chunkX * task.mapWidth - task.chunkX * scaledSize;
-        float yPos = task.chunkY * task.mapHeight - task.chunkY * scaledSize;
-        float zPos = task.chunkZ * task.mapDepth - task.chunkZ * scaledSize;
+        float xPos = task.chunkX * task.mapWidth - task.chunkX * size;
+        float yPos = task.chunkY * task.mapHeight - task.chunkY * size;
+        float zPos = task.chunkZ * task.mapDepth - task.chunkZ * size;
         if (task.chunkX == chunkmap.GetLength(0) - 1) {
-            xPos += task.chunkX * scaledSize;
-            xPos -= ((float)(subtractor + 1) / 2f) * scaledSize;
+            xPos = task.chunkX * task.chunkSize - (float)task.chunkSize / ((float)highestLOD / 2f);
         }
         if (task.chunkY == chunkmap.GetLength(1) - 1) {
-            yPos += task.chunkY * scaledSize;
-            yPos -= ((float)(subtractor + 1) / 2f) * scaledSize;
+            yPos = task.chunkY * task.chunkSize - (float)task.chunkSize / ((float)highestLOD / 2f);
         }
         if (task.chunkZ == chunkmap.GetLength(2) - 1) {
-            zPos += task.chunkZ * scaledSize;
-            zPos -= ((float)(subtractor + 1) / 2f) * scaledSize;
+            zPos = task.chunkZ * task.chunkSize - (float)task.chunkSize / ((float)highestLOD / 2f);
         }
         chunkGO.transform.position = new Vector3(xPos, yPos, zPos);
 
-        ////// Reposition chunk
-        //float xPos = task.chunkX * task.mapWidth - task.chunkX * size;
-        //float yPos = task.chunkY * task.mapHeight - task.chunkY * size;
-        //float zPos = task.chunkZ * task.mapDepth - task.chunkZ * size;
+        //// Reposition chunk
+        //float xPos = task.chunkX * task.mapWidth - task.chunkX * scaledSize;
+        //float yPos = task.chunkY * task.mapHeight - task.chunkY * scaledSize;
+        //float zPos = task.chunkZ * task.mapDepth - task.chunkZ * scaledSize;
         //if (task.chunkX == chunkmap.GetLength(0) - 1) {
-        //    xPos += task.chunkX * size - size / 2f;
+        //    xPos += task.chunkX * scaledSize;
+        //    xPos -= ((float)(subtractor + 1) / 2f) * scaledSize;
         //}
         //if (task.chunkY == chunkmap.GetLength(1) - 1) {
-        //    yPos += task.chunkY * size - size / 2f;
+        //    yPos += task.chunkY * scaledSize;
+        //    yPos -= ((float)(subtractor + 1) / 2f) * scaledSize;
         //}
         //if (task.chunkZ == chunkmap.GetLength(2) - 1) {
-        //    zPos += task.chunkZ * size - size / 2f;
+        //    zPos += task.chunkZ * scaledSize;
+        //    zPos -= ((float)(subtractor + 1) / 2f) * scaledSize;
         //}
         //chunkGO.transform.position = new Vector3(xPos, yPos, zPos);
 

@@ -9,28 +9,28 @@ public class VegetationPlanter : MonoBehaviour
 {
     // Prefabs
     [SerializeField]
-    private GameObject[] deadtrees;
-    [SerializeField]
-    private GameObject[] bushes;
+    private GameObject[] veggieObjects;
 
     // Privates
     [SerializeField]
-    private NoiseLayer[] deadtreeNoises;
+    private string parentName = "Veggie";
+    [SerializeField]
+    private NoiseLayer[] veggieNoises;
     [SerializeField]
     private Gradient coloring;
     [SerializeField]
     [Range(0f,1f)]
-    private float deadtreeThreshold = 0.8f;
+    private float threshold = 0.8f;
     [SerializeField]
     private LayerMask terrainMask;
     [SerializeField]
     [Range(0f,3f)]
     private float sinkInOffset = 0.1f;
     [SerializeField]
-    private int deadtreeRadius = 5;
+    private int radius = 5;
     [SerializeField]
     [Range(0f,1f)]
-    private float deadtreeIntensity = 1f;
+    private float intensity = 1f;
     [SerializeField]
     private float scaleVariation = 0.3f;
 
@@ -38,7 +38,7 @@ public class VegetationPlanter : MonoBehaviour
     private string progressBarTitle = "Planting Vegetation";
     private string progressBarInfo = "0 trees have been planted";
 
-    public NoiseLayer[] DeadtreeNoises { get { return deadtreeNoises; } }
+    public NoiseLayer[] Noises { get { return veggieNoises; } }
 
     void Initialise()
     {
@@ -48,20 +48,32 @@ public class VegetationPlanter : MonoBehaviour
 
     public void GenerateVegetation()
     {
-        // Delete old veggies if neccessary
-        GameObject oldVeggieGO = GameObject.FindGameObjectWithTag(Tags.VEGGIE__TAG);
-        if (oldVeggieGO != null) {
-            DestroyImmediate(oldVeggieGO);
+        // Check if there are Gameobjects to use
+        if (veggieObjects.Length == 0) {
+            Debug.LogError("No GameObjekts in the veggieobjects!");
+            return;
         }
 
+        // Delete old veggies if neccessary
+        GameObject[] veggies = GameObject.FindGameObjectsWithTag(Tags.VEGGIE__TAG);
+        GameObject toDestroy = null;
+        for (int i = 0; i < veggies.Length; ++i) {
+            if (veggies[i].name == parentName) {
+                toDestroy = veggies[i];
+                break;
+            }
+        }
+        if (toDestroy != null)
+            DestroyImmediate(toDestroy);
+
         // Fetch some variables
-        GameObject veggieGO = new GameObject("Veggie");
+        GameObject veggieGO = new GameObject(parentName);
         Transform veggieT = veggieGO.transform;
         veggieGO.tag = Tags.VEGGIE__TAG;
 
         // Generate values
         float[,] values;
-        FillNormalizedValues(out values, ref deadtreeNoises);
+        FillNormalizedValues(out values, ref veggieNoises);
 
         // Show a Progress Bar
         float progress = 0f;
@@ -75,13 +87,13 @@ public class VegetationPlanter : MonoBehaviour
             for (int y = 0; y < mapgen.TotalDepth; ++y) {
 
                 // Check conditions for planting a tree
-                if (values[x, y] > deadtreeThreshold) {
+                if (values[x, y] > threshold) {
                     
                     //  1. Randomly choose a tree and position it above
-                    int treeIndex = Random.Range(0, deadtrees.Length);
+                    int treeIndex = Random.Range(0, veggieObjects.Length);
                     Vector3 position = new Vector3(x, 100f, y);
                     position -= new Vector3(16f, 0, 16f);
-                    GameObject tree = Instantiate(deadtrees[treeIndex], position, RandomRotation()) as GameObject;
+                    GameObject tree = Instantiate(veggieObjects[treeIndex], position, RandomRotation()) as GameObject;
                     Transform treeT = tree.transform;
                     treeT.parent = veggieT;
 
@@ -96,7 +108,7 @@ public class VegetationPlanter : MonoBehaviour
 
                         // 3. Make sure that no other trees plant themselves nearby
                         // by reducing the noise values close to the tree
-                        DrawFilledCircle(ref values, Mathf.RoundToInt(x), Mathf.RoundToInt(y), deadtreeRadius, deadtreeIntensity);
+                        DrawFilledCircle(ref values, Mathf.RoundToInt(x), Mathf.RoundToInt(y), radius, intensity);
 
                         // Increase Tree Count for the Progress Bar
                         progressTreeCount++;
@@ -108,7 +120,7 @@ public class VegetationPlanter : MonoBehaviour
                 }
             }
 
-            // Update Progressbar every second row
+            // Update Progressbar every fifth row
             if (x % 5 == 0) {
                 progress += progressStep * 5;
                 if (EditorUtility.DisplayCancelableProgressBar(progressBarTitle, progressTreeCount + " trees have been planted", progress)) {

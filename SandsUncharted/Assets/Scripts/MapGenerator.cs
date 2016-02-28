@@ -84,6 +84,7 @@ public class MapGenerator : MonoBehaviour
         // Init the UI feedback
         if (UI != null) {
             UIenabled = true;
+            UI.gameObject.SetActive(true);
             ui_loadingPanel = UI.FindChild("LoadingPanel").gameObject;
             Assert.IsNotNull<GameObject>(ui_loadingPanel);
             ui_loadingText = ui_loadingPanel.transform.FindChild("LoadingText").GetComponent<Text>();
@@ -158,6 +159,7 @@ public class MapGenerator : MonoBehaviour
             yield return new WaitForEndOfFrame();
         }
         ui_loadingPanel.SetActive(false);
+        playerTransform.gameObject.SetActive(true);
 
         // Now queue all the jobs on the ThreadManagement
         for (int x = 0; x < width; ++x) {
